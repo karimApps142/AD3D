@@ -1,0 +1,237 @@
+358
+
+Title:
+Recursive Segmentation: An Approach to Produce Large and Complex Designs
+Authors:
+Bradley Camburn, bradley_camburn@sutd.edu.sg, SUTD-MIT IDC
+Yuhui Wee, yuhui_wee@sutd.edu.sg, SUTD-MIT IDC
+Lujie Chen, chenlujie@sutd.edu.sg, SUTD
+Lawrence Sass, lsass@mit.edu, MIT
+Kristin Wood, kristinwood@sutd.edu.sg, SUTD
+Keywords:
+Segmentation, Additive Manufacturing, Large-Scale Prototyping, Casting Molds
+DOI: 10.14733/cadconfP.2019.358-362
+Introduction:
+Additive manufacturing and computational modeling approaches have enabled the production of
+complex and intricate parts. Yet, there has been relatively lesser exploration of how these emerging
+technologies can support the production of very large parts and assemblies. This paper will explore an
+approach to segmentation using recursion. Segmentation is the division of a large model into smaller
+modules using a set of design rules [1, 6, 7]. In recursion, a process is called within a sub-step of the
+process itself. In this case, a model is segmented, then those initial modules are re-segmented to meet
+a design criterion through a recursive process.
+A typical challenge is that printers often have fixed volume print beds. While larger (e.g. >1m3)
+printing systems have been developed [3] or those which are extensible in a single dimension [4] there
+are opportunities to explore how alternative approaches, such as modular segmentation may support
+large scale part production with additive manufacture. Previous work has introduced one mechanism
+for segmentation of large parts via computational algorithm to support large scale prints [2, 10–12].
+In parallel, one proposed advantage of additive manufacturing, in early rapid prototyping
+literature, was the concept of adaptive fidelity or optimal layer slicing [9, 14]. This is the theoretical
+notion of refining part granularity in regions of interest where higher precision is required [8, 14].
+However, in practice, there has been relatively little pursuit of adaptive granularity. This is likely due
+to the practical limitation that it is non-implementable in most machines. Common processes (FDM,
+SLM, SLS) typically operate with a fixed beam or filament diameter. In some processes the vertical
+height layer precision can be tunable within a small tolerance [13]. These approaches are still limited
+to refinement only in a single dimension. This would not cover many cases where adaptive granularity
+is desired, e.g. a high-quality surface layer. Thus, an alternative is to explore how new design processes
+might support adaptive precision in other ways.
+Recursive Segmentation:
+In this study an approach is presented that supports the production of arbitrarily large models and/or
+adaptive tolerancing through a process of recursive segmentation. This approach enables parallel
+printing, such as is possible with a printer farm [5]. For a single extruder, print time scales with the
+characteristic dimension cubed, e.g. 3. Conversely, a segmented assembly can be of arbitrarily large
+scale, yet the print time is equivalent to that of one module. This requires parallel extruders.
+The process-concept consists of two primary steps. The first step is a segmentation algorithm that
+slices an initial three-dimensional part into an array of spatially distributed, approximately equal
+Proceedings of CAD’19, Singapore, June 24-26, 2019, 358-362
+© 2019 CAD Solutions, LLC, http://www.cad-conference.net
+
+359
+
+volume smaller modules. The second step is to evaluate each of these smaller segments against a
+convergence criterion, whether it be dimensional accuracy, target volume, or other criteria such as
+mold slice segmentation (detailed in a case study later). If a module does not meet the convergence
+criteria, it is fed back into the segmentation algorithm and recursively sliced. That is a module
+produced in the first round is further segmented into smaller modules. Once the criteria are satisfied
+all the parts are exported for production. They may be printed in parallel. This segmentation process
+is outlined by the following pseudocode algorithmic description:
+1)
+2)
+3)
+4)
+5)
+
+6)
+
+Import BASE_MODEL (the original part)
+Append BASE_MODEL to SEGMENT_LIST
+k=1
+FOR each part in SEGMENT_LIST
+a. Segment part into k segmented modules
+b. Append each module to SEGMENT_LIST
+FOR each part in SEGMENT_LIST
+a. IF part fails criteria, move to next part,
+b. ELSE store part in PRINT_LIST, remove from SEGMENT_LIST, move to next part
+c. IF no part meets criteria, increase k by 1
+d. RETURN to segment (above)
+Export PRINT_LIST
+
+For the case studies below, segmentation is executed in a software co-developed by two of the authors,
+called LuBan (www.luban3d.com). The standard convergence criteria for LuBan is volume. With LuBan, a
+model of any arbitrary size can be segmented into parts that will fit inside a user-specified volume.
+The algorithm firstly examines the size of the object in orthogonal directions, i.e. x, y, and z, and
+compares it with a build volume threshold for each these axes. Whichever direction exceeds the build
+size by highest factor is set as the one that requires plane cutting. Then LuBan performs an
+intersection calculation between a new cutting plane (or series of evenly spaced cutting planes) and the
+object, in the form of a triangular mesh. The intersections of the plane and all meshed-triangles are
+calculated. New triangles are generated on the cutting section to close the open mesh on each segment.
+As a result, two or more new closed mesh objects are produced. LuBan will perform a size check on the
+new mesh objects and apply another cutting plane if needed. This process is repeated until all new
+segmented mesh objects are within the user-specified build volume for the first axis. It will then move
+on and repeat the process for each axis.
+Exemplar Case Study 1, Complex Casting Mold:
+One potential application is to support the production of complex molds for re-usable casting. A
+traditional mold is often either destroyed by use or limited to several segments, often only split in a
+single plane. It can be complicated to produce a mold that splits in multiple planes as more planning
+and CAD work is required. As a result, is it often difficult to develop a mold with no overhangs for
+complex shapes. Recursive segmentation can be used to solve this issue if the convergence criteria is
+to ensure that any segmented module can be separated from the model once the molding material is
+cast (i.e. ‘no overhangs’). In the example, silicone is used to cast a complex shape that could not be
+generated using a two-piece mold due to several complex overhangs.
+To produce this casting, there are several steps involved. These steps are derived from the
+algorithm shown above. Starting from the target part to be cast, a surface thickening function is used.
+In this case, one of the LuBan features supports expanding the model’s thickness by a predefined
+value. This thick outer shell, with the original part subtracted, forms an initial single part mold for the
+complex model. The original model (Figure 1.a) and expanded surface (Figure 1.b) are shown below.
+After an initial segmentation, each part is then inspected to see whether it meets the necessary
+criteria for production. In this case, the intention for these parts is to be used as a casting mold.
+Therefore, there should be no overhangs on any part that will form the inner surface of the mold. An
+overhang will mean that part would not be easily removable from the mold once the filler material
+hardens. As a demonstration of the need for recursion, a simple segmentation (with no recursion) is
+Proceedings of CAD’19, Singapore, June 24-26, 2019, 358-362
+© 2019 CAD Solutions, LLC, http://www.cad-conference.net
+
+360
+
+performed on the model. Even with a very fine segmentation, resulting in 216 unique parts (Figure 1.c)
+there are still parts that fail to meet the design criteria of no overhangs. Thus, recursion is applied.
+
+Fig. 1: (a) Original CAD part, sculpture that depicts one possible realization of Penrose’ impossible
+square formed to resemble the letter ‘D’, which is also the IDC logo. This is the form to be cast; b) the
+expanded surface which forms a single part, initially unsplit, mold form; (c) results of initial, naïve
+segmentation (216 parts); (d) highlight of location of example failed component, this initial
+segmentation fails, there are still overhangs; (e) closeup view of module with overhang.
+In recursive segmentation, the large model is initially split into four parts. This is the coarsest
+segmentation that allows for some parts that meet the criteria. Then, only those parts which did not
+meet the criteria (they still have overhangs) are recursively segmented until overhangs are gone. This
+process is visually outlined in detail in Figure 2 and results in 17 unique parts.
+
+Fig. 2: Depiction of a recursive segmentation case study for complex mold generation. Three levels of
+iteration were required to meet the convergence criteria of ‘no inner surface overhangs’, resulting in 17
+unique components.
+In the recursion step, parts that did not meet the criteria are re-segmented (See Figure 2). They are
+imported in to LuBan as new designs and re-segmented, in the same manner that the initial complete
+Proceedings of CAD’19, Singapore, June 24-26, 2019, 358-362
+© 2019 CAD Solutions, LLC, http://www.cad-conference.net
+
+361
+
+part was segmented. The results of this segmentation are a new set of 7 smaller modules (See Figure 2).
+Each of these re-segmented modules satisfied the criteria of no overhangs with respect to the mold
+surface. After this procedure, the entire model now consists of 17 parts. The final step is to print all
+the components, assemble the array and create a silicone casting. The cast model is shown in Figure 4.
+
+Fig. 3: Case study of an applied casting process. This type of complex casting could have applications
+such as customized medical implants. The figures above are the: (a) printed modules, (b) integrated
+model with silicone injected, (c) cast model.
+To empirically evaluate the effectiveness of this recursion process, a cost analysis is undertaken. In
+many machining processes, cost is proportional to surface area. In a case where this CAD process was
+used to produce a precision mold to cast a part for actual use, such as medical-grade prosthetic for
+example, cost would be proportional to surface area (assuming a medical grade mold was produced by
+CNC machining metal modules). This is because any precise surface requires machining. Subtractive
+machining cost is generally proportional to total part surface area. Industrial mold making also
+typically indicates higher cost in proportion to the number of parts in a mold for the same reason. A
+comparison of cost using a one-step segmentation versus a recursive process follows in Table 1.
+Such a mold would generally not be manufacturable (except as a sacrificial mold) without
+segmentation. Further, recursion could equate to a substantial cost reduction in the production of this
+complex mold. Notice that the production surface area for the single step segmentation process of the
+same mold is substantially greater, by approximately a factor of 5 times.
+Approach
+Surface Area
+Single step segmentation
+~ 0.4 m2
+Recursive segmentation
+~ 0.09 m2
+Tab. 1: Comparison of surface area (as a proxy for cost) by two methods
+Exemplar Case Study 2, Large Scale Print:
+A second case is provided in which a large and complex model is produced using segmentation with
+build volume as the convergence criteria. The model is too large to be printed on the target machine as
+a single piece. This case demonstrates reduction of print time and the ability to produce parts outside
+the build volume of the target machine. This process can add value if parts are produced in parallel (to
+reduce time) and in smaller segments (to produce a large model), See Figure 4 on the next page.
+Discussion and Conclusions:
+This study presented a high-level process for recursive segmentation that can enable the production of
+large or complex molds for casting as well as the production large complex models using a fixed bed
+size volumetric production method such as fused deposition modelling, or FDM printing.
+The first case study demonstrates that recursive segmentation can reduce model cost for when
+producing complex molds for casting. The requirement for segmentation is that “no part shall have an
+overhang on the part surface”. Recursive segmentation of the base model results in a set of 17 smaller
+modules that were without overhangs. This approach enables the automated generation of a
+Proceedings of CAD’19, Singapore, June 24-26, 2019, 358-362
+© 2019 CAD Solutions, LLC, http://www.cad-conference.net
+
+362
+
+Fig. 4: Chinese dragon sculpture composed of 129 components, with 1000mm by 800mm by 600mm
+bounding dimensions. (a) Printed components, (b) partial integration, (c) final integration.
+complex mold. The second case demonstrates production of a large scale, complex model, directly
+using a single segmentation phase followed by subsequent parallel FDM printing and assembly.
+Recursive segmentation could be applied to other metrics such as maintaining a surface feature
+tolerance and allowing smaller parts to be printed on a high-resolution machine and larger parts to be
+printed on a lower resolution machine. This could enable targeted precision in production. For this
+study, the module segmentation for fixed volume was executed automatically, while the mold
+segmentation was executed manually, both were executed within the LuBan software.
+References:
+[1]
+Agathos, A.; Pratikakis, I.; Perantonis, S.; Sapidis, N.; Azariadis, P.: 3D mesh segmentation
+methodologies for CAD applications, Computer-Aided Design and Applications, 4(6), 2007, 827–
+841.
+[2]
+Chen, L.; Sass, L.: Fresh Press Modeler: A generative system for physically based low fidelity
+prototyping, Computers & Graphics, 54, 2016, 157–165.
+[3]
+Gosselin, C.; Duballet, R.; Roux, P.; Gaudillière, N.; Dirrenberger, J.; Morel, P.: Large-scale 3D
+printing of ultra-high-performance concrete–a new processing route for architects and builders,
+Materials & Design, 100, 2016, 102–109.
+[4]
+Günther, D.; Heymel, B.; Franz Günther, J.; Ederer, I.: Continuous 3D-printing for additive
+manufacturing, Rapid Prototyping Journal, 20(4), 2014, 320–327.
+[5]
+How a 3D Printer Farm Can Help Your Business: https://formlabs.com/blog/3d-print-farmbusiness-benefits/, Accessed: 2019-01-04.
+[6]
+Lavoué, G.; Dupont, F.; Baskurt, A.: A new CAD mesh segmentation method, based on curvature
+tensor analysis, Computer-Aided Design, 37(10), 2005, 975–987.
+[7]
+Randrianarivony, M.: Quadrilateral decomposition by two-ear property resulting in CAD
+segmentation, Proc. Fifth international conference on computational geometry, 2008, 179–185.
+[8]
+Rosen, D.W. 2007: Computer-aided design for additive manufacturing of cellular structures,
+Computer-Aided Design and Applications, 4(5), 2007, 585–594.
+[9]
+Sabourin, E.; Houser, S.A.; Helge Bøhn, J.: Adaptive slicing using stepwise uniform refinement,
+Rapid Prototyping Journal, 2(4), 1996, 20–26.
+[10] Sass, L.: Design for self assembly of building components using rapid prototyping, Architecture
+in the Network Society, 22nd eCAADe Conference Proceedings, Copenhagen (Denmark), 2004,
+15–18.
+[11] Sass, L.; Chen, L.; Sung, W.K.: Embodied prototyping: exploration of a design-fabrication
+framework for large-scale model manufacturing, Computer-Aided Design and Applications,
+13(1), 2016, 124–137.
+[12] Sass, L.; Michaud, D.; Cardoso, D.: Materializing a design with plywood, Predicting the Future,
+2007, 629–636.
+[13] Variable Layer Height: https://manual.slic3r.org/expert-mode/variable-layer-height. Accessed:
+2019-01-04.
+[14] Zhao, Z.; Luc, Z.: Adaptive direct slicing of the solid model for rapid prototyping, International
+Journal of Production Research, 38(1), 2000, 69–83.
+Proceedings of CAD’19, Singapore, June 24-26, 2019, 358-362
+© 2019 CAD Solutions, LLC, http://www.cad-conference.net
+
+

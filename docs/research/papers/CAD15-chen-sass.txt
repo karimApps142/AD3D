@@ -1,0 +1,131 @@
+12
+
+Title:
+Exploration of a Design Framework for Large-scale Model Manufacturing
+Authors:
+Lawrence Sass, lsass@mit.edu, Massachusetts Institute of Technology, USA
+Lujie Chen, chenlujie@sutd.edu.sg, Singapore University of Technology and Design, Singapore
+Woong Ki Sung, Massachusetts Institute of Technology, USA
+Keywords:
+Rapid prototyping, Large-scale prototyping, Scalable planar structure
+DOI: 10.14733/cadconfP.2015.12-15
+Introduction:
+Physical prototyping (rapid prototyping) as part of an iterative design process is becoming a standard
+operation for most design communities. Creating physical models with automated machines is a
+necessary step across many product scales [1]. Architects, boat designers and furniture makers are
+limited in the physical size of models that can be produced with common, affordable prototyping
+machines. A conceptual model of prototyping is presented as a way of addressing shortcomings for
+designers of large-scale products.
+Unlike traditional design, where a designer produces ideas and intentions, and a constructor acts
+on these intentions, this research aims to create an integrated system that includes design reflection,
+rapid 3D model generation and 2D CAD/CAM fabrication. A generative system used to create large
+models named as Scalable Planar Structure (SPS) is introduced. The system minimizes repetitive CAD
+modelling and serves as a framework that integrates physical actions associated with making and
+software functions associated with design and fabrication.
+Research questions here are based on the production of design information through prototyping
+and less on model representation or realistic interpretations. Part of the investigation was a search for
+a method of information production suited for the laser cutting or CNC machining of dense thick
+material. Physical and cognitive factors that could influence model production are also investigated.
+We believe these questions will lead to a design framework and an advanced software system for
+design makers.
+Scalable Planar Structure:
+A Scalable Planar Structure (SPS) is a generative modelling system that starts with a 3D shape model
+and ends with a physical model consists of numbered parts manufactured by a laser cutter. The
+system automatically segments the 3D shape and produces a set of cutting paths. Planar material,
+such as plywood sheets, is used in cutting. After that, the cut components are manually assembled to
+form a physical prototype.
+Three model types are presented as cases, each capturing a novel moment in the development of
+(SPS). Functions written for the first few cases were driven by visual goals. Resulting models were
+evaluated by comparison to virtual models, efficient production and strength. Functions developed for
+the last two cases were designed to solve problems related to behavior and human interaction. In case
+one, fixed sized planar structures are generated. Later, scaling methods were incorporated that split
+planes into smaller parts.
+
+Proceedings of CAD’15, London, UK, June 22-25, 2015, 12-15
+© 2015 CAD Solutions, LLC, http://www.cad-conference.net
+
+13
+
+Case One: A Plane:
+This case generates shapes as interlocking planes with inclusive slotted geometry. Models are limited
+in size to the maximum length of the material stock (Fig. 1). Planes or planar shapes are created from
+projections taken through the initial shape model (Fig. 2). The system generates new planes from
+contours with interlocking features and labels classified as symbols. Planes along the same axis
+maintain a parallel relationship. The finished planar shape is a 2D parametric object composed of
+start, bottom, and ending lines and segments that join the ends of cross-plane slots. Base curves are
+splines generated from the initial 3D model. The base curve drives the organization of symbols, new
+segments and lines.
+
+Fig. 1: Models as thin wall structures of a limited size.
+
+Fig. 2: Anatomy of a planar element illustrating symbols, cross-plane slots and contours in different
+positions.
+Case Two: Sub-Planes:
+A major goal of the program is to generate a range of model sizes from the same initial 3D shape
+model. Isotropic scaling of an initial shape model presented three challenges. First, how are smaller
+sets of curved planes created from a longer curve and once fabricated and assembled, will the smaller
+planes match the original curve as a collection of parts? Second, how best to generate attachment
+Proceedings of CAD’15, London, UK, June 22-25, 2015, 12-15
+© 2015 CAD Solutions, LLC, http://www.cad-conference.net
+
+14
+
+symbols between smaller planar shapes? Lastly, can an assembly of smaller parts be organized to
+create a robust large shape?
+The first large-scale model was an assembly greater than one-meter along the x axis and half a
+meter along the y (Fig. 3). Most important for this study, its size (102x51 cm2) meant that it was too
+large to be manufactured with an in-house laser cutter. A set of drawings and a 3D model of planes
+were generated from user-specified variables, one of which controls the maximum length of a
+component. In this example the longest piece was limited to 45 cm.
+
+Fig. 3: In-plane features (left) of an assembled model atop a laser cutter (right).
+Case Three: Planar Volume:
+Creating 3D objects similar to common 3D printed models, is generation a planar model as a volume
+as opposed to a linear surface. A volume is a thin walled 3D shape composed of planes as closed
+shapes (planes) along one axis. Horizontal planes are cylindrical with a central axis. Each segmented
+component has male or female slots on either side. Cross-plane slots are organized around a central
+axis to allow vertical contours to be assembled from the outside. Initial shape in Fig. 4 was generated
+from scans from a rotary turntable.
+Physical and Cognitive Challenges:
+When the fabricators were asked questions related to visual quality, structural integrity, and efficiency
+in production, they expressed that complications in assembly were based on material choice. The
+programmer and fabricators also noted that model assembly was extremely complicated and
+physically exhausting. They said they had to take many breaks and that the duck model took two days
+to assemble including breaks.
+Assembly as a manual process, as opposed to using the automated setups found in additive
+manufacturing, revealed a range of issues. The greatest concerns expressed by several fabricators
+involved challenges in material handling, pre-assembly of planes, and part structuring as they related
+to model behavior and control during and after assembly. The choice for the programmer of where to
+split planes into smaller sub-planes affected the strength and handling of elements. Reading labels on
+the sub-planes presented a challenge to the efficiency of assembly and created confusion between
+parts. Quantitative measures taken included time, materials, number of parts, and time ratios are
+recorded for further analysis of physical and cognitive challenges.
+Conclusion:
+Physically based prototyping has known benefits and unanswered questions. In this work we
+addressed questions related to basic production by fabricating models greater than a meter in length
+from a common prototyping machine. Assumptions were made that a large physical prototype
+assembled by hand could be limited by cognitive and physical factors not addressed in the literature
+on additive manufacturing. Resulting models demonstrated many complex concerns mostly related to
+human factors. Designers interested in prototyping their ideas prior to manufacturing expect and need
+systems of rapid production similar to the proposed SPS system, which is a scalable modeler and a
+Proceedings of CAD’15, London, UK, June 22-25, 2015, 12-15
+© 2015 CAD Solutions, LLC, http://www.cad-conference.net
+
+15
+
+realistic large-scale prototyping method. Researchers and programmers can use this system in its
+current state as a platform from which to build an embodied prototyping system inclusive of new
+measures for pragmatic and embodied cognitive activities.
+
+Fig. 4: (1) Middle scale model built of 20 horizontal layers. (2-6) Large-scale model: (2-3) start of
+assembly and base parts, (4) oscillation of joints between horizontal layers, (4-5) assembly of the last
+30 layers and (6) comparison in size between original model used for scanning, middle scale and final
+scale build from the same scan.
+References:
+[1] Yang, M. C.: A study of prototypes, design activity, and design outcome, Design Studies, 26(6),
+2005, 649-669. http://dx.doi.org/10.1016/j.destud.2005.04.005
+
+Proceedings of CAD’15, London, UK, June 22-25, 2015, 12-15
+© 2015 CAD Solutions, LLC, http://www.cad-conference.net
+
+

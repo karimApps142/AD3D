@@ -1,0 +1,4704 @@
+Hello LuBan
+
+Hello LuBan
+
+August 19, 2025
+
+Contents
+1
+
+Introduction
+1.1 Download LuBan . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.2 Install LuBan . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.2.1
+Windows . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.2.2
+Mac . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.2.3
+Linux . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.3 License . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.3.1
+License file MU License.dat . . . . . . . . . . . . . . . . . . . . .
+1.3.2
+Windows . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.3.3
+Mac . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.3.4
+Linux . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.3.5
+Change of a License ID . . . . . . . . . . . . . . . . . . . . . . .
+1.4 Update LuBan . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.5 Language . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.6 Setting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.7 Window frame . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1.8 Hit the Enter key to update display . . . . . . . . . . . . . . . . . . . . .
+
+2
+2
+3
+3
+3
+3
+3
+4
+4
+5
+6
+6
+7
+7
+8
+9
+9
+
+2
+
+Lithophane
+2.1 Positive vs. Negative . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.2 Exterior vs. Interior . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.3 Model size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.4 Min Max thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.5 Resolution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.6 File size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.7 Border . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.8 Base and Socket . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.9 Hanger . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.10 Support . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.11 Backlight . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+11
+11
+12
+13
+13
+14
+14
+14
+15
+15
+15
+16
+
+1
+
+CONTENTS
+
+3
+
+Hello LuBan
+
+2.12 Save model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.13 Flat lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.13.1 Model size X and Z . . . . . . . . . . . . . . . . . . . . . . . . .
+2.13.2 Slant . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.13.3 Base and Socket . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.14 Arc lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.15 Poly-face lithophanes . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.15.1 Select multiple photos . . . . . . . . . . . . . . . . . . . . . . . .
+2.15.2 Upright vs. Inverted . . . . . . . . . . . . . . . . . . . . . . . . .
+2.15.3 One body vs. Assembly . . . . . . . . . . . . . . . . . . . . . . .
+2.16 Cylinder, Cone, and Vase lithophanes . . . . . . . . . . . . . . . . . . . .
+2.16.1 Fixed vs. Stretch . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.16.2 Base and Socket . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.17 Sphere lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.17.1 Photo alignment . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.17.2 Sphere angle, diameter, and opening . . . . . . . . . . . . . . . .
+2.17.3 Socket . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.18 Spiral lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.19 Stencil lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.20 Balloon lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.20.1 Expansion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.20.2 Extra space . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.20.3 Center X and Y, Photo scale . . . . . . . . . . . . . . . . . . . .
+2.20.4 Balloon of an object . . . . . . . . . . . . . . . . . . . . . . . . .
+2.21 Tattoo lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.21.1 Axis to wrap a photo around . . . . . . . . . . . . . . . . . . . .
+2.21.2 Resolution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.21.3 Center X and Y . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.21.4 Photo scale X and Y . . . . . . . . . . . . . . . . . . . . . . . .
+2.22 Color lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.23 Tips for 3D printing lithophane . . . . . . . . . . . . . . . . . . . . . . .
+
+16
+17
+17
+18
+19
+19
+20
+20
+21
+22
+22
+22
+24
+25
+25
+27
+28
+28
+29
+29
+31
+31
+31
+31
+34
+35
+35
+36
+37
+37
+37
+
+Photo magic
+3.1 Balloon . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2 Box . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.1
+Inner vs. Outer size . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.2
+Base, lid, and box size . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.3
+Lid type . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.4
+Inner pattern . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.5
+Nested box . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.6
+Edge chamfer . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+40
+40
+41
+41
+42
+42
+43
+45
+46
+
+2
+
+CONTENTS
+
+3.3
+
+3.4
+
+3.5
+
+3.6
+
+3.7
+
+Hello LuBan
+
+3.2.7
+Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.8
+Box light . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2.9
+Box lithophane . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Cell . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.1
+Bright vs. Dark . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.2
+Model size X and Y . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.3
+Thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.4
+Border size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.5
+Cell shape . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3.6
+Resolution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Cutter . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.1
+Flip photo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.2
+Photo vs. Text . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.3
+Inner size X, Y, Z . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.4
+Inner pattern . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.5
+Blade, Cutter, and Base . . . . . . . . . . . . . . . . . . . . . . .
+3.4.6
+Base hole . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4.7
+Edge chamfer . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Extrusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.1
+Positive vs. Negative . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.2
+Photo vs. Text . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.3
+Model size X and Y . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.4
+Extrusion, Elevation, and Elevation angle . . . . . . . . . . . . .
+3.5.5
+Expansion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.6
+Clearance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.7
+Support . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5.8
+Base shape, Round corner, Base thickness, and Keychain hole . .
+Layering . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.6.1
+Layer order and Number of layers . . . . . . . . . . . . . . . . .
+3.6.2
+Layer size X and Y . . . . . . . . . . . . . . . . . . . . . . . . .
+3.6.3
+Layer thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.6.4
+Layer offset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.6.5
+Frame shape, Expansion, Round corner, and Clipping . . . . . .
+3.6.6
+Solid base . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.6.7
+Arbitrary-shaped frame . . . . . . . . . . . . . . . . . . . . . . .
+3.6.8
+Multiple photos . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Morphing . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.7.1
+Positive vs. Negative . . . . . . . . . . . . . . . . . . . . . . . .
+3.7.2
+Photo vs. Text . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.7.3
+Model size X, Y, and Z . . . . . . . . . . . . . . . . . . . . . . .
+3.7.4
+Base thickness and Text baseline . . . . . . . . . . . . . . . . . .
+3
+
+47
+47
+50
+53
+53
+53
+53
+54
+54
+55
+55
+55
+56
+56
+57
+57
+58
+59
+59
+59
+59
+60
+60
+60
+60
+61
+61
+62
+62
+63
+63
+64
+64
+65
+65
+67
+68
+68
+68
+69
+69
+
+CONTENTS
+
+Hello LuBan
+
+3.7.5
+Axis of rotation . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.8 Painting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9 Pillar . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.1
+Bright vs. Dark . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.2
+Pattern . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.3
+Width in X, Depth in Y, Height in Z, and Thickness . . . . . . .
+3.9.4
+Level of detail . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.5
+Cap and Base height . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.6
+Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.9.7
+Text size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10 Puzzle . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.1 Model size X and Y . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.2 Min and Max thickness . . . . . . . . . . . . . . . . . . . . . . .
+3.10.3 X and Y section . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.4 Resolution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.5 Edge chamfer . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.6 Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.7 Save model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.10.8 Puzzle of a 3D model . . . . . . . . . . . . . . . . . . . . . . . .
+
+69
+70
+70
+70
+70
+72
+72
+73
+73
+74
+74
+75
+75
+75
+75
+76
+76
+76
+77
+
+4
+
+Mesh → Cut
+4.1 Model size X, Y, and Z . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2 Planar cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2.1
+Regional cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2.2
+Close cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2.3
+Natural cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.3 Grid cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.4 Radial cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.5 Modular cut . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.5.1
+Printer setting . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.5.2
+Part number . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.5.3
+Assembly sequence . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6 Connector . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.1
+Plug vs. Dowel . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.2
+Design . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.3
+Shape . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.4
+Depth ratio . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.5
+Size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.6.6
+Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+78
+79
+79
+79
+79
+80
+81
+82
+83
+83
+83
+84
+86
+86
+86
+87
+87
+88
+88
+
+5
+
+Mesh → LuBan
+90
+5.1 Cocoon . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 91
+4
+
+CONTENTS
+
+5.2
+
+5.3
+
+5.4
+
+5.5
+
+5.6
+
+5.7
+
+Hello LuBan
+
+5.1.1
+Shape and Direction . . . . . . . . . . . . . . . . . . . . . . . . . 91
+5.1.2
+Clearance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+5.1.3
+Offset X, Y, and Z . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+5.1.4
+Mold . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92
+Contour . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93
+5.2.1
+Sheet width, height, and thickness . . . . . . . . . . . . . . . . . 93
+5.2.2
+Direction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93
+5.2.3
+Frame and Clearance . . . . . . . . . . . . . . . . . . . . . . . . 94
+5.2.4
+Base light socket . . . . . . . . . . . . . . . . . . . . . . . . . . . 94
+5.2.5
+Nesting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 95
+Stack . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 95
+5.3.1
+Dowel size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96
+5.3.2
+Ring width . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96
+5.3.3
+Text size . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96
+Hash . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 97
+5.4.1
+Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 98
+5.4.2
+Orthogonal vs. Radial . . . . . . . . . . . . . . . . . . . . . . . . 98
+5.4.3
+X and Z layers . . . . . . . . . . . . . . . . . . . . . . . . . . . . 98
+5.4.4
+Tilt . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 99
+Plate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 99
+5.5.1
+Low poly . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+5.5.2
+Tolerance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+5.5.3
+Finger width . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+5.5.4
+Mold . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 101
+Relief . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 102
+5.6.1
+Direction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 102
+5.6.2
+Single vs. Double sided . . . . . . . . . . . . . . . . . . . . . . . 102
+5.6.3
+Positive vs. Negative . . . . . . . . . . . . . . . . . . . . . . . . 103
+5.6.4
+Relief thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . 104
+5.6.5
+Bury . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 104
+5.6.6
+Base and Base thickness . . . . . . . . . . . . . . . . . . . . . . . 104
+5.6.7
+Border size and thickness . . . . . . . . . . . . . . . . . . . . . . 105
+5.6.8
+Clearance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 106
+Spin . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 106
+5.7.1
+Spin shape . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 106
+5.7.2
+Repeat . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+5.7.3
+Direction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+5.7.4
+Inner diameter . . . . . . . . . . . . . . . . . . . . . . . . . . . . 107
+5.7.5
+Top and Bottom diameter . . . . . . . . . . . . . . . . . . . . . . 108
+5.7.6
+Sphere angle . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 108
+5.7.7
+Arc angle . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 109
+5
+
+CONTENTS
+
+Hello LuBan
+
+5.7.8
+Separation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 109
+5.7.9
+Model thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . 110
+5.7.10 Cap and Base . . . . . . . . . . . . . . . . . . . . . . . . . . . . 110
+5.8 Spring . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 110
+5.8.1
+Layer width . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+5.8.2
+Thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+5.8.3
+Separation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 111
+5.9 Wave . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 113
+5.9.1
+Oscillate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 113
+5.9.2
+Number of sources and Adjust source . . . . . . . . . . . . . . . 113
+5.9.3
+X, Y, and Z . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 114
+5.9.4
+Amplitude . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 114
+5.9.5
+Attenuation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 114
+5.9.6
+Wavelength . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 114
+5.9.7
+Phase . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 115
+5.9.8
+Save model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 115
+5.10 Wireframe . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 116
+5.10.1 2D vs. 3D . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 116
+5.10.2 Wire thickness . . . . . . . . . . . . . . . . . . . . . . . . . . . . 117
+
+6
+
+Hello LuBan
+
+1
+
+Introduction
+
+LuBan is generative design software that helps designers and makers in rapid production
+of their creations. LuBan automatically generates 3D models in various forms, such as
+lithophane, cookie cutter, extrusion, stack, hash, plate, relief, module, and wireframe.
+The generated models can be fabricated by 3D printing, laser cutting, and CNC milling.
+The most widely used LuBan functions are grouped in four clusters.
+ Lithophane (File → Create → Lithophane)
+
+Convert a photo to a 3D printable photo.
+ Photo magic (File → Create → Photo magic)
+
+Convert a photo to various forms of 3D models.
+ Mesh → Cut
+
+Cut a model into smaller parts.
+ Mesh → LuBan
+
+Convert a 3D model to various forms of new 3D models.
+LuBan official website is www.luban3d.com. Technical support for LuBan is available
+in several places.
+ Facebook LuBan group
+
+https://www.facebook.com/groups/1067858546711484
+ MeWe LuBan group
+
+https://mewe.com/join/luban
+ Email: luban3d@gmail.com
+
+1.1
+
+Download LuBan
+
+LuBan can be downloaded at www.luban3d.com. Scroll down to “Download LuBan” and
+click either the Dropbox or Google drive download link (Figure 1). LuBan Windows
+version, LuBan.exe or setup.msi, can be downloaded from the Win 32 or Win 64 folder.
+Mac version, LuBan.dmg, can be downloaded from the Mac 64 folder. Linux version,
+LuBan, can be downloaded from the Ubuntu 64 folder.
+Some anti-virus program or internet browser may block LuBan during the download.
+If that happens, a warning will be shown usually. Please click the warning or a MoreInformation button and you may have a chance to bypass the warning, and then download
+LuBan without a problem.
+
+7
+
+1.2
+
+Install LuBan
+
+Hello LuBan
+
+Figure 1: LuBan Google drive download folder.
+
+1.2
+
+Install LuBan
+
+1.2.1
+
+Windows
+
+If you have downloaded LuBan.exe, you can run LuBan without any installation. If
+you have downloaded setup.msi, you can double click the file to install LuBan on your
+computer. By default, LuBan will be installed in “C:\Program Files (x86)\LuBan”,
+together with a license file and some language folders.
+Note that the folder “Program Files (x86)” does not necessarily suggest that LuBan.exe
+is Win 32 version. If fact, both Win 32 and Win 64 LuBan.exe will be installed under
+that folder.
+1.2.2
+
+Mac
+
+Double click LuBan.dmg to install LuBan app, which can then be placed in any folder.
+By default, it is placed in the Mac OS’s Applications folder.
+1.2.3
+
+Linux
+
+The LuBan file downloaded can be run from command line and no installation is needed.
+In a Terminal program, use cd command to browse to the folder that contains LuBan;
+then type ./LuBan and hit Enter to run LuBan.
+1.3
+
+License
+
+LuBan license is an ID that uniquely identifies a computer. It can be read from LuBan
+“Help → About” dialogue box (Figure 2).
+There are several types of licenses.
+ Unregistered license: A computer can run LuBan to process and view data while
+saving of processed results is limited to small-sized files, not larger than 1MB.
+ Trial license: Full access to all LuBan features for 30 days.
+ Education license: Full access for 3 months.
+8
+
+1.3
+
+License
+
+Hello LuBan
+
+Figure 2: LuBan license ID of a computer.
+
+ One-month license: Full access for 1 month.
+ One-year license: Full access for 1 year.
+ Permanent license: Full access forever.
+
+A permanent license dose not require internet connection when running LuBan, while
+a timed license does.
+1.3.1
+
+License file MU License.dat
+
+A license file MU License.dat that stores all registered license IDs is placed in the same
+folder that contains the LuBan application. To register an ID, please follow instructions
+at www.luban3d.com/license and send relevant information using a web form. Within
+48 hours, a LuBan developer will add the ID to MU License.dat and update the file in the
+LuBan Dropbox and Google drive download folder, the “License” sub-folder. You will be
+informed by email when the updated license file is ready for download.
+1.3.2
+
+Windows
+
+After downloading the updated MU License.dat, place it in the same folder as the LuBan
+application. If there is an existing license file in the folder, overwrite it with the new one.
+(You may have to do this with an administrator account.)
+Then run LuBan.exe and go to “Help → About” to check the expiration date. An
+updated date should be shown. If the expiration text box still shows Unlicensed or an old
+date, you may have encountered the following situations.
+1. Wrong ID
+If you type the ID and send to LuBan email, there can be typos. Same applies to
+sending a screenshot of the ID, not the plain text. It is best to select the ID, copy
+it, and paste it to an email. The entire line of the ID with the brackets and the OS
+information should be included.
+
+9
+
+1.3
+
+License
+
+Hello LuBan
+
+2. Wrong file name
+The license file name must be MU License.dat. No other names can be recognized
+by LuBan. For example, “MU License (1).dat” is a wrong name. Sometimes during
+the download, an internet browser may rename the file to MU License.txt. That is
+wrong too as the extension must be “dat”. If this happens, go to your file browser
+“View → Options”; under the View tag, make sure “Hide extension for known file
+types” is unchecked (Figure 3). This makes sure that the extension is displayed in
+the file browser and can be modified subsequently. Change the extension to “dat”.
+
+Figure 3: Uncheck “Hide extension for known file types”.
+
+3. Wrong location
+The license file must be placed together with LuBan.exe in the same folder. Do not
+place the license file in a sub-folder. See an example in Figure 4.
+4. False download
+An internet browser may not actually download the latest copy of MU License.dat
+but gives you a local cached copy, which has not included your computer’s license
+ID. To fix the problem, clear the history of the internet browser and download again.
+1.3.3
+
+Mac
+
+On Mac OS the actual LuBan application is hidden in a LuBan package icon. You may
+right click on the icon and select Show Package Contents. That will show you the internal
+
+10
+
+1.3
+
+License
+
+Hello LuBan
+
+Figure 4: Left: correct location. Right: wrong location. The license file is placed in a sub-folder named
+License.
+
+folder structure of the package. Enter “Contents” folder and then “MacOS” folder. Copy
+the downloaded license file to the “MacOS” folder and overwrite the existing file.
+Sometimes, Mac OS may prevent you from changing a file in a package. If that happens,
+you need to obtain the permission by the following steps.
+1. Open Finder, select your home folder. View the information with the Apply key or
+with a secondary click and select “Get Info”.
+2. In a popup menu, select “Sharing & Permissions” section and then click on the
+padlock icon at the bottom right.
+3. Enter the password of your user session, then click on the cogwheel on the left
+and choose the “Apply to included items” option. Wait till the operation is complete.
+Depending on the number of folders and files in your home folder, this may take a little
+while.
+4. Open the Terminal application and enter this command:
+diskutil resetUserPermissions / ’id -u’
+Wait till the end of the operation, which can also take some time.
+1.3.4
+
+Linux
+
+Similar to Windows.
+1.3.5
+
+Change of a License ID
+
+A LuBan license ID is generated from a computer’s hardward. It may change in the
+following situations. You may contact LuBan to replace an old ID with a new one.
+ Change of a hard disk
+ Change of a network adaptor
+ Computer failure
+ Re-installation of an OS. (May happen to Win 10. Unlikely on Mac.)
+ Major-upgrade of an OS. (May happen from Win 7 to 10. Unlikely on Mac.)
+11
+
+1.4
+
+Update LuBan
+
+1.4
+
+Hello LuBan
+
+Update LuBan
+
+LuBan is under active development. At the time of writing, it does not have an autoupdating feature. To update LuBan, please delete LuBan.exe or uninstall LuBan, then
+download the latest version from LuBan Dropbox or Google drive download folder (Section 1.2). In each new release of LuBan, the latest license file is included in the installer:
+setup.msi (Windows) and LuBan.dmg (Mac); however, if you update LuBan by downloading LuBan.exe directly, you should keep a copy of your license file. If you lose the file,
+you may download it from the License folder in LuBan Dropbox or Google drive share
+folder.
+1.5
+
+Language
+
+LuBan can be set to display in several languages. (On Linux, only English is available
+for now.) Except for English, each language is stored in a folder (Figure 5).
+
+Figure 5: LuBan language folders.
+
+At the time of writing, supported languages are
+ Chinese (Simplified), folder zh CN
+ Chinese (Traditional), folder zh TW
+ English
+ French, folder fr FR
+ German, folder de DE
+ Greek, folder el GR
+ Italian, folder it IT
+ Lithuanian, folder lt LT
+12
+
+1.6
+
+Setting
+
+Hello LuBan
+
+ Malay, folder ms MY
+ Polish, folder pl PL
+ Portuguese (Brazilian), folder pt BR
+ Russian, folder ru RU
+ Slovak, folder sk SK
+ Slovenian, folder sl SI
+ Spanish, folder es ES
+ Thai, folder th TH
+
+The language folders are automatically installed on Mac or using the setup.msi file on
+Windows. If you directly downloaded LuBan.exe on Windows and hope to use a nonEnglish language, you should download the corresponding language folder from LuBan
+Dropbox or Google drive Win 32 or Win 64 folder. A language folder is often downloaded
+as a zip file. Unzip it after the download and make sure the folder name is exactly same
+as shown in the above list.
+Then place the folder together with LuBan.exe as shown in Figure 5. Do not move
+an MU.mo file out of the folder. When done, run LuBan and go to “Help → Language”.
+Select the language that you hope to display.
+1.6
+
+Setting
+
+LuBan settings, such as background color and parameters in many functions, are stored
+in a MU Setting.txt file, located in the same folder as the LuBan application. When
+LuBan starts, it will load the settings. If no setting file can be found, LuBan will apply
+the default settings.
+
+Figure 6: Right click on LuBan.exe and select “Run as administrator”.
+
+On Windows, if you installed LuBan from setup.msi, you should run LuBan by right
+click LuBan.exe and select “Run as administrator” at least once (Figure 6). This will
+13
+
+1.7
+
+Window frame
+
+Hello LuBan
+
+ensure that LuBan has the permission to read the setting file located in the system folder
+“C:\Program Files (x86)\LuBan”.
+1.7
+
+Window frame
+
+LuBan has a 2D and a 3D window frame with completely different menu items (Figure 7).
+The 2D window is focused on image processing and the 3D window is focused on mesh
+processing. When LuBan starts, the 3D window will be show by default. The two types
+of windows can be switched by “File → Invoke 2/3D window”.
+
+Figure 7: Left: LuBan 2D window. Right: LuBan 3D window.
+
+1.8
+
+Hit the Enter key to update display
+
+The major functions of LuBan have a graphical user interface (GUI) similar to that shown
+in Figure 8. The left area is a control panel and the right area shows a 3D display of a
+generated model.
+
+Figure 8: Graphical user interface of LuBan.
+
+The control panel can have many kind of settings, such as drop-down lists, radio
+buttons, check boxes, spin buttons, and text boxes. When you change a selection, the
+14
+
+1.8
+
+Hit the Enter key to update display
+
+Hello LuBan
+
+display on the right area will be updated automatically with one exception: changes in a
+text box will not trigger an automatic update.
+To reflect changes in a text box, you should hit the Enter (or Return) key to update
+the display (Figure 9). The Enter key carries the same purpose as an “Apply” button.
+The GUI of LuBan is designed with a style of simplicity and it tries to avoid redundancy;
+therefore, there is no “Apply” button.
+
+Figure 9: Hit the Enter key to update the display of LuBan.
+
+15
+
+Hello LuBan
+
+2
+
+Lithophane
+
+Lithophane makes use of the semi-transparency of a material to show intensity variation of
+a photo. A lithophane can be 3D printed or CNC machined as long as light can penetrate
+the material in use. The challenge in making lithophane is to generate a 3D model from
+a photo. LuBan addresses the challenge by offering a serious of powerful and ease to use
+lithophane generation methods.
+Run LuBan and go to “File → Create → Lithophane” to enter the lithophane mode
+(Figure 10). Control parameters are laid out on the left panel and live display is rendered
+on the right. Several types of lithophanes can be selected from the drop down shape list.
+To load a photo, click the “Browse” button next to “Select photo”.
+
+Figure 10: File → Create → Lithophane.
+
+2.1
+
+Positive vs. Negative
+
+A positive lithophane resembles the intensity distribution of the original photo. A negative
+lithophane inverses the intensity similar to a negative photo (Figure 11).
+
+Figure 11: Left: original photo. Center: positive lithophane. Right: negative lithophane.
+
+16
+
+2.2
+
+2.2
+
+Exterior vs. Interior
+
+Hello LuBan
+
+Exterior vs. Interior
+
+A lithophane has a rough surface and a smooth surface (Figure 12). The thickness varia-
+
+Figure 12: Rough and smooth surface of a lithophane.
+
+tion between the two surfaces causes different amount of light to penetrate the lithophane
+and to produce an image. An exterior lithophane has its rough surface facing a viewer
+and its smooth surface facing the light source, while an interior lithophane has the two
+surfaces reversed.
+In general, an exterior lithophane looks sharper than an interior one (Figure 13). This
+has to do with how light scatters through the material. However, using some special
+
+Figure 13: Left: rough surface facing the viewer. Right: smooth surface facing the viewer. Made by
+LuBan user, Jelle Van Regenmortel.
+
+filament, an interior lithophane can be sharp (Figure 14). While an exterior lithophane
+
+Figure 14: An interior lithophane trophy made by LuBan user, Rob Dorward, using Eryone silk silver
+filament. The min and max thickness of the lithophane is 0.6 and 2.4 mm respectively.
+
+17
+
+2.3
+
+Model size
+
+Hello LuBan
+
+might still be sharper, the difference is small. The advantage of the interior lithophane
+is that it has a surprising impact on a viewer as he only sees a smooth surface without
+backlight.
+In LuBan, you may find that the rendering of an interior lithophane is better than
+an exterior one. That is only a rendering issue! Computer graphics rendering cannot
+fully simulate the actual physical process; therefore, the rendering on a smooth surface
+(interior) looks better than on a rough surface (exterior).
+2.3
+
+Model size
+
+The model size of a lithophane in X, Y, and Z directions can be set in text boxes. After changing a value in a text box, you must hit the Enter key to update the display
+(Figure 15). This is equivalent to clicking an “Apply” button in some other software.
+
+Figure 15: Model size text boxes. Hitting the Enter key to update the display is required in LuBan when
+changing a value in a text box.
+
+2.4
+
+Min Max thickness
+
+The minimum and maximum thickness settings determine the overall thickness of a lithophane. A relative thick lithophane is strong while requires a strong light source for
+viewing. The bigger the depth variation, the higher the contrast of the lithophane but
+the more likely that support is needed when printing the lithophane.
+
+4,
+
+7
+
+9
+
+4
+
+4,
+
+8,
+
+3
+
+5
+
+8,
+
+2
+
+4,
+
+0.
+
+0.
+
+8,
+
+0.
+
+Figure 16: From left to right the Min, Max thickness of the lithophane is (0.8, 2), (0.8, 3), (0.8, 4), (4,
+5), (4, 7), and (4, 9).
+
+18
+
+2.5
+
+2.5
+
+Resolution
+
+Hello LuBan
+
+Resolution
+
+The resolution determines the level of details on a lithophane. A small resolution value
+indicates high resolution in common sense as the unit of resolution is millimeter per pixel
+(Figure 17).
+
+0.1
+
+0.5
+
+2.5
+
+Figure 17: From left to right the resolution of the lithophane is 0.1, 0.5, and 2.5 mm/pixel.
+
+A small resolution leads to a large model file. To reduce the file size, increase the resolution value. (Hit the Enter key to update the display.) Although a 3D model file size can
+also be reduced by mesh simplification using “Mesh → Simplify”, it is not recommended
+for a lithophane model since mesh simplification will result in non-uniform resolution and
+the process is time consuming.
+Based on a resolution value, you may roughly calculate the desired image resolution
+in X direction: Image size X = Model size X / Resolution. For example, Model size X is
+50 mm and Resolution is 0.1. The desired image size X is 50/0.1 = 500 pixels.
+In practice, it is not necessary to set the resolution value too small because (1) an input
+image’s resolution may not be high enough, and (2) a 3D printer’s or a CNC machine’s
+resolution may not be high enough. Details finer than a machine’s resolution cannot be
+printed or fabricated.
+2.6
+
+File size
+
+The file size setting is readable only; it predicts a lithophane model’s file size on disk.
+One of the most effective methods in reducing the file size is to increase the value of the
+Resolution setting. (Hit the Enter key to update the display.)
+2.7
+
+Border
+
+A border can be optionally generated on a lithophane. If a border size text box is set to
+0 (hit Enter after the change), no border will be generated on the lithophane (Figure 18).
+If the border size is a positive value and a dark border is selected, you will see another
+text box to set the border thickness, which must be larger than the Max thickness by 5%.
+
+19
+
+2.8
+
+Base and Socket
+
+Hello LuBan
+
+Figure 18: From left to right, no border, light border, and dark border.
+
+2.8
+
+Base and Socket
+
+Several lithophane shapes have an option to enable a base, which may be used to integrate
+a light socket. The base and light socket will be further described in the section of each
+lithophane shape.
+2.9
+
+Hanger
+
+Several lithophane shapes have an option to generate a hanger, which may allow the
+lithophane to be used as a hanging photo or a hanging lamp shade (Figure 19). The
+hanger hole size is customizable.
+
+Figure 19: Hanger of Flat and Hexagon lithophane.
+
+A hanger may also be used as a key chain hole.
+2.10
+
+Support
+
+Support is useful when printing a large Flat or Arc lithophane (Figure 21). Printer
+vibration and extruder movement may cause a large lithophane to shake, which results in
+undesired artifects. The support is designed to reduce such effects so as to maintain the
+quality of the print.
+
+20
+
+2.11
+
+Backlight
+
+Hello LuBan
+
+Figure 20: Hanger used as a key chain hole. Made by LuBan user, Kevin Lems.
+
+Figure 21: Flat lithophane support attached and detached. Made by LuBan user, Mitchell Rabushka.
+
+2.11
+
+Backlight
+
+Backlight is used to simulate the appearance of a lithophane under backlight illumination
+(Figure 22). The color of the light and the filament can be configured. The light intensity
+can also be adjusted.
+
+Figure 22: From left to right: Backlight simulation in LuBan, a real print with backlight, and the real
+printing without backlight, Made by LuBan user, Steve McGarr.
+
+2.12
+
+Save model
+
+Click the “Save model” button at the bottom of the control panel to save a lithophane
+model to an export folder. The folder name will be automatically generated based on
+the input photo’s file name and the time stamp when the button is clicked. Here is an
+21
+
+2.13
+
+Flat lithophane
+
+Hello LuBan
+
+example, a photo named “family” is loaded to the lithophane function. After saving
+the model, you will find a folder named something like “family LP Arc 10-25-29”. “LP”
+stands for lithophane; “Arc” indicates that it is an arc lithophane; “10-25-29” is the time
+stamp, at 10:25 AM, 29 seconds. In the folder, there are several files.
+ Color 46 46.jpg
+
+A color image for making a color lithophane. More in Section 2.22.
+ family LP Model.stl
+
+The lithophane model in STL format.
+ LuBan Model.fgd and LuBan Model.fgs
+
+LuBan model data file (fgd) and setting file (fgs). They record the model and the
+3D space settings, such as viewing angle and lighting information. You can open the
+FGS file to view the lithophane model in exact the same 3D environment when it
+was saved.
+ family Setting.txt
+
+Human readable settings used to generate the lithophane.
+ MU Setting.txt
+
+LuBan setting file. If you hope to roll back to the settings used in an old project, you
+can copy this file and place it in the folder that contains LuBan application. There
+should be a default setting file in that folder, which can be overwritten by the file
+from the old project. Then, restart LuBan; all settings will be rolled back.
+2.13
+
+Flat lithophane
+
+A flat lithophane resembles a conventional framed photo. It has an option to generate a
+slanted photo with a base and a hanger.
+2.13.1
+
+Model size X and Z
+
+The model size X and Z can be set to any desired value; however, the aspect ratio of the
+lithophane is fixed to the aspect ratio of the selected photo. That means when the model
+size X is changed and the Enter key is hit to update the display, the model size Z will be
+changed accordingly to maintain the same aspect ratio, and vice versa.
+For example, if you want a 100 by 50 mm flat lithophane, the aspect ratio of your image
+must be 100/50 = 2. In other words, the width of the image should be twice its height.
+You may use any image editor to prepare the input image. To prepare it in LuBan, you
+may do the following.
+1. Run LuBan.
+2. File → Invoke 2D window.
+22
+
+2.13
+
+Flat lithophane
+
+Hello LuBan
+
+3. File → Open, open the original image.
+4. Tool → Body → Crop. Use the mouse device to select two points on the image to
+define a region to crop. A dialogue box will show the coordinates of the region as x1
+y1 x2 y2 (Figure 23). (x1, y1) is the left-top corner and (x2, y2) is the right-bottom
+corner. x2 − x1 is the width and y2 − y1 is the height of the region. You can modify
+the coordinates so that width/height is 2.
+
+Figure 23: Coordinates of a region to crop.
+
+5. File → Export → BMP, JPG, or PNG. Save the cropped image and use it to generate
+a flat lithophane. The lithophane’s aspect ratio will also be 2.
+2.13.2
+
+Slant
+
+A slant angle can be applied to a flat lithophane to orient it to a top-down viewing angle
+(Figure 24). When printing such a lithophane, it may be better to make the lithophane
+surface vertical instead. That is why when you click the “Save model” button, LuBan
+will rotate the lithophane back to the vertical position. Although some support is needed
+under a base, the printing quality of the lithophane should be better then doing it at an
+angle.
+
+Figure 24: Left: Slant angle 20 degrees. Right: When printing, the lithophane can be oriented vertically.
+
+23
+
+2.14
+
+Arc lithophane
+
+2.13.3
+
+Hello LuBan
+
+Base and Socket
+
+The base of a flat lithophane is a stand that extends towards the back. The base can be
+hidden by setting the base length to 0. (Hit the Enter key to update the display.) If the
+base length is non-zero, you can configure the thickness of the base (Figure 25) as well as
+a socket for adapting to a light source.
+
+Figure 25: From left to right: no base (base length 0), base length 30 mm and thickness 4 mm, and base
+thickness 8 mm.
+
+A socket is generated if both the base length and the socket diameter are non-zero
+(Figure 26). You may choose to generate an O-shape or a U-shape socket. If the O-shape
+is chosen, you can configure the socket height.
+
+Figure 26: From left to right: O-shape socket height 10 mm, O-shape socket height 20 mm, and U-shape
+socket.
+
+2.14
+
+Arc lithophane
+
+An arc lithophane is a warped flat lithophane. They share all settings except that the
+model size X in the flat lithophane is replaced by the arc angle (Figure 27). In addition,
+the arc lithophane has an option of exterior vs. interior. The convex surface is the exterior
+surface and the concave surface is the interior surface.
+As you can see in Figure 27, rendering of the interior lithophanes look better than
+the exterior ones; however, the actual print will show sharper pictures on the exterior
+lithophanes. This is a topic that has been discussed in Section 2.2. For this reason, some
+
+24
+
+2.15
+
+Poly-face lithophanes
+
+Hello LuBan
+
+Figure 27: First row: exterior lithophanes. Second row: interior lithophanes. From the first to the third
+column: arc angle 30, 90, and 120 degrees.
+
+LuBan users prefer to adjust settings based on the display of an interior lithophane; then
+switch to an exterior lithophane right before saving the model as disk files.
+2.15
+
+Poly-face lithophanes
+
+Poly-face lithophanes are rectangle and polygon lithophanes. They share most of the
+settings. The model size X, Y, and Z of a rectangle lithophane can be independently set,
+while the model size Y of the other poly-face lithophanes is determined by the model size
+X and the number of faces.
+Unlike the flat and arc lithophanes which adjust the model size to include an entire
+photo, the poly-face lithophanes automatically crop from the center of a photo to adapt
+to the size of a face dictated by the model size. Changing the model size of a poly-face
+lithophane may change the region of the photo to include (Figure 28).
+2.15.1
+
+Select multiple photos
+
+The “Select photo” button can be used to select one or several photos. LuBan will order
+the photos based on their file names and sequentially apply them on each face of a polyface lithophane. For example, four photos named: p1.jpg, p2.jpg, p3.jpg, and p4.jpg are
+selected. After seeing the display, you hope to swap the second and third photos. You
+can do so by swapping the file name of p2.jpg and p3.jpg, and then use the “Select photo”
+button to select the four photos again.
+In some situations, you may want to apply photos on certain faces and keep other faces
+25
+
+2.15
+
+Poly-face lithophanes
+
+Hello LuBan
+
+Figure 28: Left: a flat lithophane shows the entire photo. Center: a rectangle lithophane crops a central
+region from the photo to adapt to the size of a face. Right: changing the model size also changes the
+region of the photo to be included.
+
+empty. To achieve this, you can create a white image with a thin black border (Figure 29)
+and name all the photos according to a desired face sequence.
+
+Figure 29: Left: a white image with a thin black border. Right: a lithophane with an empty face
+corresponding to the image.
+
+2.15.2
+
+Upright vs. Inverted
+
+Photos on a poly-face lithophane can be oriented upright or inverted. The upright option
+enables the lithophane to sit on a lamp, whereas the inverted option assumes that the
+lithophane will be hung upside down (Figure 30).
+
+Figure 30: Left: upright photos. Center: inverted photos. Right: when hung upside down, the inverted
+photos are back to upright.
+
+26
+
+2.16
+
+Cylinder, Cone, and Vase lithophanes
+
+2.15.3
+
+Hello LuBan
+
+One body vs. Assembly
+
+A poly-face lithophane can be generated as one body or as an assembly of separate parts
+(Figure 31). The advantage of one body lies in the ease of machine set up and one process
+of 3D printing; however, if the print fails midway, all is lost. In the assembly option,
+each face is generated as a separate model and saved as an STL file. The faces are held
+together by a base and a cap. Each of these files can be printed separately; therefore, if
+errors occur during printing, they only affect one part of the assembly. After printing, the
+single-face lithophanes can be fixed in the slots on the base and cap. You may also enable
+pillars, connected to the base; they can block light from the gap between two adjacent
+faces.
+
+Figure 31: Left: one body. Center: assembly. Right: an exploded view of assembly. To enable the
+exploded view, use “Object → Select”.
+
+To facilitate the physical assembly, a setting called tolerance is used to adjust the fitness
+of the single-face lithophanes with the slots. The tolerance is defaulted to a negative value,
+e.g. -0.3, meaning a slot is expanded by 0.3 mm on both sides. In 3D printing, it is likely
+that a printed object is a bit bigger than its digital model due to a printed shell around the
+object. This effect tends to make a slot narrower; hence, the expansion of the slots helps
+to fit the lithophanes in. If you find the printed slots are too tight, you should reduce
+the tolerance, for example from -0.3 to -0.4, in your next print. If they are too loose, you
+should increase the tolerance, for example from -0.3 to -0.2. The “best” tolerance value
+varies with different printers and printing profiles; therefore, the best value can only be
+found through trial and error.
+2.16
+
+Cylinder, Cone, and Vase lithophanes
+
+Cylinder, Cone, and Vase lithophanes are revolving shapes around a vertical axis. The
+flexibility of these shapes increases: a cylinder has a fixed diameter, a cone has a top and
+a bottom diameters, and a vase has varying diameters controlled by several sliders.
+More than one photos can be selected and applied to these lithophanes. Just click the
+“Select photo” button and select several photos in one go.
+
+27
+
+2.16
+
+Cylinder, Cone, and Vase lithophanes
+
+Hello LuBan
+
+Figure 32: Cylinder, Cone, and Vase lithophanes
+2.16.1
+
+Fixed vs. Stretch
+
+The Fixed vs. Stretch option refers to whether a photo maintains a fixed aspect ratio
+or is stretched when mapped to the surface of a cylinder, a cone, or a vase (Figure 33).
+In the fixed mode, LuBan automatically adds a gap between photos or extends the top
+
+Figure 33: First row: fixed aspect-ratio photos. Second row: stretched photos. First column: the height
+of the cone is 50 mm. Second column: the height is 70 mm. Third column: the height is 90 mm.
+
+and bottom border so that the photo’s aspect ratio is preserved. Please note that when
+mapping a rectangle photo to a cone or a vase, regional distortion is inevitable. The fixed
+mode only preserves the average aspect ratio and does not deal with the distortion.
+In both modes, LuBan may duplicate the photos to preserve the original aspect ratio
+as much as possible (Figure 34). To prevent duplication, you may crop the input photo
+so that its width / height is roughly the average perimeter / the height of the lithophane
+
+28
+
+2.16
+
+Cylinder, Cone, and Vase lithophanes
+
+Hello LuBan
+
+Figure 34: Left: original photo. Center: fixed mode. Right: Stretch mode.
+
+(Figure 35).
+
+Figure 35: Left: original photo. Center: fixed mode. Right: Stretch mode.
+
+2.16.2
+
+Base and Socket
+
+The base of the cylinder, cone, and vase lithophane can be solid or hollow (Figure 36).
+If the solid option is selected, a watertight lithophane will be produced. You may pour
+water into the lithophane and drop some waterproof LED light in it to light it up. If the
+hollow option is selected, you may optionally enable a light socket by entering a non-zero
+socket diameter. The socket height can be separately set. These settings are useful to
+make a standing lamp shade. If you want to make a hanging lamp shade, you may explore
+the inverted option as discussed in Section 2.15.2.
+
+Figure 36: Left: solid base. Center: hollow base. Right: hollow base with a light socket.
+
+29
+
+2.17
+
+Sphere lithophane
+
+2.17
+
+Hello LuBan
+
+Sphere lithophane
+
+Unlike previously discussed lithophane shapes, a sphere lithophane can be tricky to 3D
+print. (Tips for 3D printing lithophane are discussed in Section 2.23.) One of the difficulties is that support may be needed in printing a sphere lithophane, which usually has
+an opening for inserting a light source (Figure 37). That brings an interesting question:
+
+Figure 37: Left: an exterior sphere lithophane with its opening facing downward. Right: an interior
+sphere lithophane with its opening facing upward.
+
+Should the opening be faced downward or upward when printing the lithophane?
+A comprehensive answer is a bit long. Firstly, if you can print it without support, either
+orientation could be fine. If support is needed, an exterior sphere lithophane should be
+printed with the opening facing downward; an interior sphere lithophane should be printed
+with the opening facing upward. Exactly as it is shown in Figure 37.
+Why? The key to the answer lies in the fact that the support should not be directly in
+contact with the rough surface of the lithophane because it carries fine-scale and delicate
+structures that can be damaged when removing the support. In contrast, the smooth
+surface has no fine-scale structures; when removing the support attached to it, the surface
+quality is not compromised. If the opening of a sphere faces downward, support is needed
+from a printer bed to the top of the inner surface. This orientation is suitable for an
+exterior sphere lithophane as the rough surface is on the outside and the support is only
+in contact with the inner smooth surface. If the opening of the sphere faces upward,
+support is needed from the printer bed to the bottom, outer surface of the sphere. This
+orientation is suitable for an interior sphere lithophane.
+That explains why the orientation of the sphere lithophane is reversed when you switch
+between the exterior and interior options.
+2.17.1
+
+Photo alignment
+
+The photo alignment setting determines the orientation of a photo with respect to a
+sphere. The first option aligns the top of the photo to the center of the sphere (the first
+row of Figure 38). This should be selected if the sphere lithophane is used as a standing
+lamp shade where a light source is attached to the bottom opening of the sphere.
+Mapping the bottom of the photo to the center of the sphere is equivalent to inverting
+30
+
+2.17
+
+Sphere lithophane
+
+Hello LuBan
+
+Photo top
+
+Sphere top
+
+Photo center
+
+Photo bottom
+
+Sphere bottom
+
+Photo top
+
+Sphere top
+
+Photo center
+
+Photo bottom
+
+Sphere bottom
+
+Top offset
+
+Bottom offset
+Figure 38: First row: photo top to sphere surface center. Second row; photo bottom to sphere surface
+center. Third row: top and bottom offset set to 0.5.
+
+the photo (the second row of Figure 38). This option should be selected if the sphere
+lithophane is used as a hanging lamp shade. In the above two alignment options, you
+can set a top and bottom offset to confine the photo to a central band on the sphere (the
+third row of Figure 38). This helps to reduce the photo distortion on the sphere. The
+offset value should be between 0 and 1.
+It is also possible to map the center of the photo to the center of the sphere (Figure 39).
+In this case, only a central circular region of the photo is mapped to the sphere lithophane.
+This option often produces large distortion on a normal photo; however, it is useful in
+mapping a special-effect photo to the sphere lithophane (Figure 39).
+Figures shown in this section are based on an exterior sphere lithophane. If the interior
+option is selected, the orientation of the sphere is reversed.
+It is important to note that the sphere lithophane only takes one photo. To apply
+multiple photos on a sphere, you need to join the photos to a big one and use it in the
+31
+
+2.17
+
+Sphere lithophane
+
+Hello LuBan
+
+Figure 39: First row: photo center to sphere surface center. Only the circular region of the photo is
+mapped to the sphere. Other regions are not used. Second row: a special-effect photo.
+
+sphere lithophane. You may use any image processing software to join the photos. LuBan
+can also do this in the following process.
+1. Run LuBan.
+2. File → Invoke 2D window.
+3. File → Open, open two images.
+4. Tool → Body → Join <left, right> or Join <top, bottom>. Use the mouse device
+to select the two images.
+To join more than two photos, just repeat the above process. When done, use “File →
+Export → BMP, JPG, or PNG” to save the joined image. You may also try an alternative
+function “File → Create → Collage” to put several images in one big picture.
+The sphere lithophane also tries to maintain the aspect ratio of a photo in similar ways
+as the cylinder, cone, and vase lithophanes. That means a photo may be duplicated. If
+you do not want the duplication, you should make the photo’s width/height roughly 3:1.
+2.17.2
+
+Sphere angle, diameter, and opening
+
+The sphere angle, diameter, and the opening diameter are interrelated parameters (Figure 40); therefore, not all three can be set independently. The sphere angle and diameter
+can be user specified (hit the Enter key to update the display), based on which the opening
+diameter is calculated and displayed. The opening diameter is proportional to the sphere
+diameter. Assuming the sphere angle is larger than 180 degrees, reducing the sphere angle
+32
+
+2.18
+
+Spiral lithophane
+
+Hello LuBan
+
+will increase the opening diameter. In most situations, you do not need to directly deal
+with the opening diameter as you can use a socket to adapt a sphere lithophane to a light
+source.
+
+Sphere angle
+eter
+diam
+Opening
+diameter
+Figure 40: Sphere angle, diameter and opening diameter.
+
+2.17.3
+
+Socket
+
+A socket is enabled when the socket diameter is non-zero. The socket diameter is the
+inner diameter of the socket and should be less than the opening diameter; otherwise, you
+will see a warning when hitting the Enter key to update the display. The base thickness
+and socket height can be used to configure the socket as shown in Figure 41.
+
+Figure 41: Left: sphere angle: 300 degrees, diameter: 100, base thickness: 4, socket diameter: 50, socket
+height: 10. Center left: the socket diameter is changed to 30. Center-right: the socket height is changed
+to 30. Right: the base thickness is changed to 10.
+
+2.18
+
+Spiral lithophane
+
+A spiral lithophane is for printing a long flat lithophane. For example, a 500 by 50 mm
+flat lithophane may be too long to fit in a printer’s volume; instead, a spiral lithophane
+of diameter 90 mm can fit in. After printing, the spiral lithophane can be dipped in hot
+water to soften it and then unfold it to a flat lithophane (Figure 42).
+The diameter of a spiral lithophane can be user specified. If the specified value is
+too small to generate a spiral to accommodate a photo, a warning will be shown. In
+practice, the diameter should be set to a value as large as possible because the larger the
+33
+
+2.19
+
+Stencil lithophane
+
+Hello LuBan
+
+Figure 42: First row: an input photo. Second: a spiral lithophane and an unfolded spiral lithophane.
+
+diameter, the smaller the curvature of a spiral and the easier it is to unfold and flatten
+the lithophane.
+2.19
+
+Stencil lithophane
+
+An arbitrary-shaped flat lithophane can be made based on a photo and a template. The
+template is a black and white image, in which black pixels indicate background and white
+pixels indicate regions of the lithohpane (Figure 43).
+
+Figure 43: Left: a template. Center: a photo. Right: a generated stencil lithophane.
+
+In the stencil mode, you need to select a template image first and then select a photo.
+The center X and Y settings are used to position the photo with respect to the template.
+The photo scale setting is used to increase or reduce the size of the photo on the template. A stencil lithophane can be made in the shape of an object (Figure 50). Refer to
+Section 2.20.4 on how to prepare a photo to match with a corresponding template image.
+
+2.20
+
+Balloon lithophane
+
+A balloon lithophane is a two-sided, balloon-like lithophane. To generate such a lithophane, a balloon template and one or two photos are needed. A balloon template is a
+black-and-white image; the white region is the balloon region and the black region is
+treated as background (Figure 45). A template image can be easily downloaded online;
+
+34
+
+2.20
+
+Balloon lithophane
+
+Hello LuBan
+
+Figure 44: Stencil lithophane made by LuBan user, Kennet McCoy.
+
+for example Google search “star black and white” and you will get many star-shaped
+template images.
+
+Figure 45: The left image shows a heart-shaped template. The central white region is converted to a
+balloon. The right image shows a black heart template. The surrounding region is converted to a balloon.
+
+Up to two photos can be selected to map to the front and back surface of a balloon
+lithophane (Figure 46). The photos are ordered by their file names. If only one photo is
+selected, the front and back surface will show the same photo.
+The balloon lithophane does not have a socket option. To insert a light socket, other
+software, such as MeshMixer, needs to be used. The approach is to intersect a balloon
+lithophane exported from LuBan with a cylinder tube. The resultant mesh is the balloon
+with the tube as an open socket.
+2.20.1
+
+Expansion
+
+The expansion setting determines how much to blow up the balloon. The larger the value,
+the more blown up is the balloon (Figure 47). If you hope to have a double-sided flat
+lithophane, you can input a small non-zero value, such as 0.01.
+2.20.2
+
+Extra space
+
+Between the front and back surface of a balloon, there is a default space, which is often
+very small. Sometimes, in order to insert a light socket you may add some space using
+35
+
+2.20
+
+Balloon lithophane
+
+Hello LuBan
+
+Figure 46: Front and back surface of a balloon lithophane.
+
+Figure 47: From left to right, the expansion values are 0.2, 1, and 2.
+
+the extra space setting (Figure 48).
+
+Figure 48: From left to right, the extra space values are 0, 10, and 20.
+
+2.20.3
+
+Center X and Y, Photo scale
+
+The center X and Y settings are used to position a photo on a balloon (Figure 49). The
+photo scale setting is used to increase or reduce the size of the photo on the balloon.
+2.20.4
+
+Balloon of an object
+
+A balloon lithophane can be made in the shape of an object and when illuminated by a
+light source inside, it shows a picture of the object (Figure 50). This section shows how
+36
+
+2.20
+
+Balloon lithophane
+
+Hello LuBan
+
+Figure 49: From left to right, the photo center X and Y are (0, 0), (0.1, 0), and (0, 0.2).
+
+to create such a balloon object.
+
+Figure 50: Balloon lithophane of a motorcycle made by LuBan user, Cyril Burnet.
+
+Take a photo of a lotus as an example. The first step is to extract a template of the
+lotus. You may do this in any image processing software, such as Photoshop. Then, you
+may generate a balloon lithophane using the template and the original photo. It is most
+likely that you will get something similar to what is shown in Figure 51. The results are
+not optimal because the lotus has a dark boundary and does not match the balloon shape
+perfectly. To fix the problem, we need to crop the lotus from the photo such that it does
+not have extra boundary pixels.
+
+Figure 51: Left: a photo of a lotus. Center: a balloon template of the lotus. Right: a balloon lithophane
+of the lotus by directly using the photo and the template.
+
+1. Run LuBan.
+37
+
+2.20
+
+Balloon lithophane
+
+Hello LuBan
+
+2. File → Invoke 2D window.
+3. File → Open, open the template image.
+4. Tool → Geometry → Labeling. A dialogue box will appear; just use the default
+parameters and click OK. A new labeling image will be generated, which can be closed
+as we are only interested in the blue rectangle added to the template (Figure 52).
+
+Figure 52: Left: coordinates of the light blue rectangle. Center: the template of the lotus. Right: a
+labeling image that can be ignored.
+
+5. Right click the rectangle and select Properties. On the properties dialogue box, copy
+the coordinates.
+6. File → Open, open the original photo.
+7. Tool → Body → Crop. Use the mouse device to select any two points on the photo.
+They do not have to accurately define the lotus region. A dialogue box will show
+the coordinates of the selected region. Overwrite the coordinates by pasting those
+copied from the light blue rectangle (Figure 53). A new photo will be created which
+is in the exact size that we want.
+
+Figure 53: Left: the original photo. Center: a cropping dialogue box. Paste the coordinates of the light
+blue rectangle here. Right: a cropped photo.
+
+8. File → Export → BMP, JPG, or PNG. Save the cropped photo.
+9. File → Invoke 3D window.
+10. File → Create → Lithophane.
+38
+
+2.21
+
+Tattoo lithophane
+
+Hello LuBan
+
+Finally, generate a ballon lithophane based on the template and the cropped photo.
+The photo of the lotus will match the shape of the lithophane exactly (Figure 54)!
+
+Figure 54: A balloon lithophane of the lotus, in which the photo of the lotus matches the balloon shape
+perfectly. Changing the filament color can produce vivid rendering effects.
+
+2.21
+
+Tattoo lithophane
+
+The idea of a tattoo lithophane is to apply a photo on any 3D model. The photo is
+mapped to the model’s surface continuously (Figure 55). Unlike a balloon lithophane,
+there is no gap between the front and back surface. In fact, a tattoo lithophane does not
+have front and back. It only has an axis, about which a photo is wrapped around.
+
+Figure 55: Top: a photo and a 3D model. Bottom: a tattoon lithophane based on the photo and model.
+
+Although any 3D model can be used in principle, it is recommended to use a singlesurface, closed model, i.e. solid model. The generated tattoo lithophane is a doublesurface, hollow model. A socket for a light source may be inserted using other software,
+
+39
+
+2.21
+
+Tattoo lithophane
+
+Hello LuBan
+
+such as MeshMixer. If the input model is hollow, the generated lithophane will have four
+layers of surfaces, which can cause 3D printing errors.
+2.21.1
+
+Axis to wrap a photo around
+
+The axis to wrap a photo around determines the orientation of the photo on a 3D model.
+Figure 56 shows a photo of an arrow to be applied on a sphere model. Six possible options
+are shown in Figure 57.
+
+100
+
+100
+
+50
+
+50
+
+50
+
+Z
+
+100
+
+Z
+
+Z
+
+Figure 56: Apply the photo of an arrow to a 3D sphere model.
+
+100
+
+100
+
+0
+0
+50
+100 0
+
+X
+
+50
+
+Y
+
+100 0
+
+X
+
+50
+
+Y
+100
+
+50
+
+50
+
+50
+
+Z
+
+100
+
+100
+
+100
+0
+100
+
+0
+100
+
+50
+
+Y
+
+0 0
+
+X
+
+50
+
+Y
+
+00
+
+X
+
+X
+
+0 0
+
+Y
+
+100
+
+Z
+
+Z
+
+100
+0
+100
+
+0
+0
+
+100
+0
+100
+
+50
+
+00
+
+X
+
+Y
+
+Figure 57: From left to right and top to bottom: wrap the photo around +X, -X, +Y, -Y, +Z, and -Z
+axis.
+
+2.21.2
+
+Resolution
+
+The resolution is default to 0.1 mm/pixel in all shapes of lithophane except for the tattoo
+lithophane, where it is default to 10 mm/pixel. That is because a tattoo lithophane is
+time-consuming to generate; therefore, to speed up the display the resolution is default to
+a seemingly unreasonably large value. In fact, after a 3D model is selected and before the
+selection of a photo, the resolution is fixed at 10 even when you try to input a different
+40
+
+2.22
+
+Color lithophane
+
+Hello LuBan
+
+value and hit the Enter key to update the display. In this situation, the resolution is not
+really used in displaying the model without a photo.
+Figure 58 shows the rendering effects of three different resolutions and their corresponding file sizes. High quality rendering requires a small resolution value; however, the
+lithophane can take a long time to generate. It is recommended that a large resolution
+value is used when adjusting a photo’s position and scale on a 3D model; then a small
+resolution value is used for the final generation of the lithophane model.
+
+10
+
+1
+
+0.2
+
+Figure 58: Left to right: resolution value is 10, 1, and 0.2 mm/pixel. The corresponding file size is 1 MB,
+8 MB, and 190 MB.
+
+It is important to note that if the input model is high density, it will be time consuming
+to generate a tattoo lithophane even with a large resolution value; therefore, it is best
+to use 3D models that are relatively smooth and low density. You can view a model’s
+vertices and edges by “Edit → Edge → Enable”.
+2.21.3
+
+Center X and Y
+
+The center X and Y settings are used to position a photo on a model. The X value moves
+the photo around the axis and the Y value moves the photo up and down (Figure 59).
+2.21.4
+
+Photo scale X and Y
+
+The photo scale settings changes the scaling factor of the photo in horizontal and vertical
+directions (Figure 60).
+2.22
+
+Color lithophane
+
+One of the approaches to make a color lithophane is to attach a color photo to the back of a
+lithophane. When illuminated, the color photo works as a color filter and the lithophane
+modulates the intensity. Since the color photo is supposed to transmit light and only
+filters out certain color, it is recommended to use transparent paper to print the color
+photo on, although normal white paper may also work if a light source is strong.
+All lithophane shapes except for balloon and tattoo have a color photo generated in
+an export folder. The color photo’s physical size is included in its file name; for example,
+“Color 105 86.jpg” indicates that the photo’s size is 105 by 86 mm. You should use
+41
+
+2.23
+
+Tips for 3D printing lithophane
+
+Hello LuBan
+
+Figure 59: Left top: a photo applied on a heart model. Right top: center X and Y are both 0. Left
+bottom: center X is 0.1 and Y is 0. Right bottom: center X and Y are both 0.1.
+
+Figure 60: Left: photo scale X is 1.2 and Y is 1. Right bottom: photo scale X is 1.2 and Y is 0.8.
+
+software such as MS Word to resize the photo to the indicated size before printing. Note
+that this may not be fixed aspect ratio resizing as the photo’s aspect ratio in pixel may
+be different from that in millimeter.
+A generated color photo may not be a rectangle (Figure 61). The size indicated in its
+file name is the size of a bounding rectangle. After printing, the color photo should be cut
+along the edges of the irregular pattern and then attach to the back of its corresponding
+lithophane. For a full sphere lithophane, you have to generate two semi-spheres, attach
+the color photo, and glue the two semi-spheres together.
+A color photo generated will look quite different from the original photo (Figure 62).
+The intensity component of the photo has been removed as much as possible because the
+lithophane’s thickness is responsible for intensity modulation and the color photo only
+works as a color filter.
+2.23
+
+Tips for 3D printing lithophane
+
+Printing a high-quality lithophane requires in-depth knowledge of a 3D printer and a piece
+of slicing software that converts a lithophane model to Gcode to drive the printer. The
+following is general guideline not restricted to a type of printer or slicing software.
+42
+
+2.23
+
+Tips for 3D printing lithophane
+
+Hello LuBan
+
+Figure 61: A color photo of a cone (top), a vase (center), and a sphere (bottom):
+
+ Vertical vs. horizontal printing orientation
+
+A flat lithophane can be printed either vertically or horizontally, i.e. laid flat on
+bed. The vertical orientation is preferred because a printer’s X and Y resolution is
+often higher than its Z resolution. This is not due to its X- and Y-direction motors
+having higher resolution than that of the Z-direction motor; rather, the disposition of
+filament is continuous in X and Y directions but is discontinuous in the Z direction.
+Material is added layer by layer in the Z direction; therefore, the resolution is dictated
+by the layer height. In the X and Y directions, the effective resolution goes beyond
+the layer height. Hence, a flat lithophane printed vertically has richer thickness
+variation than printed horizontally.
+ Low vs. high printing speed
+
+High speed, e.g. 80 to 100 mm/second may cause a printer to vibrate and introduce
+artefacts, such as line strips. Low speed, e.g. 30 to 50 mm/second, can reduce such
+43
+
+2.23
+
+Tips for 3D printing lithophane
+
+Hello LuBan
+
+Figure 62: Left: original photo. Right: a generated color photo.
+
+artefacts.
+ Support
+
+Support can be disabled when printing a lithophane because removing the support
+may damage the rough surface. In situations where support must be used, such
+as in a sphere lithophane, you should orient the model such that the support is in
+contact with the smooth surface, not the rough surface. When printing a smallsized sphere lithophane, you may disable the support and let the printer attempt to
+close the upper gap in the sphere. With any luck, there will be no significant issues
+completing the sphere.
+ Printer belt
+
+A printer’s drive belt should be properly tightened. A loose belt may cause vibration.
+ Extruder
+
+A printer’s extruder should be regularly washed by running filament through it at
+a relatively high feeding rate. Small dust in the extruder can be cleaned this way;
+otherwise, it may clog the extruder and cause non-uniform extrusion of filament.
+The printed lithophane may have regions that lack material.
+ Layer height
+
+Layer height is usually set to half of the nozzle diameter of an extruder. For example,
+using a 0.2 mm nozzle, the layer height can be set to 0.1 mm. A nozzle with a
+small diameter can produce a high-resolution lithophane at the cost of relatively
+long printing time.
+
+44
+
+Hello LuBan
+
+3
+
+Photo magic
+
+Photo magic is a collection of tools that transform an ordinary photo into a variety of
+3D models for 3D printing, laser cutting, or CNC machining. To optimize a photo for
+photo magic functions it is first manually converted to black and white (Figure 63) before
+creating a balloon, box, cutter, extrusion, or morphing.
+
+Figure 63: Left: original photo. Center: black and white image converted by an algorithm. Right: black
+and white image converted from the blue component of the original photo. An intensity threshold is
+manually chosen to differentiate the sunflower from the background.
+
+Run LuBan and go to “File → Create → Photo magic” to enter the photo magic mode
+(Figure 64). Control parameters are laid out on the left panel and live display is rendered
+on the right. A method can be selected from the drop down method list. To load a photo,
+click the “Browse” button next to “Select photo”.
+
+Figure 64: File → Create → Photo magic.
+
+3.1
+
+Balloon
+
+The balloon method turns a photo into a 3D balloon model (Figure 65). The method
+is similar to the balloon lithophane presented in Section 2.20, except that it does not
+45
+
+3.2
+
+Box
+
+Hello LuBan
+
+involve mapping another photo onto the surface of the balloon. Hence, the balloon method
+produces a single-surface, solid model whereas the balloon lithophane produces a doublesurface, hollow model. The settings of the two methods are similar.
+
+Figure 65: Left: original photo. The rest are different views of the generated balloon model.
+
+3.2
+
+Box
+
+The box method turns a photo into a 3D box model (Figure 66). A box has a base and
+a lid. On the lid, an inner pattern of a photo can be included. The inner pattern is any
+feature inside the outer boundary. An example is shown in the first column of Figure 67.
+If a photo has disjointed features without an outer boundary, LuBan will automatically
+generate a boundary and treats all disjoint features as the inner pattern (second column
+of Figure 67).
+
+Figure 66: A box made by LuBan user, Stephanie Brown.
+
+3.2.1
+
+Inner vs. Outer size
+
+The inner and outer size options determine the meaning of base size X, Y, Z and lid
+size Z. If the inner option is selected, the sizes indicate the inner dimensions of the box;
+otherwise, they indicate the outer dimension. If you hope to design a box to hold a specific
+object, you should choose the inner size option to make sure the inner dimension is big
+enough. If you hope to make a box that will be put on a certain place, e.g. a shelf, you
+may want to use the outer size option to make sure that the box is not over sized.
+46
+
+3.2
+
+Box
+
+Hello LuBan
+
+Figure 67: First column, left: a heart shape without any inner pattern. Center: a heart shape with
+an inner pattern. Right: the boundary in black and the inner pattern in red. Second column, left: no
+boundary that contains all the edge features. Right: an automatically generated boundary in black and
+the inner pattern in red.
+3.2.2
+
+Base, lid, and box size
+
+The base size X and Y maintain the same aspect ratio as that of the 2D feature of a
+photo, which means changing base size X (and hit the Enter key to update the display) will
+automatically change base size Y, and vice versa. Base and lid size Z can be independently
+set. There is no setting to directly specify the overall height of a box; nevertheless, the
+height can be determined from the following settings: (1) inner or outer size, (2) base size
+Z, (3) box thickness, (4) lid type, (5) lid size Z, and (6) lid indent. These settings also
+determine the interior height of the box. The relationship is summarized in Table 1.
+Lid type
+Basic or Twist
+Flat
+Inlay
+
+Exterior height
+Inner size
+Outer size
+Zb + Zl − Dl + 2T Zb + Zl − Dl
+Zb + 2T
+Zb + T
+Zb
+—
+
+Interior height
+Inner size
+Outer size
+Zb + Zl − Dl Zb + Zl − Dl − 2T
+Zb
+Zb − T
+Zb − 2T
+—
+
+Table 1: Determine the overall height of a box. Zb : base size Z. Zl : lid size Z. Dl : lid indent. T : box
+thickness. When the outer size option is selected, the lid type cannot be inlay.
+
+3.2.3
+
+Lid type
+
+There are four lid types: basic, twist, flat, and inlay. The basic type generates an indent
+on the base and lid so that they overlap each other by a distance specified in the lid indent
+setting: Dl (Figure 68). The overlapping region produces friction between the two parts
+and the friction force can be tuned by a tolerance setting (Section 3.2.7).
+47
+
+3.2
+
+Box
+
+Hello LuBan
+
+Figure 68: Lid type: Basic.
+
+The twist type rotates the indent region by an angle of twist (Figure 69). In addition
+to the friction force, the twisted shape also creates a locking mechanism between the base
+and lid; however, when the lid indent is relatively small, do not use a relatively large angle
+of twist because the generated shape may require support to print and limited precision
+of a 3D printer may prevent the base and lid from fitting to each other.
+
+Figure 69: Lid type: Twist. Left: a relatively large lid indent used with a relatively small twist angle
+ensures a good match between the base and lid. Center: a relatively small lid indent used with a relatively
+large twist angle may cause problems in fitting the base and lid together. Right: a large twist angle should
+be used with a large lid indent.
+
+In the flat type, small circular sinks (sockets) can be generated on the edge of the base
+and lid. Place magnets in these sinks to firmly attach the lid to the base. (Figure 70).
+On the control panel, you may configure the number of sinks, the sinks’ diameter and
+depth, and the position of each sink. The sink index setting let you change the position
+of the selected sink, which is indicated in red. The position goes from 0 to 1, indicating
+a fraction of the perimeter of the box.
+The inlay type makes the lid sink into the base. The wall enclosing the lid is half the
+thickness of that of the base.
+3.2.4
+
+Inner pattern
+
+If a photo has an inner pattern, you have several options to handle it. You can ignore it,
+extrude it, make an indent, make a hollow lid, or make a hollow box. The extrude and
+
+48
+
+3.2
+
+Box
+
+Hello LuBan
+
+Figure 70: Lid type: Flat. Circular sinks may be generated to host magnetic buttons.
+
+Figure 71: Lid type: Inlay.
+
+indent options (Figure 72) let you set the depth of the pattern. In addition, the indent
+option gives you three models: the base, the lid, and the inner pattern. If you try to print
+them and then push the inner pattern into the lid, you will find it difficult because a 3D
+printed object is usually a bit larger than its digital model due to a shell printed around
+it. Hence, the printed inner pattern is very likely to be a bit larger than the indent on the
+lid. (The tolerance setting to be discussed in Section 3.2.7 is not used in the generation
+of the inner pattern.)
+
+Figure 72: Inner pattern: extrude (left) and indent (center and right).
+
+The best way to print an indent lid is to flip it so that the indent faces a printer’s bed.
+Furthermore, it is recommended to set the pattern depth to one layer height. In slicing
+
+49
+
+3.2
+
+Box
+
+Hello LuBan
+
+software, align the flipped lid and inner pattern; then do the following.
+1. Temporarily delete the lid in the working space. Generate Gcode of the inner pattern.
+2. Restore the lid and delete the inner pattern. Set a Z hop value to the depth of the
+inner pattern. Generate Gcode of the lid.
+3. Print the inner pattern. After it is done, do not remove it from the bed.
+4. Print the lid on top of the inner pattern. The Z hop setting is to raise the nozzle by
+a small amount when it is moving to a different location so as to prevent the nozzle
+from dragging across the already printed inner pattern.
+When both prints are done, you will get a lid with the inner pattern printed on it
+(Figure 73). Since they are two separate prints, you can use filament of different colors
+for the lid and the inner pattern.
+
+Figure 73: An inner pattern printed on the lid. Made by LuBan user, Morton Hatch.
+
+The hollow lid option of the inner pattern generates a lid with a hollow pattern (left of
+Figure 74). Note that some parts of the pattern may not be connected to the boundary
+of the lid. The hollow box option makes the box hollow based on the inner pattern. The
+outcome is affected by the X and Y size of the box and its thickness. Assuming that the X
+and Y size is fixed, a large thickness would produce a low-resolution of the inner pattern
+(center of Figure 74) and a small thickness would produce a high-resolution of the inner
+pattern (right of Figure 74).
+3.2.5
+
+Nested box
+
+If the nested box option is set to yes, several nested boxes will be generated until the
+size of the innermost box cannot be reduced further. At each level, a box’s size and lid
+indent (applicable to the lid types: basic and twist) are shortened by the thickness and
+the nested box clearance setting. When any of these values goes to zero or negative, the
+generation of the nested box stops. The shape of an inner pattern is affected on the nested
+boxes as the size becomes smaller and smaller. You may use “Object → Select” and move
+the slider on the toolbar to highlight each part of the nested boxes.
+
+50
+
+3.2
+
+Box
+
+Hello LuBan
+
+Figure 74: Left: a hollow lid. Center: a hollow box with a relatively large thickness. Right: a hollow box
+with a relatively small thickness.
+
+Figure 75: Nested boxes.
+3.2.6
+
+Edge chamfer
+
+An edge chamfer is a 45-degree slanted surface between a flat base and a vertical wall
+(Figure 76). The chamfer not only makes an object better looking but also deals with a
+practical issue in 3D printing. Without any chamfer, there will be some extra material
+at an edge between the base and the wall due to upper layers compressing the base. The
+extra material can make the edge look ugly and sometimes may even cut one’s finger.
+A suitable edge chamfer can be a few layer heights and it does not require any support
+during printing. It often noticeably improves the printing quality of the edge.
+
+Figure 76: Left: no chamfer or edge chamfer is zero. Right: edge chamfer is 1 mm.
+
+51
+
+3.2
+
+Box
+
+3.2.7
+
+Hello LuBan
+
+Tolerance
+
+The tolerance is an important setting in LuBan. It can be applied to fine tune the tightness
+between parts. In the box method, the tolerance is used to slightly adjust the size of the
+base and lid so that they can fit nicely. Figure 77 shows that the gap between the base
+and lid increases with the tolerance being more negative. (Here, the tolerance cannot be
+set to a positive value.) As mentioned earlier, when an object is printed, it is likely to be
+a bit larger than the digital model; hence, a base and a lid generated with zero tolerance
+is unlikely to fit. The tolerance should be set to a negative value to reserve some space
+for the slight expansion of the printed models. A suitable tolerance is related to many
+factors such as printer hardware, slicing software, printing profile, filament, and a user’s
+preference of tightness; therefore, there is no “best” value. A suitable value needs to be
+found by trial and error with the assumption that the influencing factors are relatively
+fixed. Since zero tolerance is unlikely to work, you may start your trials from -0.2 mm
+tolerance. The good news is that once you find a suitable value, you can probably use it
+in all LuBan functions that require a tolerance, assuming that the influencing factors will
+not change significantly.
+
+Figure 77: Left: tolerance is 0. Center: tolerance is -0.2 mm. Right: tolerance is -0.5 mm.
+
+3.2.8
+
+Box light
+
+A box light (Figure 78) is useful in many situations and the model files can be prepared
+easily with the box function.
+
+Figure 78: A box light made by LuBan user, Veri Sreckovic.
+
+52
+
+3.2
+
+Box
+
+Hello LuBan
+
+The process is shown below with an example that has two letters: S and G, on a
+template image (Figure 79). The letters were written in Microsoft Word, using font
+Verdana Pro Black. The font property was set to condensed spacing so that S and G
+overlap. Then, zoom in the two letters in Microsoft Word till they nearly occupy the
+whole screen; do a screenshot, crop the letter region, and save it as an image. In general,
+any black and white image is a template.
+
+Figure 79: Left: a letter template image. Center: a box based on the inner size option. Right: a box
+based on the outer size option.
+
+Import the image in the box function. If the inner size option is selected, the inner
+volume will follow the outline of the letter while the exterior of the box will be expanded
+by the box thickness (center of Figure 79). If you do not prefer the expansion, select the
+outer size option, which will produce an exterior exactly like the letter template (right of
+Figure 79). In this case, the interior volume will be shrunk by the box thickness; since it
+is only for housing some LED lights, it should be OK.
+The remaining work is just to attach lights, wires, and batteries in the box; then close
+the lid. It is done! Surprisingly simple, right? Please note that this approach only works
+well when the box thickness is small, e.g. 1 to 3 mm; otherwise, light cannot penetrate
+through the box.
+If you wish to create a physically stronger box light, you need to increase the box
+thickness and use an outline image of the letters. The outline image can be used to
+generate a box with an inner pattern, which are the letters themselves. You can now
+adjust the thickness to be as great as you want, keeping in mind that the indent on the
+lid must be thin enough for light to penetrate.
+First things first, let’s make an outline image from the template.
+1. Run LuBan.
+2. File → Invoke 2D window.
+3. File → Open, open the template image.
+4. Tool → Geometry → Distance transform. A dialogue box asks for a threshold to
+differentiate an object from the background. Use the default value and click OK.
+You should get a distance map similar to the left of Figure 80. A distance map is an
+image, on which the value of each pixel indicates how far the pixel is to the boundary
+of the object. If the pixel is on the object, its distance value is positive; if it is on
+the background, the value is negative. The further away a background pixel is from
+the object, the more negative is its value.
+53
+
+3.2
+
+Box
+
+Hello LuBan
+
+5. Tool → Threshold → Between. Enter “-1000 0”. It means that pixels with distance
+value between -1000 and 0 are converted to white pixels and the rest are converted
+to black pixels. In the distance map, the length of a pixel corresponds to 100;
+hence, -1000 means background within 10-pixel length to the letters and 0 means
+the boundary of the letters. This operation extracts a 10-pixel outline image of the
+letters (right of Figure 80). You can use different values, such as “-200 0”, extracting
+a 2-pixel outline image.
+6. File → Export → PNG. Save the outline image.
+
+Figure 80: Left: a distance map. Right: an outline image of the letters.
+
+Lastly, import the image file into a new box. Make sure that the inner size option
+is selected. The outline image has two polygons; the outer one is an expanded version
+of the letters and the inner one is directly from the letters. They are very close to
+each other; therefore, if using the outer size option, shrinkage of the outer polygon may
+have unexpected effects on the inner one and cause LuBan to remove the inner pattern
+completely.
+Also make sure that the inner pattern option is set to indent and the pattern depth is
+set to a value a little bit smaller than the thickness. For example, if the thickness is set
+to 5 mm, the pattern depth can be set to 4 mm. When saving the box, you will get three
+model files: the base, the lid, and the inner pattern. Print the base and lid; the box light
+does not need the inner pattern to be printed (Figure 81).
+
+Figure 81: Left: a box with an inner pattern. Right: only print the base and lid; do not print the inner
+pattern.
+
+As for the lid type, you can use any one, while the flat and inlay types are preferred
+54
+
+3.2
+
+Box
+
+Hello LuBan
+
+because they can be printed with little support. Figure 81 shows a flat lid with a few
+magnet sinks. This is an added advantage of the flat lid type. When embedded with
+magnetic buttons, the base and lid can be opened and closed easily.
+3.2.9
+
+Box lithophane
+
+You can also apply the box function to make a box lithophane (Figure 82). A template
+and a photo for your lithophane are needed (Figure 83). The first step is to make a box
+with an inlay lid. Select the outer size option so that the box is not expanded (left of
+Figure 84). Save the model for later. Then, extract a new template image based on the
+3D display of the lid, which will be replaced by a lid-shaped lithophane.
+
+Figure 82: A box lithophane made by LuBan user, Roli Kiraly.
+
+Figure 83: Left: a template image. Right: a photo for making a lithophane.
+
+Figure 84: Left: a box made from the original template. Right: a new template image.
+
+The new template is extracted by the following process.
+55
+
+3.2
+
+Box
+
+Hello LuBan
+
+ In a 3D window, open the lid file of a box.
+ Edit → Environment → Orthogonal / Perspective projection, or press a keyboard
+shortcut F1. This converts the 3D space from perspective to orthogonal projection.
+ View → Viewing angle → Z. Bring the letters to face towards you. After one click,
+the letters may turn their back toward you; click again and they will face toward you
+(right of Figure 84).
+ View → Zoom → In. Zoom in the letters as big as possible.
+ View → Copy. Copy the content of the 3D window.
+ File → Invoke 2D window.
+ View → Paste. Paste the content of the 3D window as a 2D image.
+ Tool → Threshold → Manual. Select a threshold to differentiate the letters from the
+background (left of Figure 85).
+ Tool → Data → Invert. Make the letters white and the background black (right of
+Figure 85). This step is not needed if the letters are already in white.
+ File → Export → PNG. Save the new template image.
+
+Figure 85: Left: the new template after applying a threshold. Right: make the letters white and the
+background dark.
+
+Comparing the original (left of Figure 83) with the new template (right of Figure 85),
+the letters are thinner in the new one because the inlay lid is applied and the letters
+are shrunk by half of the box thickness. Generate a stencil lithophane based on the new
+template and the photo (Section 2.19). Set the lithophane’s size in X the same as that of
+the box; however, the thickness of box and the boundary of the new template may cause
+the lid and the lithophane to mismatch in size.
+In order to make their sizes exactly the same, check the size of the lid first. To do
+this, click the save model button at the bottom of the control panel in the 3D window.
+Select an export folder. Several files will be saved, in which you will find a lid.stl file.
+Open it and go to “Mesh → Statistics”. The bounding cube X and Y is the areal size of
+the lid (Figure 86). Then, open the lithophane model and go to “Object → Transform”
+56
+
+3.2
+
+Box
+
+Hello LuBan
+
+(Figure 87). The size option should be selected as opposed to the scale option and the
+flexible option should be selected as opposed to the fixed option. Set X and Z to the areal
+size of the lid. (They are X and Z, not X and Y, due to different orientation of the two
+models.) Click OK and “File → Export → STL” to save the resized lithophane model.
+
+Figure 86: The size of the lid.
+
+Figure 87: Set the size for the lithophane.
+
+Finally, you can print the base of the box and the lithophane; install some lights, wires,
+and batteries in the box to finish the box lithophane (Figure 88).
+
+Figure 88: Computer rendering of the finished box lithophane.
+
+57
+
+3.3
+
+Cell
+
+3.3
+
+Hello LuBan
+
+Cell
+
+The cell method turns a photo into a cellular structure (Figure 89). The structure consists
+of many small holes and can be 3D printed or laser engraved.
+
+Figure 89: A cellular structure made by LuBan user, Jose Luis Jimenez. Left: original photo. Right: the
+printed cell structure.
+
+3.3.1
+
+Bright vs. Dark
+
+A cell structure can be viewed in two situations: (1) bright cells on a black background,
+or (2) dark cells on a white background (Figure 90). The bright and dark control let you
+choose a situation suitable for your targeted environment. The cell structure can also be
+used as a negative and projected onto a wall to form a positive image (Figure 91).
+
+Figure 90: Left: original photo. Center: bright cells. Right: dark cells.
+
+3.3.2
+
+Model size X and Y
+
+The ratio between the model size X and Y is fixed to the aspect ratio of a photo. Changing
+the model size X and hitting the Enter key to update the display will automatically change
+the model size Y, and vice versa.
+3.3.3
+
+Thickness
+
+The thickness of a 3D printed cell structure can be set to a multiple of the layer height
+in a slicer. If the structure is to be laser cut or engraved, the thickness is determined by
+58
+
+3.3
+
+Cell
+
+Hello LuBan
+
+Figure 91: Projection of a cellular structure made by LuBan user, Claudio Miguel Gomes Carvalho.
+
+the sheet thickness and this parameter is only used in rendering the results (Figure 92).
+
+Figure 92: Thickness: 0.5 (left) and 4 (right).
+
+3.3.4
+
+Border size
+
+The border size determines the size of the edge around a cell structure (Figure 93).
+
+Figure 93: Border size: 2 (left) and 10 (right).
+
+3.3.5
+
+Cell shape
+
+Several shapes can be chosen as the shape of each individual cell (Figure 94).
+
+59
+
+3.4
+
+Cutter
+
+Hello LuBan
+
+Figure 94: Cell shape: rectangle (left), hexagon (center), and circle (right).
+3.3.6
+
+Resolution
+
+The resolution is one tenth of the size of a cell (Figure 95). It can be set to the finest
+detail that a 3D printer or a laser cutter may handle. For example, if a 3D printer’s
+nozzle diameter is 0.4 mm, the resolution can be set to 0.2 mm. If a lower value is used,
+the outcome may be suboptimal as the printer cannot handle details smaller than 0.2 mm.
+
+Figure 95: Resolution: 0.5 (left), 1 (center), and 2 (right).
+
+3.4
+
+Cutter
+
+The cutter method turns a photo into a 3D cookie cutter (Figure 96). The cutter can be
+customized with or without an inner pattern, which is handled in the same way as in the
+box method (Section 3.2 and Figure 67).
+3.4.1
+
+Flip photo
+
+When a cutter cuts a dough, the resultant shape is in a flipped orientation. To produce
+a dough in the exact same orientation of a photo, the photo should be flipped before
+generating a cutter (Figure 97). The flip photo setting serves this purpose. If set to yes,
+it mirrors the cutter with respect to the Y axis.
+
+60
+
+3.4
+
+Cutter
+
+Hello LuBan
+
+Figure 96: Cookie cutters made by LuBan user, Kristy Ancheta.
+
+Figure 97: Left: original photo. Center: photo flipped. Right: photo not flipped.
+3.4.2
+
+Photo vs. Text
+
+You can also create a cookie cutter from text symbols or even icons. Use LuBan to prepare
+the cutter text in your preferred font (Figure 98). If you wish to have multi-line or special
+effect text, such as overlapping letters, use MS Word or similar software to prepare the
+text; do a screenshot and save it as an image; then import the image to the cutter method
+through the “Select photo” button.
+
+Figure 98: Different fonts. Left: Arial. Right: Times New Roman.
+
+3.4.3
+
+Inner size X, Y, Z
+
+The inner size settings determine the interior dimension of a cutter when there is no inner
+pattern (left of Figure 99). If there is an inner pattern, the inner size X and Y determine
+
+61
+
+3.4
+
+Cutter
+
+Hello LuBan
+
+the areal dimension of the inner pattern (right of Figure 99).
+
+Figure 99: Inner size X, Y, and Z. Left: no inner pattern. Right: has an inner pattern.
+
+3.4.4
+
+Inner pattern
+
+The inner pattern setting offers three options (Figure 100) to deal with an inner pattern
+if it exists: (1) ignore it and generate a cutter of only the outline, (2) integrate it into the
+cutter, and (3) separate it from the outline cutter.
+
+Figure 100: Left: no inner pattern. Center: an integrated inner pattern. Right: a separate inner pattern.
+
+When the integrate or the separate option is selected, you may set the inner pattern’s
+depth and its clearance from the boundary. Be prepared! Changes to the clearance setting
+may produce some unexpected results. For example, in Figure 101 the inner pattern has
+two letters: L and B. When the clearance is set to 1, an outline is generated internally
+around each letter with an offset of 1; however, the two outlines do not intersect as the gap
+between the letters are relatively big. In this case, LuBan generates a bounding convex
+polygon as the mutual outline. When the clearance is set to 3, the individual outlines
+intersect and produce an oddly shaped mutual outline. When the clearance is set to 7,
+the mutual outline looks more natural.
+3.4.5
+
+Blade, Cutter, and Base
+
+The blade, cutter, and base walls are indicated in Figure 102. The blade is designed to
+start a cut. The cutter wall will then be pushed into the dough. The base is to stop the
+cut.
+
+62
+
+3.4
+
+Cutter
+
+Hello LuBan
+
+Figure 101: Clearance set to 1 (left), 3 (center), and 7 (right).
+
+Figure 102: No. 1 is the blade wall. No. 2 is the cutter wall. No. 3 is the base wall.
+
+The blade wall should be thinner than the cutter wall since the blade is supposed to be
+narrow and sharp. The height of the blade is hard-coded to 1.5 times of its thickness so
+that it has enough strength. The height of the cutter wall is the inner size Z setting. The
+base wall should be thicker than the cutter wall. The height of the base is determined by
+the base thickness setting.
+3.4.6
+
+Base hole
+
+When the inner pattern is set to integrate or separate, some holes can be optionally
+generated on the base so as to let out air when cutting a dough (Figure 103). The
+position and size of the holes are automatically determined. If there is not enough space
+on the base, no holes will be generated even when the base hole option is set to yes.
+
+Figure 103: Base holes on an integrated cutter (left) and a separated cutter (right).
+
+63
+
+3.5
+
+Extrusion
+
+3.4.7
+
+Hello LuBan
+
+Edge chamfer
+
+The general information of the edge chamfer has been described in Section 3.2.6. The
+edge chamfer has a special use in a cutter with a separate inner pattern. It helps to fix
+the relative position between the outline cutter and the inner pattern when pressing the
+cutter into a dough (Figure 104). Without the edge chamfer, the two parts may slide
+against each other.
+
+Figure 104: Edge chamfer of a cutter with a separate inner pattern.
+
+3.5
+
+Extrusion
+
+The extrusion method turns a photo into an extruded 3D model (Figure 105). Similar to
+the cutter method, text symbols can be directly input to generate an extrusion.
+
+Figure 105: Left: an extrusion made by LuBan user, Bryan O’Riley Jr. Center and right: extrusions
+made by LuBan user, Kevin Lems.
+
+3.5.1
+
+Positive vs. Negative
+
+The positive and negative options determine whether to extrude a 2D pattern or the
+background of the pattern, as shown in Figure 106.
+3.5.2
+
+Photo vs. Text
+
+See Section 3.4.2.
+
+64
+
+3.5
+
+Extrusion
+
+Hello LuBan
+
+Figure 106: Left: original photo. Center: positive extrusion. Right: negative extrusion.
+3.5.3
+
+Model size X and Y
+
+The ratio between the model size X and Y is fixed to the aspect ratio of a 2D pattern.
+Changing the model size X and hitting the Enter key to update the display will automatically change the model size Y, and vice versa.
+3.5.4
+
+Extrusion, Elevation, and Elevation angle
+
+The extrusion, elevation, and elevation angle determine respectively the thickness, the
+height of a vertical raise, and the angle of the front face of a pattern (Figure 107).
+
+Figure 107: ET : extrusion, EL : elevation, and A: elevation angle.
+
+3.5.5
+
+Expansion
+
+The expansion setting is the ratio between the front and the end face of a pattern. A
+value smaller than 1 results in a shrinking extrusion, while a value larger than 1 results
+in an expanding extrusion (Figure 108).
+3.5.6
+
+Clearance
+
+The clearance setting indicates the distance from an extrusion to the boundary of a base.
+It is not an absolute distance; instead, it is an indicative value that does not change
+the model size in X and Y. This means that a small clearance leads to a relatively big
+extrusion, while a large clearance leads to a relatively small extrusion (Figure 109).
+65
+
+3.5
+
+Extrusion
+
+Hello LuBan
+
+Figure 108: First row: expansion set to 0.5 (left), 1 (center), and 3 (right). Second row: extrusion printed
+by LuBan user, Wayne Obi-Wan Walford.
+
+Figure 109: Clearance set to 0 (left), 5 (center), and 10 (right).
+3.5.7
+
+Support
+
+Several shapes of support beneath an extrusion can be selected. They include concave
+and convex arc, triangle, and vertical support (Figure 110). You may also select the void
+option to disable the support.
+3.5.8
+
+Base shape, Round corner, Base thickness, and Keychain hole
+
+The base of an extrusion can be configured by the base shape, round corner, base thickness,
+and keychain hole settings (Figure 111). If you do not want a base, set the base thickness
+to zero and hit the Enter key to update the display.
+A keychain hole can be generated by setting a positive hole size. The hole will be
+automatically placed at one of the corners. If not enough space is found at any of the
+66
+
+3.6
+
+Layering
+
+Hello LuBan
+
+Figure 110: Support set to concave arc (left), convex arc (center left), triangle (center right), and vertical
+(right).
+
+Figure 111: Left: rectangle base. Center: rectangle base with round corner and a keychain hole. Right:
+original-shaped base.
+
+corners, the keychain hole will not be generated.
+3.6
+
+Layering
+
+The layering method turns a photo into a layered 3D model (Figure 112). Each layer is
+saved as a DXF and an SVG file for laser cutting, and also saved as an STL file for 3D
+printing. If the input photo has some disconnected inner pattern or features, they will be
+ignored in the generated structure (Figure 113).
+
+Figure 112: Left: original photo. Center and right: a layering structure made by LuBan user, Dirk
+Schreckenbach.
+
+3.6.1
+
+Layer order and Number of layers
+
+One or several photos can be selected to generate a layered structure. The layer order
+text window shows the sequence of the photos’ layers. You may use the move up and
+67
+
+3.6
+
+Layering
+
+Hello LuBan
+
+Figure 113: Left: a photo that has disconnected features. Center left: the generated structure ignores
+such features. Center right: all features of the photo are connected. Center right: the generated structure
+includes all features.
+
+move down buttons to change the sequence. When a photo is selected, you may set the
+number of layers to be generated by this photo (Figure 114).
+
+Figure 114: Layer order and number of layers.
+
+Keep in mind that the actual number of layers generated may be smaller. When a
+layer has no holes, no more layers will be generated (Figure 114).
+
+Figure 115: Top, middle, and bottom layers of a photo. No more layers can be generated, even though
+the number of layers might be larger than 3, because the bottom layer has no holes.
+
+3.6.2
+
+Layer size X and Y
+
+The ratio between the layer size X and Y is fixed to the aspect ratio of a 2D pattern.
+Changing the layer size X and hitting the Enter key to update the display will automatically change the layer size Y, and vice versa.
+3.6.3
+
+Layer thickness
+
+The layer thickness is the thickness of a single layer.
+68
+
+3.6
+
+Layering
+
+3.6.4
+
+Hello LuBan
+
+Layer offset
+
+Layer offset determines the amount of shrinkage of a hole from one layer to the next
+(Figure 116).
+
+Figure 116: Layer offset set to 2 (left) and 4 (right).
+
+3.6.5
+
+Frame shape, Expansion, Round corner, and Clipping
+
+A frame can be applied to the features of a photo. The expansion setting can be used to
+adjust the size of a frame (Figure 117). Note that if the expansion is too big, the frame
+may be disconnected from the features. That will cause the features to be ignored in the
+generated structure.
+
+Figure 117: Expansion set to -10 (left), 0 (center), and 3 (right).
+
+The round corner setting determines if the frame’s corner is rounded. The clipping
+setting determines whether to ignore features outside the frame (Figure 118).
+
+Figure 118: Left: a frame with sharp corners. Center: a frame with round corners. Right: clipping
+enabled. Features outside the frame are clipped.
+
+69
+
+3.6
+
+Layering
+
+3.6.6
+
+Hello LuBan
+
+Solid base
+
+You can force the layering method to generate a solid base by setting the solid base control
+to Yes (Figure 119).
+
+Figure 119: Solid base set to No (left) and Yes (right).
+
+3.6.7
+
+Arbitrary-shaped frame
+
+An arbitrary-shaped frame can greatly enhance the aesthetics of a layered structure (Figure 120). To begin with making such creations, you should have a template and a feature
+image as shown in Figure 121.
+
+Figure 120: Layered structures of arbitrary-shaped frames made by LuBan user, Pinter Viktor.
+
+Figure 121: Left: a black and white template image. Right: an image with features.
+
+1. Run LuBan.
+70
+
+3.6
+
+Layering
+
+Hello LuBan
+
+2. File → Invoke 2D window.
+3. File → Open, open both images.
+4. Tool → Report → Statistics, check the size of the images.
+5. Tool → Body → Resize, resize one of the images so that both images are of the same
+size.
+6. On the template image, Tool → Threshold → Manual. Select a threshold to differentiate the foreground from the background. This will make sure that the black
+regions are of value 0 and the white regions are 255.
+7. Tool → Data → Set mask value. Click on the feature image and click OK to confirm;
+then click on the template and click OK to confirm. In the dialogue box, input 0
+and click OK. This will mask the feature image by the template and the background
+pixels are set to zero (Figure 122).
+
+Figure 122: The feature image masked by the template.
+
+8. Go back to the template. Tool → Geometry → Distance transform. A dialogue box
+asks for a threshold to differentiate an object from the background. Use the default
+value and click OK. You should get a distance map similar to the left of Figure 123.
+A distance map is an image, on which the value of each pixel indicates how far the
+pixel is to the boundary of the object. If the pixel is on the object, its distance value
+is positive; if it is on the background, the value is negative.
+9. Tool → Threshold → Between. Enter “0 1000”. It means that pixels with distance
+value between 0 and 1000 are converted to white pixels and the rest are converted
+to black pixels. In the distance map, the length of a pixel corresponds to 100;
+hence, 1000 means 10-pixel length and 0 means the boundary of the template. This
+operation extracts a 10-pixel outline image of the template (right of Figure 123).
+You can use different values, such as “0 200”, extracting a 2-pixel outline image.
+10. Tool → Arithmetic → Max (Img1, Img2). Click on the outline image and click OK
+to confirm; then click on the masked feature image and click OK to confirm. This
+will combine the outline with the masked feature (left of Figure 124).
+71
+
+3.6
+
+Layering
+
+Hello LuBan
+
+Figure 123: Left: a distance map. Right: an outline image of the template.
+
+Finally, go back to LuBan 3D window (File → Invoke 3D window) and apply the
+layering method on the outline combined image to generate a layered structure (right of
+Figure 124).
+
+Figure 124: Left: the masked feature and the outline combined. Right: generated layered structure.
+
+3.6.8
+
+Multiple photos
+
+An interesting scenario where multiple photos can be applied is the original photo has
+some inner pattern as shown on the left of Figure 125. You may use any image processing
+software to get a solid template image from it as shown on the right of Figure 125.
+
+Figure 125: Left: the masked feature and the outline combined. Right: generated layered structure.
+
+Then, apply the same process described in Section 3.6.7 to get an arbitrary-shaped
+72
+
+3.7
+
+Morphing
+
+Hello LuBan
+
+frame (left of Figure 126). Lastly, generate a layered structure from both the original
+photo and the arbitrary-shaped frame image. Set the original photo on the top and make
+it generate one layer only. The end result is the original photo supported by a beautiful
+layered structure (right of Figure 126).
+
+Figure 126: Left: arbitrary-shaped frame with the feature. Right: generated layered structure.
+
+3.7
+
+Morphing
+
+The morphing method merges two or three photos into a 3D model. When it is viewed
+along the X, Y, or Z direction, a viewer sees the image of one of the photos (Figure 127).
+
+Figure 127: Morphing made by LuBan user, Massimo Manfredini.
+
+3.7.1
+
+Positive vs. Negative
+
+The positive morphing generates a model that directly represents the input photos in a
+viewing direction. The negative morphing generates hollow regions in a cubic model. The
+input photos are represented by the hollow regions (Figure 128).
+3.7.2
+
+Photo vs. Text
+
+Text morphing can be directly input to three text boxes. If the number of letters in the
+text strings are unequal, a letter of one string will be morphed with multiple letters in
+
+73
+
+3.7
+
+Morphing
+
+Hello LuBan
+
+Figure 128: Left two images are the input photos. Center right: positive morphing. Right: negative
+morphing.
+
+the other string (Figure 129). All letters are automatically converted to capital letters
+because the underline morphing algorithm requires a uniform height of the letters. Lower
+case letters may have different heights that would cause problems.
+
+Figure 129: Morphing of text strings: “HELLO” and “SEE YOU”. The first “L” in “HELLO” is morphed
+with “E” and “Y” in “SEE YOU”.
+
+3.7.3
+
+Model size X, Y, and Z
+
+The ratio between the model size X, Y, and Z is fixed to the aspect ratio of the morphing
+model. Changing the model size X and hitting the Enter key to update the display will
+automatically change the model size Y and Z, and vice versa.
+3.7.4
+
+Base thickness and Text baseline
+
+When morph text strings, you can generate a base to connect all the letters. To disable
+the base, set the base thickness to zero (Figure 130). The text baseline determines how
+much to cut off from the bottom of the letters and join them with the base (Figure 131).
+3.7.5
+
+Axis of rotation
+
+When two photos are morphed, the axis of rotation to view the photos is the Z axis. An
+example is shown in Figure 132 and Figure 133. Sometimes, this orientation may not be
+ideal as it may produce a big-sized model.
+You may rotate the original photos 90 degrees (Figure 134) and load the rotated photos
+to the morphing method. A smaller-sized model will be generated (left of Figure 135). If
+74
+
+3.8
+
+Painting
+
+Hello LuBan
+
+Figure 130: Base thickness set to 5 (left) and 0 (right).
+
+Figure 131: Text baseline set to 1 (left), 5 (center), and 10 (right).
+
+you orient the model horizontally (right of Figure 135), the axis of rotation to view the
+photos becomes the X axis.
+3.8
+
+Painting
+
+This method is still under development.
+3.9
+
+Pillar
+
+The pillar method turns a photo into a pillar structure (Figure 136) that can be 3D
+printed or laser cut. Intensity information of the photo will be directly used to generate
+the structure; therefore, do not manually convert the photo to black and white as you
+may have done in the methods presented in the earlier sections. In those methods, such
+manual conversion may help you obtain better results than leaving LuBan to do the auto
+conversion; however, in the pillar method, the conversion will remove useful information
+and produce suboptimal results.
+3.9.1
+
+Bright vs. Dark
+
+A pillar structure can be viewed in two situations: (1) bright pillars on a black background,
+or (2) dark pillars on a white background (Figure 137). The bright and dark control let
+you choose a situation suitable for your targeted environment.
+3.9.2
+
+Pattern
+
+The pattern setting has several options: Line, Ellipse, Semiellipse, Sawtooth, Sine, and
+Random. A few of them are shown in Figure 138. A viewer can see the photo when
+
+75
+
+3.9
+
+Pillar
+
+Hello LuBan
+
+Figure 132: Two photos to morph.
+
+Figure 133: Rotate about the Z axis to view the two photos.
+
+Figure 134: Two photos are rotated before morphing.
+
+Figure 135: Left: rotate about the Z axis to view the two rotated photos. Right: reorient the model
+horizontally and rotate about the X axis to view the original photos.
+
+76
+
+3.9
+
+Pillar
+
+Hello LuBan
+
+Figure 136: A pillar structure made by LuBan user, Altan Canalem Kisakol.
+
+Figure 137: Left: original photo. Center: bright pillar. Right: dark pillar.
+
+looking at the pillar structure from a front view. If viewed from the side, the photo is
+unclear, which presents a surprising factor to the viewer.
+3.9.3
+
+Width in X, Depth in Y, Height in Z, and Thickness
+
+The width in X is the width of one pillar. The depth in Y is the depth of a pattern.
+The height in Z is the height of a pillar. The thickness is the thickness of a pillar. These
+parameters are labelled in Figure 139.
+3.9.4
+
+Level of detail
+
+The level of detail determines the fine-scale structures to be included in the pillars (Figure 140). The higher the details, the better is a photo being represented but the harder
+it is to fabricate the pillars. Fine-scale structures also tend to wear out more quickly
+than gross-scale structures. In practice, in order to make durable pillars, you may wish
+to set the level of details based on the precision of your machines and the strength of the
+material.
+77
+
+3.9
+
+Pillar
+
+Hello LuBan
+
+Figure 138: Left: ellipse. Center left: sawtooth. Center right: sine. Right: random.
+
+Figure 139: Wx : width in X. Dy : Depth in Y. Hz : Height in Z. T : thickness.
+3.9.5
+
+Cap and Base height
+
+The pillars can be installed on a cap and a base. To enable the cap and base, set their
+height to a positive value. The cap and base thickness is default to the thickness of the
+pillars. The cap and base height and their thickness are labelled in Figure 141.
+3.9.6
+
+Tolerance
+
+The tolerance setting can be applied to fine tune the tightness between the pillars and the
+cap and base. It is a signed value, used to compensate for material loss in laser cutting
+or material gain in 3D printing. Set a positive value for laser cutting; e.g. 0.1 mm to
+compensate for a layer of 0.1 mm material burnt during laser cutting. Set a negative
+value for 3D printing; e.g. -0.2 mm to compensate for a 0.2 mm expansion of a printed
+object. The best tolerance can only be found by trial and error because it is dependent on
+many factors, such as type of machines, configuration of the cutting or printing process.
+Rule of the thumb: if parts are are too tight to fit, reduce the tolerance, e.g. from 0.2 mm
+to 0.1 mm or from -0.2 mm to -0.3 mm; if parts are too loose to fit, increase the tolerance,
+e.g. from 0.2 mm to 0.3 mm or from -0.2 mm to -0.1 mm.
+
+78
+
+3.10
+
+Puzzle
+
+Hello LuBan
+
+Figure 140: Level of detail set to 100 (left), 90 (center), and 80 (right).
+
+Figure 141: Ch : cap height. Bh : base height. T : cap and base thickness, same as the thickness of the
+pillars.
+3.9.7
+
+Text size
+
+The text size determines the size of the 3D text used to label each pillar. To disable the
+text, set the text size to 0.
+3.10
+
+Puzzle
+
+The puzzle method turns a photo into a 3D puzzle (Figure 142). Intensity information of
+the photo will be converted to a surface height distribution; therefore, do not manually
+convert the photo to black and white.
+
+Figure 142: A puzzle made by LuBan user, JS Hbl.
+
+79
+
+3.10
+
+Puzzle
+
+3.10.1
+
+Hello LuBan
+
+Model size X and Y
+
+The ratio between the model size X and Y is fixed to the aspect ratio of the selected
+photo. Changing the model size X and hitting the Enter key to update the display will
+automatically change the model size Y, and vice versa.
+3.10.2
+
+Min and Max thickness
+
+The min and max thickness determine the range of the surface height variation of a puzzle
+(Figure 143). They work similarly as the min and max thickness of a lithophane. A puzzle
+can also achieve the effect of a lithophane with back lighting (Figure 144).
+
+Figure 143: The min and max thickness are set to 2 and 10 (left), and 5 and 20 (right).
+
+Figure 144: A puzzle can work like a lithophane, made by LuBan user, Jackie Kenworthy.
+
+3.10.3
+
+X and Y section
+
+The X and Y section settings determine the number of parts in the x and y directions
+(Figure 145).
+3.10.4
+
+Resolution
+
+The resolution indicates the size, e.g. millimeter, of a pixel. it is used in the same way as
+in the lithophane function (Section 2.5).
+
+80
+
+3.10
+
+Puzzle
+
+Hello LuBan
+
+Figure 145: The X and Y section are set to 3 and 2 (left), and 12 and 9 (right).
+3.10.5
+
+Edge chamfer
+
+See Section 3.2.6.
+3.10.6
+
+Tolerance
+
+The tolerance can be used to adjust the tightness of the parts. For 3D printing, it is often
+set to a negative value, such as -0.2 mm. See more discussion in Section 3.9.6.
+3.10.7
+
+Save model
+
+When saving a puzzle through the “Save model” button, the puzzle pieces will be exported
+as STL files. If a selected photo has color information, OBJ files that enclose the color
+information will also be exported. The puzzle pattern in 2D are exported in DXF, SVG,
+and SHP format. The SHP format is defined by LuBan and can be opened in a LuBan
+2D window. The 2D pattern may be useful for customized data processing.
+Given a fixed set of parameters, you can actually generate different puzzle patterns.
+Just move the cursor to a text box, e.g. model size X; then hit the Enter key without
+changing its value. The display will be updated and you will see some changes in the
+puzzle pattern. This behaviour is owing to a random process used in generating a puzzle.
+
+Figure 146: Two puzzle patterns generated from the same set of parameters.
+
+81
+
+3.10
+
+Puzzle
+
+3.10.8
+
+Hello LuBan
+
+Puzzle of a 3D model
+
+Although the puzzle method is for processing a photo, it can be used to generate a puzzle
+of a 3D model. You need to get a depth map of the 3D model and save it as a 2D image;
+then, select the image in the puzzle method. All these can be done in LuBan.
+
+Figure 147: Left: a 3D model. Center: a depth map generated from the model. Right: a puzzle based
+on the depth map.
+
+1. Run LuBan.
+2. File → Open, open a 3D model (left of Figure 147).
+3. Mesh → Depth map. Set the direction and the resolution of the depth map. A 2D
+image will be generated that describes the surface height distribution of the model
+(center of Figure 147).
+4. On the depth map, go to File → Save. Save the image as an FLT file, which is
+a LuBan-defined file format. The FLT format stores float point information and
+therefore, it preserves higher accuracy than BMP, JPG, or PNG format.
+5. On the 3D window, go to File → Create → Photo magic, method Puzzle; then select
+the depth map. You will get a puzzle of the 3D model (right of Figure 147).
+
+82
+
+Hello LuBan
+
+4
+
+Mesh → Cut
+
+The cutting function has several methods to split a 3D model into smaller parts. It has
+many applications from extracting components of a model to printing a model bigger than
+the working dimension of a 3D printer (Figure 148).
+
+Figure 148: A 3D printed castle assembled from parts made by LuBan user, Burkhard Effertz.
+
+Run LuBan, open a 3D model, and go to “Mesh → Cut” to enter the cutting mode
+(Figure 149). Control parameters are laid out on the left panel and live display is rendered
+on the right. A method can be selected from the drop down method list.
+
+Figure 149: Mesh → Cut.
+
+83
+
+4.1
+
+Model size X, Y, and Z
+
+4.1
+
+Hello LuBan
+
+Model size X, Y, and Z
+
+The ratio between the model size X, Y, and Z is fixed to the aspect ratio of a 3D model.
+Changing the model size X and hitting the Enter key to update the display will automatically change the model size Y and Z, and vice versa.
+4.2
+
+Planar cut
+
+The planar cut method splits a model into two parts, one on each side of a cutting plane.
+The cutting plane is determined by four parameters: A, B, C, and D. They can be set
+through text boxes or sliders. Click the “Cut” button at the bottom of the control panel
+to split the model (Figure 150). Each part after cutting is saved as an individual STL file
+in a selected folder.
+
+Figure 150: Left: preview of a model and a cutting plane. Center: two model parts after cutting. Right:
+an exploded view of the two parts.
+
+4.2.1
+
+Regional cut
+
+Sometimes you may like to cut a small piece of a model, such as an arm from a body.
+The whole cutting plane approach may not work as it may cut other parts off the model
+in addition to the piece of interest. In this case, you can set the regional cut to Yes, and
+the cutting plane will become a disk (Figure 151). The radius and center position of the
+disk can be set through text boxes and sliders. Parts of the model that are completely
+separated by the disk will be cut off. Other parts that do not fully intersect the disk will
+remain unchanged. This approach offers more flexibility compared to the whole cutting
+plane approach.
+4.2.2
+
+Close cut
+
+Be default, LuBan will close a cut section and make each part a solid model, but in some
+situations, you may want a cut section to be open. If so, you can set the “Close cut”
+option to No (Figure 152).
+
+84
+
+4.2
+
+Planar cut
+
+Hello LuBan
+
+Figure 151: Left: the regional cut is set to No. Center left: results of the whole cutting plane approach.
+Center right: the regional cut is set to Yes. Right: results of the regional cut approach.
+
+Figure 152: Left: a sphere to be cut in half. Center left: when “Close cut” is set to Yes, you get a solid
+model of the hemisphere. Right: when “Close cut” is set to No, the cut section is open; you do not get
+a solid model.
+4.2.3
+
+Natural cut
+
+The natural cut option can apply a curved cut on a model based on its local shape. A
+natural cut algorithm takes the cutting plane as a guide and searches for local concave
+regions to place the cut. The end result is a curved cut section (right of Figure 153). Note
+that the algorithm may not work on complex local shapes. If it fails to make a natural
+cut, LuBan will roll back to the pure planar cut.
+
+Figure 153: Left: a horse model and a cutting plane. Center: pure planar cut. Right: natural cut that
+uses the cutting plane as a guide.
+
+85
+
+4.3
+
+4.3
+
+Grid cut
+
+Hello LuBan
+
+Grid cut
+
+The grid cut method splits a model by a grid of cutting planes. The number of sections in
+X, Y, and Z directions are set through spin controls. The grid can be configured to have
+a staggered cutting pattern, which may strengthen the assembly of a model compared to
+a grid without staggering (Figure 154).
+
+Figure 154: Left: a grid without staggering. Center left: a cutting plane goes through the whole body.
+Center right: a staggered grid. Right: the cutting planes changes their positions in each Z section.
+
+If staggering is not used, you can adjust the position of each cutting plane. The adjust
+plane control let you choose a particular plane, shown in red in Figure 155. Then by
+moving a slider or entering a value in a text box, you may reposition the cutting plane.
+
+Figure 155: Left: the middle cutting plane is repositioned. Right: parts obtained after cutting.
+
+Figure 156: Left: parts of an elephant model. Center: an exploded view. Right: an individual part is
+highlighted.
+
+A model cut into several parts can be viewed with the “Object → Explode” and
+“Object → Restore” functions. They offer an exploded view of all the parts (center of
+86
+
+4.4
+
+Radial cut
+
+Hello LuBan
+
+Figure 156). You may also apply the “Object → Select” function, which highlights a
+selected part (right of Figure 156). You can navigate all the parts one by one using the
+slider on the toolbar. The highlighted view is useful in figuring out the spacial relationship
+of the parts.
+4.4
+
+Radial cut
+
+The radial cut method splits a model by a set of radially arranged cutting planes. The
+radial axis can be configured to X, Y, or Z direction (Figure 157). The starting angle
+of a cutting plane is user-specified. Changing the start angle rotates the cutting planes
+around the radial axis (Figure 158).
+
+Figure 157: Radial cut direction: X (left), Y (center), and Z (right).
+
+Figure 158: Start angle: 0 (left) and 10 degrees (right).
+
+The radial center can be changed as well through the center X and Y settings, which
+are normalized to [-0.5, 0.5]. Values beyond this range are valid, while if a plane does not
+intersect with the bounding box of the object, it will not be shown.
+
+Figure 159: Radial center: (0, 0) (left) and (-0.2, 0.2) (right).
+
+87
+
+4.5
+
+Modular cut
+
+4.5
+
+Hello LuBan
+
+Modular cut
+
+The modular cut method is not directly based on cutting planes but is based on the
+build volume of one or more 3D printers. The first step is to set the desired model size,
+which is assumed to be bigger than the build volume of your printers. (If not, you will
+be asked to print the model in one body and no cutting will be done.) Then, you need
+to determine how many printers will be used in printing the model parts. If only one will
+be used, choose the single-printer option, set its bed shape, and specify its X, Y, and Z
+dimensions. If more than one printers will be used, choose the multi-printer option and
+click the “Set up multi-printer” button to input the specification of each printer.
+In the preview (Figure 160), a single printer are shown as several cubes or cylinders
+depending on its bed shape. The boundary of the cubes or cylinders are not cutting
+planes. They just indicate the build volume of the printer with respect to the size of the
+model. In the multi-printer mode, each printer is shown once (right of Figure 160).
+
+Figure 160: Preview of a single printer with a rectangular bed (left) and a circular bed (center). Preview
+of the multi-printer mode (right); in this case, three printers.
+
+4.5.1
+
+Printer setting
+
+The printer settings include a printer’s bed shape and its X, Y, and Z dimensions. In
+the multi-printer mode, you can also input the relative speed of each printer and the
+quantity of a type of printer (Figure 161). When cutting a model, LuBan will try to
+assign model parts to the printers so that they will finish printing roughly around the
+same time. In practice, the part assignment may not be optimal because LuBan can only
+roughly estimate the time spent in machine set up and filament changes. There are also
+many factors that LuBan cannot take into account, such as print failure and inaccurate
+speed settings.
+4.5.2
+
+Part number
+
+In the single-printer mode, parts resulted from cutting are named as Part 1, Part 2, etc.
+In the multi-printer mode, the part files are named as P1 Part 1, P2 Part 2, P2 Part 3,
+etc. The first P and the number indicate which printer is assigned to print the part. The
+size of the part is guaranteed to be not bigger than that of the printer. For example, a
+88
+
+4.5
+
+Modular cut
+
+Hello LuBan
+
+Figure 161: Settings of multiple printers.
+
+part is 100-80-60 in X-Y-Z and the assigned printer is 90-110-60 in X-Y-Z. The part can
+fit inside the build volume as long as you rotate it 90 degrees about the Z axis.
+A part number can be imprinted on the surface of a part. Just set the part number
+option to Yes. Then, you may optionally set a start number and a prefix. Note that if the
+prefix is specified, it will replace the “Part ” string in the part file names. For example if
+the prefix is set to “er”, the part files will be named as er1, er2, etc. A part number may
+not be clearly seen by default. It can be viewed better by turning on the edge display
+“Edit → Edge → Enable” (Figure 162).
+
+Figure 162: Left: a part name on a surface. Right: display of the edge is enabled.
+
+Sometimes, in the export folder you may find some part files named as Tiny 1, Tiny 2,
+etc. They are very small parts that can be ignored. They are often caused by defects in
+the original model or residual errors produced in the cutting process.
+4.5.3
+
+Assembly sequence
+
+It is straightforward to assemble parts cut by the planar, grid, and radial cut methods.
+The spacial relationship of the parts can be viewed by toggling the “Object → Select”
+mode and browsing through the highlighted part using the slider on the toolbar. This
+approach also works for the modular cut method if the number of parts is relatively small,
+e.g. fewer than 20. However, when a model is cut into a greater number of parts, the
+assembly becomes much harder as a wrong assembly sequence would prevent some parts
+from being assembled. You would have to disassemble some other parts in order to make
+the assembly possible.
+89
+
+4.5
+
+Modular cut
+
+Hello LuBan
+
+The correct assembly sequence is saved in a file * Sequence.txt in an export folder.
+The content of the file is explained through two examples. Figure 163 shows a cow model
+cut into five parts. Each part is shown in a line in the sequence file (left of Figure 164).
+
+Figure 163: A cow model cut into five parts.
+
+The modular cut consists of several planar cuts.
+ Parts 1, 2, 3 are separated from 4 and 5 (center of Figure 164).
+ Part 1 is separated from 2 and 3 (right of Figure 164).
+ Part 2 is separated from 3.
+ Part 4 is separated from 5.
+
+Figure 164: Left: content of the sequence file. Center: the first cut. Right: the second cut.
+
+The correct assembly sequence is the reversed cutting sequence.
+ Assemble Parts 4 and 5.
+ Assemble Parts 2 and 3.
+ Assemble Parts 1, 2, and 3.
+ Assemble Parts 1, 2, 3, and 4 and 5.
+
+The second example is a knot cut into seven parts (left of Figure 165). The content of
+the sequence file (center and right of Figure 165) shows that the first cut splits the model
+into four groups: 1 and 2, 3 and 4, 5 alone, and 6 and 7. Three groups are further cut
+into smaller parts. The reversed cutting sequence is the assembly sequence.
+
+90
+
+4.6
+
+Connector
+
+Hello LuBan
+
+Figure 165: Left: a knot model cut into seven parts. Center: content of the sequence file. Right: the
+first cut.
+
+4.6
+
+Connector
+
+LuBan can automatically generate connectors on model parts to facilitate the assembly
+of a model.
+4.6.1
+
+Plug vs. Dowel
+
+There are two types of connectors: plug and dowel (Figure 166). A plug is a pair of
+male-female connector. Its cross-sectional size is auto-determined by LuBan. A dowel is
+a pair of female-female connector with a separate dowel in the middle. The cross-sectional
+size of a dowel is user-specified. In general, you may use plugs for the convenience of 3D
+printing since they are integrated in the parts. On the other hand, you may like to use
+dowels to avoid the protrusive male plugs, which may require additional support material
+during printing. You can print the separate dowels or even use wood or metal dowels that
+are available from other resources. In one of the interesting scenarios, a LuBan user set a
+circular dowel size to 1.7 mm and used the 3D printing filament as the solid dowels. What
+a great idea!
+
+Figure 166: Left: plug. Right: dowel.
+
+4.6.2
+
+Design
+
+There are three designs of a connector: terrace, pyramid, and claw (Figure 167). A
+terrace can provide both alignment and friction to an assembly; however, it may be hard
+to assemble since any mis-alignment of the parts can prevent two sides of a terrace from
+91
+
+4.6
+
+Connector
+
+Hello LuBan
+
+pressing into each other. A pyramid provides alignment but not so much friction. It is
+preferred in an assembly where glue will be applied to adhere the parts. A claw provides
+both alignment and friction; in addition, it is more flexible than the terrace, but as the
+claw has fine-scale structures, it requires a printer with higher quality than what is needed
+to print a terrace.
+
+Figure 167: Left: terrace. Center: pyramid. Right: claw.
+
+4.6.3
+
+Shape
+
+A connector can be configured to various different cross-sectional shapes (Figure 168).
+They work similarly except that the circular shape does not constrain the rotation of two
+parts if there is only one connector between them.
+
+Figure 168: Left to right: triangle, square, pentagon, hexagon, octagon, circle, and D-shape dowels.
+
+4.6.4
+
+Depth ratio
+
+The depth ratio is the ratio between a connector’s depth and its cross-sectional size. A
+small value produces a short connector, while a large value produces a long connector
+(Figure 169). The depth ratio can be a negative value. If the connector is a plug, this
+will reverse the male and female side. If the connector is a dowel, the negative value is
+equivalent to its absolute value. If you do not want to generate any connector, set the
+depth ratio to zero.
+A non-zero depth ratio does not guarantee that a connector will be generated. For
+example, a connector based on a user-specified depth ratio may be too long, meaning
+that it may punch through the surface of the model. In this case, the connector will not
+be generated if it is a dowel. For a plug, LuBan will halve the depth ratio internally. If
+92
+
+4.6
+
+Connector
+
+Hello LuBan
+
+Figure 169: From left to right, the depth ratio is set to 1, 1.5 , 3, and -3.
+
+the shortened connector still intersects the model, it will not be generated; otherwise, it
+will be kept on the parts. That is why you might see some generated plugs shorter than
+others, while all generated dowels are of the same length.
+4.6.5
+
+Size
+
+The size setting determines the size of dowels (Figure 170). (The size of plugs are autodetermined by LuBan.) On a cut section, the number of dowels generated is related to
+the size. A small size tends to produce more dowels, while a big size tends to produce
+fewer dowels. However, the actual number cannot be user-specified or predicted as it is
+determined based on the shape of the cut section. If the size is too big compared to the
+cut section, no dowels will be generated. A rule of thumb is that the dowel size should be
+smaller than 1/3 of the width or height of a cut section.
+
+Figure 170: Size set to 1 (left), 1.7 (center), and 2.4 (right).
+
+4.6.6
+
+Tolerance
+
+The tolerance is used to adjust the tightness of the connectors. The left of Figure 171
+shows a pair of male-female plug generated with zero tolerance. Their side walls coincide
+exactly. In practice, this is likely to result in a very tight fit because a 3D printed object
+is often slightly expanded. That means the male plug will be bigger than the digital size
+and the hole will smaller. Setting the tolerance to -0.2 mm (center of Figure 171) produces
+93
+
+4.6
+
+Connector
+
+Hello LuBan
+
+a gap of 0.4 mm between the walls. A positive tolerance (right of Figure 171) makes the
+hole smaller than the male plug; hence, a positive value is rarely used for 3D printing.
+
+Figure 171: Tolerance set to 0 (left), -0.2 (center), and 0.2 (right).
+
+Figure 171 also shows that the hole is always deeper than the male plug, leaving a
+gap at the end surface. The gap is intentionally generated because a hole may be filled
+with support material in 3D printing. The support can be difficult to remove completely;
+therefore, the gap prevents the remaining support material from interfering with the
+assembly.
+Are you curious about why the wall of the connector is not straight but slightly slanted?
+Your guess is right: this detail makes the connection strong. You press hard to assemble
+a connector; once two parts attach, they will not detach easily.
+
+94
+
+Hello LuBan
+
+5
+
+Mesh → LuBan
+
+Mesh → LuBan is a collection of tools that transform a 3D model into a variety of new
+models for 3D printing, laser cutting, or CNC machining. Run LuBan, open a 3D model,
+and go to “Mesh → LuBan” to enter the LuBan mode (Figure 172). Control parameters
+are laid out on the left panel and live display is rendered on the right. A method can be
+selected from the drop down method list.
+
+Figure 172: Mesh → LuBan.
+
+The model size settings in the input section refer to the size of the original model,
+not the generated model. The ratio between the model size X, Y, and Z is fixed to the
+aspect ratio of the original model. Changing the model size X and hitting the Enter key
+to update the display will automatically change the model size Y and Z, and vice versa.
+The output section contains configurable settings pertaining to a method. Some settings are shared among several methods.
+The measure section at the bottom of the control panel shows information of a generated model. If the method is cocoon, relief, spin, spring, or wave, it shows the size of the
+model. If the method is contour, stack, hash, or plate, it shows the number of parts of an
+assembly, estimated machine time and assembly time.
+The save model button let you select an export folder to save the results. Files for
+laser cutting are saved in DXF, SVG, and SHP formats. The SHP format is native to
+LuBan and can be opened in a 2D window. Files for 3D printing are saved in STL or OBJ
+format. LuBan also saves the 3D scene in a pair of FGD and FGS files. The former stores
+data blocks and the latter stores 3D scene settings. They can be opened in a 3D window
+through the FGS file, which then automatically loads the corresponding FGD file.
+
+95
+
+5.1
+
+Cocoon
+
+5.1
+
+Hello LuBan
+
+Cocoon
+
+The cocoon method generates an outer surface around the original model and makes a
+new hollow model. This is particularly useful in resin 3D printing: Use clear resin to print
+a cocoon model and then polish the outer surface to transparent (Figure 173).
+
+Figure 173: Cocoon models made by LuBan user, Tom Lewis.
+
+5.1.1
+
+Shape and Direction
+
+The outer surface can take on several shapes: cube, cylinder, sphere, and native (Figure 174). The native shape requires much longer processing time than the rest. If the
+cylinder is chosen, you may set the center axis of the cylinder parallel to the X, Y, or Z
+axis.
+
+Figure 174: First row: cocoon shape set to cube (left), sphere (center), and native (right). Second row:
+cylinder direction set to X (left), Y (center), and Z (right).
+
+96
+
+5.1
+
+Cocoon
+
+5.1.2
+
+Hello LuBan
+
+Clearance
+
+The clearance determines the shortest distance between the outer and the inner surfaces
+(Figure 175). Increasing the clearance results in a bigger cocoon model. The size of the
+inner surface is fixed to the model size settings.
+
+Figure 175: Clearance set to 0 (left), 5 (center), and 10 (right).
+
+5.1.3
+
+Offset X, Y, and Z
+
+The offset are used to shift the outer surface from its default position (Figure 176). This
+can be applied in some situations where the default position may not visually align the
+outer and inter surfaces; however, be aware that a user-specified offset may cause the two
+surfaces to intersect with each other (right of Figure 176).
+
+Figure 176: Offset set to (0, 0, 0) (left), (-5, 0, 5) (center), and (10, 0, 0) (right).
+
+5.1.4
+
+Mold
+
+The cocoon method can be applied to mold making (Figure 177). Generate a cocoon
+model and use the planar cut method under “Mesh → Cut” to split it in half. Inject some
+solution to the hollow volume, let it settle, and then open the mold to take out the cast
+object.
+
+97
+
+5.2
+
+Contour
+
+Hello LuBan
+
+Figure 177: Mold made by LuBan user, Picco Balla.
+
+5.2
+
+Contour
+
+The contour method can be used to make laser engraved 3D effects (Figure 178). Each
+contour is a 2D section of a 3D model, engraved on a transparent sheet. When light passes
+through the sheet, the engraved lines will scatter the light and produce a highlighted
+contour. When all the contour sheets are stacked, a viewer sees a 3D presentation of the
+original model.
+
+Figure 178: Contours of a sphere model, shared by Paul Collins.
+
+5.2.1
+
+Sheet width, height, and thickness
+
+The sheet width and height are the X and Y dimension of the sheet material to be
+used. They should be larger than the size of a contour frame. The thickness is the gap
+between adjacent sheets. If you set the thickness to the actual sheet thickness, all sheets
+are assembled back to back. If you set a larger value, then there is a gap between the
+adjacent sheets.
+5.2.2
+
+Direction
+
+The direction setting refers to the direction of the 2D contours (Figure 179). If you hope
+to extract contours in an arbitrary direction, you need to pre-rotate the model by the
+“Object → Transform” function and then apply the contour method.
+
+98
+
+5.2
+
+Contour
+
+Hello LuBan
+
+Figure 179: Contour direction: X (left), Y (center), and Z (right).
+5.2.3
+
+Frame and Clearance
+
+Several frame shapes are available for customization. The boundary clearance determines
+the shortest distance from a frame to a set of contours (Figure 180). Increasing the
+clearance results in a bigger contour frame. The size of the contours is fixed by the model
+size settings.
+
+Figure 180: Boundary clearance: 0 (left), 5 (center), and 10 (right).
+
+5.2.4
+
+Base light socket
+
+Check the “Base light socket” box to enable an extended region at the bottom of a frame
+(Figure 181). It is used to insert a frame to the socket of a base light. The width and
+height of the region are user specified.
+
+Figure 181: The width and height of a base light socket.
+
+99
+
+5.3
+
+Stack
+
+5.2.5
+
+Hello LuBan
+
+Nesting
+
+The nesting setting indicates how contour frames are laid out on cut sheets (Figure 182).
+The compact option informs LuBan to pack the frames as much as possible regardless of
+the order of the frames. The ordered option informs LuBan to pack the frames based on
+their default order; i.e. the nested frames on each sheet have consecutive numbers. The
+balanced option is a compromise between the above two. Frames on one sheet may not be
+consecutive, while they are not as random as those nested by the compact option either.
+
+Figure 182: Nested contour frames on one sheet.
+
+5.3
+
+Stack
+
+The stack method is similar to the contour method in that it also slices a 3D model and
+extracts 2D contours (Figure 183), while the stack method can generate alignment dowels
+that are invisible on the surface of a model. In addition, in the contour method the sheet
+
+Figure 183: A castle made by LuBan user, Frank Pentarakis. A bust made by LuBan user, Ivan Martı́ns
+Home.
+
+size should be larger than a contour frame; however, in the stack method, the sheet size
+can be smaller than a contour. LuBan will automatically segment a large contour into
+smaller parts so that they can be fabricated separately in a small-sized machine, e.g. a
+laser cutter (Figure 184).
+The direction and nesting settings of the stack method are exactly the same as those
+of the contour method.
+
+100
+
+5.3
+
+Stack
+
+Hello LuBan
+
+Figure 184: A 3-meter long dinosaur made from the stack method.
+5.3.1
+
+Dowel size
+
+The alignment dowels are generated as a square hole in the contours (Figure 185). Its size
+is user specified. A value too big, roughly bigger then 1/3 of the smallest dimension of
+a contour, will prevent the generation of dowel holes. You can use any feasible material,
+such as wood or metal, as the solid dowels to fill in the holes for alignment.
+
+Figure 185: Dowel holes generated on the layers.
+
+5.3.2
+
+Ring width
+
+The contours of the stack method are actually rings because they can be configured to
+have a hollow interior (Figure 186). This saves material and reduces the weight of the
+structure. If you hope to have solid contours, just set the ring width to a big value, e.g.
+bigger than the size of the model; then no hollow interior will be generated.
+5.3.3
+
+Text size
+
+Each contour has a label, such as 2.1 or 10.3.4. The first number of a label indicates a
+layer in a stack model. The second number indicates a contour of a layer, which may
+contain more than one contours. The third number, if present, indicates a segment of a
+contour. The contour is larger than the sheet size and is segmented into several parts.
+The text size of the displayed 3D label can be user specified (left of Figure 187). When
+you save a stack model, all contours will be nested on cut sheets and displayed in a 2D
+101
+
+5.4
+
+Hash
+
+Hello LuBan
+
+Figure 186: Ring width set to 10 (left) and 20 (right).
+
+window. A contour’s label will also be displayed in 2D (right of Figure‘187). That text
+size cannot be changed. The labels are supposed to be engraved on each contour so that
+you can easily find them for assembly.
+
+Figure 187: Left: 3D labels. Right: 2D labels.
+
+5.4
+
+Hash
+
+The hash method generates a set of interlocking contours with slots in X and Z directions. The contours can be assembled to produce a 3D presentation of the original model
+(Figure 188). The method shares several settings with the stack method, such as sheet
+size, ring width, text size, and nesting.
+
+Figure 188: A half meter long horse made from the hash method.
+
+102
+
+5.4
+
+Hash
+
+5.4.1
+
+Hello LuBan
+
+Tolerance
+
+The tolerance is used to adjust the tightness of the slots (Figure 189). Zero tolerance
+makes the slot exactly the same size as the sheet thickness. If the contours are to be
+3D printed, use a negative tolerance to reserve some space as a 3D printed object may
+expand a little. If the contours are to be laser cut, use a positive tolerance, which makes
+the slot smaller than the sheet thickness. The extra material of the slot compensates for
+material burnt during laser cutting.
+
+Figure 189: Tolerance: -0.2 (left), 0 (center), and 0.2 (right).
+
+5.4.2
+
+Orthogonal vs. Radial
+
+A 3d model can be hashed orthogonally or radially (Figure 190). When making a radial
+hash, the radial axis is parallel to the Z axis. Its position on the XY plane can be specified
+through the center X and Y settings.
+
+Figure 190: Left: orthogonal hash. Center: radial hash, centered at (0, 0). Right: radial hash, centered
+at (0.1, -0.2).
+
+5.4.3
+
+X and Z layers
+
+The number of evenly spaced vertical and horizontal layers are set through X and Z layers
+(Figure 191). The label of each contour starts with X or Z, indicating it belongs to the X
+or Z layer. The numbers on a label carry the same meaning as described in Section 5.3.3.
+
+103
+
+5.5
+
+Plate
+
+Hello LuBan
+
+Figure 191: Left: 5 X layers and 2 Z layers. Right: 12 X layers and 8 Z layers.
+
+Depending on the shape of the model and the number of layers, there may be some
+contours that do not interlock with the others. In this case, these contours cannot be
+assembled to the main body of the hash structure.
+5.4.4
+
+Tilt
+
+A tilt angle can be applied the hash, resulting in an artistic representation of the original
+model (Figure 192). You can use “Object → Select” and “Object → Explode” to view
+each contour of a hash structure.
+
+Figure 192: Left: orthogonal hash, 20-degree tilt. Center: radial hash, 20-degree tilt. Right: radial hash,
+45-degree tilt.
+
+5.5
+
+Plate
+
+The plate method takes each planar face of a model and generates finger joints on its
+edges. The finger joints on adjacent faces can interlock with each other, which enables
+the assembly of a plate structure (Figure 193). The thickness of a plate is user specified;
+hence, the original model should not define a face with thickness; instead, the face should
+be a thin surface. In 3D modeling software, such as Solidworks, a thin surface can be
+drafted in a surface-modeling mode as opposed to a solid-modeling mode.
+
+104
+
+5.5
+
+Plate
+
+Hello LuBan
+
+Figure 193: A cube made from the plate method.
+5.5.1
+
+Low poly
+
+The low poly setting is used to simplify a model by reducing its number of faces. This
+is needed for models of high vertex density because it will replace many small faces that
+are infeasible for finger joint generation with fewer large faces (Figure 194). It will also
+speed up the generation of finger joints.
+
+Figure 194: Low poly set to: 0.0005 (left), 0.0015 (center), and 0.005 (right).
+
+When you enter the plate mode, LuBan will automatically calculate a default low poly
+rate to reduce the number of faces. You can change the default rate to another value;
+however, your specified rate is only a guide; the actual rate is still determined by LuBan,
+which may be different from the specified value.
+5.5.2
+
+Tolerance
+
+The tolerance is used to adjust the tightness of the finger joints (Figure 195). Zero
+tolerance makes a pair of joints exactly the same size. If plates are to be 3D printed, use
+a negative tolerance to reserve some space as a 3D printed object may expand a little. If
+plates are to be laser cut, use a positive tolerance. The extra material compensates for
+material burnt during laser cutting.
+5.5.3
+
+Finger width
+
+Finger joints are equally spaced on an edge. The finger width of the joints can be set to
+any value not less than the sheet thickness (Figure 196); however, it is only a guide for
+105
+
+5.5
+
+Plate
+
+Hello LuBan
+
+Figure 195: Tolerance set to: -0.5 mm (left), 0 (center), and 0.5 mm (right).
+
+LuBan to calculate a finger width for each edge. As the length of different edges may be
+different, the finger width on the edges are also different by a small amount. You should
+not worry about the small difference since the finger joints on adjacent edges are always
+paired to each other.
+
+Figure 196: Finger width set to: 5 mm (left), 10 mm (center), and 20 mm (right).
+
+5.5.4
+
+Mold
+
+If the mold option is set to Yes, the interior volume of the generated plate structure is
+the same as that of the original model; otherwise, the exterior volume is the same as the
+original (Figure 197).
+
+Figure 197: Left: original model. Center: the mold option set to No. Right: the mold option set to Yes.
+
+You can apply the plate method to mold making (Figure 198). In fact, this is commonly
+used in building construction, except that parts of a mold is manually drafted. Based on
+the plate method, the mold making process can be more automated.
+106
+
+5.6
+
+Relief
+
+Hello LuBan
+
+Figure 198: Left: staircase models made from an assembly of plywood plates. Right: cast silicon gel
+models based on the plywood mold.
+
+5.6
+
+Relief
+
+The relief method converts a 3D model into a 2.5D relief with a customizable base (Figure 199). The generated relief is saved as an STL file that can be readily 3D printed. The
+relief can be fabricated by a CNC machine also; you need to use CNC software, such as
+MasterCAM, to convert the STL to the machine toolpath. As the relief does not have
+any overhanging regions, the toolpath will not involve any under cut.
+
+Figure 199: A relief made by LuBan user, Yves Wijckmans.
+
+5.6.1
+
+Direction
+
+The relief of a model may be generated in six different directions (Figure 200). If you hope
+to get a relief in an arbitrary direction that is not one of the six, you need to pre-rotate
+the model using “Object → Transform”, and then process it by the relief method.
+5.6.2
+
+Single vs. Double sided
+
+A single-sided relief has a flat base while a double-sized relief has a model’s surface on
+both sides (Figure 201). As a result, if the double-sided option is chosen, the direction
+setting is reduced to +X, +Y, and +Z. The -X, -Y, and -Z direction is on the opposite
+side of a double-sided relief.
+
+107
+
+5.6
+
+Relief
+
+Hello LuBan
+
+Figure 200: Left: original model. Right: six relief directions.
+
+Figure 201: Left two images: single-sided relief. Right two images: double-sided relief.
+5.6.3
+
+Positive vs. Negative
+
+A positive relief has a model’s surface raised from the base while a negative relief has its
+surface sink into the base (Figure 202). A negative relief may have a number of uses; for
+example, as a mold for casting. It also gives a special effect when viewing it. You can
+print a negative relief of a human face and then view it from different angles; you will
+know what it means.
+
+Figure 202: A negative relief viewed from two different angles.
+
+108
+
+5.6
+
+Relief
+
+5.6.4
+
+Hello LuBan
+
+Relief thickness
+
+The relief thickness determines the depth of the relief’s surface variation (Figure 203).
+By adjusting the model size and the relief thickness, you can control the X, Y, and Z
+dimension of the generated relief.
+
+Figure 203: Relief thickness set to 20 (left) and 60 (right).
+
+5.6.5
+
+Bury
+
+The bury setting let you hide parts of the relief and highlight the top most part of the
+surface distribution (Figure 204). The base area will also be adjusted according to the
+remaining area of the relief.
+
+Figure 204: From left to right: bury set to 0, 20%, 40%, 60%, and 80%.
+
+5.6.6
+
+Base and Base thickness
+
+Several base shapes are available for configuration. The base thickness is adjustable as
+well. For a positive relief, the base is under the surface of the relief. For a negative relief,
+the base is integrated with the wall of the relief (Figure 205). Hence, a negative relief
+may look thicker than a positive one while their base thickness is the same. If you set a
+singled-sided, positive relief’s base thickness to zero, you will get a relief without a base
+(Figure 206).
+
+109
+
+5.6
+
+Relief
+
+Hello LuBan
+
+Figure 205: Left: positive relief, base thickness 5. Center left: negative relief, base thickness 5. Center
+right: positive relief, base thickness 30. Right: negative relief, base thickness 30.
+
+Figure 206: A relief without a base when the base thickness is set to zero.
+5.6.7
+
+Border size and thickness
+
+The border size determines the appearance of the frame and the border thickness determines the depth of the frame. If either one of them is zero, the generated base will not
+have a frame (Figure 207).
+
+Figure 207: Left: border size 0, border thickness 0. Center left: border size 5, border thickness 5. Center
+right: border size 20, border thickness 5. Right: border size 20, border thickness 20.
+
+110
+
+5.7
+
+Spin
+
+5.6.8
+
+Hello LuBan
+
+Clearance
+
+The boundary clearance determines the shortest distance from the surface of a relief to its
+border frame (Figure 208). Increasing the clearance will increase the size of the generated
+relief.
+
+Figure 208: Boundary clearance: 5 (left) and 20 (right).
+
+5.7
+
+Spin
+
+The spin method deforms and duplicates a model around a revolving axis to produce a
+spinning effect. The generated spin model carries different forms and functions from the
+original model (Figure 209).
+
+Figure 209: A vase made by LuBan user, Amanda Napthine.
+
+Due to the deformation applied in the spin method, the original model should have
+reasonable vertex density; otherwise, the deformation may produce some defects, such as
+self-intersections, in the spin model. If the original model is of low vertex density, apply
+“Mesh → Densify” to increase the density (Figure 210).
+5.7.1
+
+Spin shape
+
+Several spin shapes are available (Figure 211). Each shape has its own control parameters,
+while some parameters are shared across different shapes.
+
+111
+
+5.7
+
+Spin
+
+Hello LuBan
+
+Figure 210: Left: surface of a cylinder. Center: edges of the surface. Right: densified edges of the surface.
+
+Figure 211: Left to right: cylinder, cone, vase, sphere, and spiral.
+5.7.2
+
+Repeat
+
+The repeat setting determines the number of duplicate models to generate in the spin
+model. These models are equally spaced by default and undergo the same type of deformation (Figure 212).
+
+Figure 212: Repeat: 1 (left), 5 (center), and 11 (right).
+
+5.7.3
+
+Direction
+
+The direction setting has four options: +X, -X, +Y, and -Y. It determines which direction
+of the original model points to the revolving axis of the spin model (Figure 213).
+5.7.4
+
+Inner diameter
+
+The inner diameter is applicable to the cylinder and vase spin models. It determines the
+size of the inner hole (Figure 214). The outer diameter of the spin model is the inner
+diameter plus twice of the model thickness.
+112
+
+5.7
+
+Spin
+
+Hello LuBan
+
+Figure 213: Direction: +X (left), -X (center left), +Y (center right), and -Y (right).
+
+Figure 214: Inner diameter: 50 (left) and 80 (right).
+5.7.5
+
+Top and Bottom diameter
+
+The top and bottom diameters are applicable to the cone spin models. They determine
+the inner diameter of the top and bottom of the cone (Figure 215).
+
+Figure 215: Top and bottom diameters: 40 and 100 (left), and 100 and 40 (right).
+
+5.7.6
+
+Sphere angle
+
+The sphere angle is applicable to the sphere spin models. It determines the vertical
+angular span of an individual model (Figure 216).
+
+113
+
+5.7
+
+Spin
+
+Hello LuBan
+
+Figure 216: Sphere angle: 180 (left) and 300 (right) degrees.
+5.7.7
+
+Arc angle
+
+The arc angle is applicable to the cylinder, cone, vase, and sphere spin models. It determines the horizontal angular span of an individual model (Figure 217). An unsuitable
+combination of the arc angle and the repeat settings may cause the individual models to
+intersect with each other. Self intersection is a kind of mesh defects that are hard to fix;
+therefore, set the arc angle and the repeat settings wisely.
+
+Figure 217: Arc angle: 30 (left), 90 (center), and 150 (right) degrees.
+
+5.7.8
+
+Separation
+
+The separation is applicable to the spiral spin model. It determines the gap between
+individual models along the spiral (Figure 218).
+
+Figure 218: Separation: 10 (left), 30 (center), and 50 (right).
+
+114
+
+5.8
+
+Spring
+
+5.7.9
+
+Hello LuBan
+
+Model thickness
+
+The model thickness is the difference between the outer and inner radius (Figure 219).
+It can be used together with the model size Z setting to adjust the aspect ratio of an
+individual model.
+
+Figure 219: Model thickness: 10 (left), 20 (center), and 30 (right).
+
+5.7.10
+
+Cap and Base
+
+The cap line and base line settings determine the percentage of model to cut off from its
+top and bottom; where a cap and base will be attached. The thickness of the cap and
+base is user specified. If the cap line or base line is zero, the top or bottom of the model
+will not be cut off and no cap or base will be generated (Figure 220).
+
+Figure 220: Left: cap line 0, base line 5, base thickness 5. Center: cap line 5, cap thickness 5, base line:
+10, base thickness 10. Right: cap line 10, cap thickness 5, base line 0.
+
+5.8
+
+Spring
+
+The spring method converts a model to a layered hollow model that can be compressed
+and stretched like a spring (Figure 209). If the original model is hollow, its inner surface
+is ignored and it is treated as a solid model.
+
+115
+
+5.8
+
+Spring
+
+Hello LuBan
+
+Figure 221: A moai model made by LuBan user, Castellano Diego.
+5.8.1
+
+Layer width
+
+The layer width determines the width of the spring (Figure 222). The bigger the width,
+the stronger the structure but the less flexible the spring model. The width should not
+be set too small, e.g. smaller than the thickness, because the adjacent layers should have
+some overlap to avoid the need of support structures in 3D printing.
+
+Figure 222: Left and center left: layer width 10. Center right and right: layer width 20.
+
+5.8.2
+
+Thickness
+
+The thickness determines the thickness of each layer (Figure 223). The bigger the thickness, the stronger the structure but the less flexible the spring model. A suitable thickness
+value usually depends on the quality of filament. If the filament is brittle, a relatively big
+thickness should be used to strengthen the structure; otherwise, a small thickness may be
+applied to make the spring model flexible.
+5.8.3
+
+Separation
+
+The separation determines the gap between two layers (Figure 224). It should be set to
+a multiple of the layer height used in a slicing program. (The layer thickness of a spring
+model and the layer height of a slicing program are two different things.) The layer height
+is one Z-direction step in 3D printing, which is often set to the radius of a printer’s nozzle.
+
+116
+
+5.8
+
+Spring
+
+Hello LuBan
+
+Figure 223: Thickness: 2.5 (left), 5 (center), and 10 (right).
+
+Figure 224: Separation: 0.4 (left), 2 (center), and 4 (right).
+
+When the slicing program converts a model to gcode to control a 3D printer, it slices
+the model layer by layer based on the layer height. If the separation is set to a multiple
+of the layer height, e.g. 2 layer heights, the slicing program can generate a consistent gap
+between the layers of a spring model; however, if the separation is not a multiple of layer
+height, the gap will be inconsistent between the layers of the spring model.
+In practice, the gap should be quite small and no support is needed to print a spring
+model. The layers are not strongly adhered to each other; you can manually separate
+them by a scraper or by similar tools (Figure 225).
+
+Figure 225: Separate the layers of a spring model.
+
+117
+
+5.9
+
+Wave
+
+5.9
+
+Hello LuBan
+
+Wave
+
+The wave method applies a wave form to a model. It can be used to achieve certain
+special effects, such as adding wave forms to a lithophane (Figure 226). The original
+model will be deformed; therefore, it should have reasonably high vertex density. If the
+original model is of low vertex density, apply “Mesh → Densify” to increase the density.
+
+Figure 226: A wave edited lithophane made by LuBan user, Tihana Macakanja.
+
+5.9.1
+
+Oscillate
+
+The “oscillate in” setting determines the direction of wave propagation (Figure 227). The
+X, Y, and Z options generate a 2D spherical wave, while the source option generates a
+3D spherical wave. The red sphere indicates the position of the point source.
+
+Figure 227: Oscillate in the direction of X (left), Y (center left), Z (center right), and source (right).
+
+5.9.2
+
+Number of sources and Adjust source
+
+The number of sources can be user specified (Figure 228). Each source has its own
+parameters: position, amplitude, attenuation, wavelength, and phase. To change the
+parameters of one source, you can select the index of the source by the adjust source
+control. The selected source is indicated by the red sphere. Other sources are indicated
+by the cyan spheres.
+
+118
+
+5.9
+
+Wave
+
+Hello LuBan
+
+Figure 228: Left: two sources. Right: four sources.
+5.9.3
+
+X, Y, and Z
+
+The position of the source is specified through the X, Y, and Z sliders. The value of a
+slider is normalized to [-1, 1].
+5.9.4
+
+Amplitude
+
+The amplitude of a wave form is proportional to the maximum dimension of the original
+model. A normalized scaling factor of 1 to 10 can be user specified (Figure 229). A high
+amplitude produces large deformation of the model, which may cause the model surface
+to suffer from self-intersection defects.
+
+Figure 229: Amplitude: 1 (left), 5 (center), and 10 (right).
+
+5.9.5
+
+Attenuation
+
+The attenuation determines the reduction of the amplitude along the direction of wave
+propagation (Figure 230). A zero attenuation means no reduction. As the attenuation
+increases, the amplitude is reduced at a faster rate.
+5.9.6
+
+Wavelength
+
+The wavelength is proportional to the maximum dimension of the original model. A
+normalized scaling factor of 1 to 10 can be user specified (Figure 231). A small wavelength
+may cause the model surface to suffer from self-intersection defects.
+119
+
+5.9
+
+Wave
+
+Hello LuBan
+
+Figure 230: Attenuation: 0 (left), 5 (center), and 10 (right).
+
+Figure 231: Wavelength: 2 (left), 10 (center), and 20 (right).
+5.9.7
+
+Phase
+
+The phase determines the phase value of a wave form (Figure 232). It can be set to an
+integer between 0 and 35, corresponding to 0 and 350 degrees.
+
+Figure 232: Phase: 0 (left), 9 (center), and 18 (right).
+
+5.9.8
+
+Save model
+
+The save model button not only saves the current state of the wave-edited model but also
+optionally saves a sequence of changes based on the selected source’s position, amplitude,
+attenuation, wavelength, or phase. The sequence may be useful in compiling a video of
+wave propagation in the model.
+120
+
+5.10
+
+Wireframe
+
+5.10
+
+Hello LuBan
+
+Wireframe
+
+The wireframe method has a 2D and a 3D version that works quite differently. The
+2D wireframe is for laser cutting and engraving that produces a projected 3D effect
+(Figure 233). The 3D wireframe is for 3D printing to make a hollow, wireframe structure
+(Figure 234).
+
+Figure 233: 2D wireframe made by LuBan user, Thomas Pascoe.
+
+Figure 234: 3D wireframe made by LuBan user, Felipe AG.
+
+The following settings are similar to those of the hash method: Orthogonal vs. Radial,
+X, Y, Z layer, and tilt. In the hash method, no Y-direction layers are generated, while
+they are available in the wireframe method when using the orthogonal option.
+5.10.1
+
+2D vs. 3D
+
+The preview of a 2D wireframe shows wire lines on the surface of the original model but
+does not show the boundary line and the base socket because it is time consuming to
+calculate that information for real time display. The saved version shows all the lines in
+DXF, SVG, and SHP formats (Figure 235). When importing the DXF or SVG file to a
+laser cutting program, you can set the red line (boundary) for cutting and the black lines
+for engraving.
+The preview of the 3D wireframe does not show the thickness of the wires for the same
+reason. You have to save the model to view the generated 3D wireframe. When printing
+a 3D wireframe, it is best not to use any support. If the number of layers are reasonably
+large, you can count on a 3D printer to bridge all the gaps in a wireframe structure.
+121
+
+5.10
+
+Wireframe
+
+Hello LuBan
+
+Figure 235: Left: preview 2D wireframe. Center: saved 2D wireframe. Right: preview 3D wireframe
+5.10.2
+
+Wire thickness
+
+The wire thickness is a normalized value from 1 to 5 (Figure 236). If you prefer a dense
+wireframe with many layers, you may choose a small thickness; otherwise, choose a large
+thickness as a thicker structure is easier to print.
+
+Figure 236: Thickness: 1 (left), 3 (center), and 5 (right).
+
+122
+
+

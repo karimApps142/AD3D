@@ -1,0 +1,953 @@
+##### 2019-02-06 _test | Natural cut
+Natural cut
+Lujie Chen
+Feb 6, 2019
+1 min read
+Updated: Jun 15, 2019
+Apply a curved cut to an object.
+Related menu
+1. "Mesh -> LuBan", Method Module.
+2. "Mesh -> Split".
+##### 2019-02-12 printer-bed-shape | Printer bed shape
+Printer bed shape
+Lujie Chen
+Feb 12, 2019
+1 min read
+Support to a circular printer bed is added to "Mesh -> LuBan", Method Module.
+##### 2019-02-12 grid-cut | Grid cut
+Grid cut
+Lujie Chen
+Feb 12, 2019
+1 min read
+Grid cut split an object into equal-sized blocks.
+The function is under "Mesh -> Split", Method Grid cut.
+##### 2019-03-17 2d-wireframe | 2D Wireframe
+2D Wireframe
+Lujie Chen
+Mar 17, 2019
+1 min read
+Turn a 3D mesh into a 2D wireframe that can laser cut and engraved.
+The function is under "Mesh -> LuBan", Method Wireframe.
+##### 2019-03-18 d-shape-plug-and-dowel | D-shape plug and dowel
+D-shape plug and dowel
+Lujie Chen
+Mar 18, 2019
+1 min read
+D-shape plug and dowel allows the orientation of two parts to be uniquely determined.
+This option is available under "Mesh -> LuBan", Method Module and "Mesh -> Split".
+##### 2019-03-28 bitmap-to-vector-conversion | Bitmap to vector conversion
+Bitmap to vector conversion
+Lujie Chen
+Mar 28, 2019
+1 min read
+Convert a bitmap to a vector image for the ease of laser cutting.
+"Tool -> Convert -> Bitmap (binary image) -> Vector"
+"Tool -> Convert -> Bitmap (natural image) -> Vector"
+##### 2019-04-02 staggered-cut-pattern | Staggered cut pattern
+Staggered cut pattern
+Lujie Chen
+Apr 2, 2019
+1 min read
+An option of a staggered cut pattern is added to "Mesh -> Split", Method Grid cut.
+##### 2019-04-03 exploded-view | Exploded view
+Exploded view
+Lujie Chen
+Apr 3, 2019
+1 min read
+Show multiple objects in a window in an exploded view.
+"Object -> Explode" and "Object -> Restore".
+##### 2019-04-25 lithophane-1st-release | Lithophane 1st release
+Lithophane 1st release
+Lujie Chen
+Apr 25, 2019
+1 min read
+Turn any 2D photo into a 3D printed photo with a frame.
+"File -> Create -> Lithophane"
+##### 2019-05-09 lithophane-2nd-release | Lithophane 2nd release
+Lithophane 2nd release
+Lujie Chen
+May 9, 2019
+1 min read
+Sphere lithophane
+##### 2019-05-14 3d-wireframe | 3D Wireframe
+3D Wireframe
+Lujie Chen
+May 15, 2019
+1 min read
+Turn a 3D mesh into a 3D wireframe.
+"Mesh -> LuBan", Method Wireframe.
+##### 2019-05-27 lithophane-3rd-release | Lithophane 3rd release
+Lithophane 3rd release
+Lujie Chen
+May 27, 2019
+1 min read
+Lamp color and intensity, filament color, one body vs. assembly.
+##### 2019-06-01 lithophane-4th-release | Lithophane 4th release
+Lithophane 4th release
+Lujie Chen
+Jun 1, 2019
+1 min read
+Lithophane on the interior surface.
+##### 2019-06-07 lithophane-5th-release | Lithophane 5th release
+Lithophane 5th release
+Lujie Chen
+Jun 7, 2019
+1 min read
+Cone shape lithophane
+##### 2019-06-09 contour | Contour
+Contour
+Lujie Chen
+Jun 9, 2019
+1 min read
+Turn a 3D mesh into a set of 2D contours, which can be laser engraved on transparent sheets, giving a 3D perspective effect.
+##### 2019-06-13 depth-map-of-a-3d-mesh | Depth map
+Depth map
+Lujie Chen
+Jun 13, 2019
+1 min read
+Updated: Jun 16, 2019
+Get the depth map of a 3D mesh using "Mesh -> Depth map".
+##### 2019-06-22 relief | Relief
+Relief
+Lujie Chen
+Jun 22, 2019
+1 min read
+Turn a 3D mesh into a relief that can be fabricated by 3D printing, CNC milling, and laser engraving.
+Function under "Mesh -> LuBan", Method Relief.
+##### 2019-07-07 flexible-grid-cut | Flexible grid cut
+Flexible grid cut
+Lujie Chen
+Jul 7, 2019
+1 min read
+Adjust each cutting plane under "Mesh -> Split", Method Grid cut.
+##### 2019-07-09 double-sided-relief | Double-sided relief
+Double-sided relief
+Lujie Chen
+Jul 9, 2019
+1 min read
+Mesh -> LuBan, Method Relief. An option is added to generate double-sided relief.
+##### 2019-07-25 lithophane-6th-release | Lithophane 6th release
+Lithophane 6th release
+Lujie Chen
+Jul 25, 2019
+1 min read
+An adjustable vase-like shape is added. Through control points, the shape can take various different forms.
+##### 2019-09-02 flat-lithophane-support | Lithophane support
+Lithophane support
+Lujie Chen
+Sep 2, 2019
+1 min read
+Updated: Sep 22, 2019
+Add edge support to flat and arc lithophane to reduce the out-of-plane movement during 3D printing. A tall flat lithophane is particularly sensitive to nozzle movement. With the edge support, a flat lithophane is more stable during printing and better results can be obtained.
+##### 2019-09-05 cutting-region | Cutting region
+Cutting region
+Lujie Chen
+Sep 5, 2019
+1 min read
+Split a model by a cutting region instead of a basic cutting plane.
+##### 2019-09-08 stretch-to-cover-full-surface | Stretch to whole surface
+Stretch to whole surface
+Lujie Chen
+Sep 8, 2019
+1 min read
+Stretch a photo to cover the whole surface of a cylinder, cone, and vase lithophane.
+##### 2019-09-21 _wave | Wave
+Wave
+Lujie Chen
+Sep 21, 2019
+1 min read
+Apply wave propagation to a mesh to create interesting visual effects and to generate wavy surface deformation to the mesh.
+##### 2019-09-28 lithophane-7th-release | Lithophane 7th release
+Lithophane 7th release
+Lujie Chen
+Sep 28, 2019
+1 min read
+A new shape ,spiral, enables the print of very large lithohphane. After printing, the spiral lithophane can be put in hot water and be reshaped to a long, flat lithophane.
+##### 2019-09-28 radial-center-adjustment | Radial center adjustment
+Radial center adjustment
+Lujie Chen
+Sep 28, 2019
+1 min read
+Adjust the radial center of the Radial method.
+##### 2019-09-30 cookie-cutter | Cookie cutter
+Cookie cutter
+Lujie Chen
+Sep 30, 2019
+1 min read
+Generate 3D printable cookie cutter from a black and white picture.
+##### 2019-10-13 halftone | Halftone
+Halftone
+Lujie Chen
+Oct 13, 2019
+1 min read
+Convert a grayscale image to a halftone image for laser engraving.
+##### 2019-10-15 halftone-line | Halftone line
+Halftone line
+Lujie Chen
+Oct 15, 2019
+1 min read
+Convert a grayscale image to a halftone line image. Base line intensity, line width, gap between lines, and line angle can be adjusted.
+##### 2019-10-28 pillar | Pillar
+Pillar
+Lujie Chen
+Oct 28, 2019
+1 min read
+Represent a photo by laser cut or 3D printed pillars.
+##### 2019-11-01 radial-cut | Radial cut
+Radial cut
+Lujie Chen
+Nov 1, 2019
+1 min read
+Radially cut a 3D object.
+##### 2019-11-21 cookie-cutter-2nd-release | Cookie cutter 2nd release
+Cookie cutter 2nd release
+Lujie Chen
+Nov 21, 2019
+1 min read
+Generate an inner pattern based on an image to cut and imprint a cookie.
+##### 2019-12-17 morphing | Morphing
+Morphing
+Lujie Chen
+Dec 17, 2019
+1 min read
+Morph two photos or two text strings into a 3D model.
+##### 2020-01-12 extrusion | Extrusion
+Extrusion
+Lujie Chen
+Jan 12, 2020
+1 min read
+Extrude a 2D pattern on a photo or a text string to generate a 3D model.
+##### 2020-01-19 extrusion-2nd-release | Extrusion 2nd release
+Extrusion 2nd release
+Lujie Chen
+Jan 19, 2020
+1 min read
+Add keychain hole and color to the extrusion method.
+##### 2020-01-27 collage | Collage
+Collage
+Lujie Chen
+Jan 27, 2020
+1 min read
+Generate a collage of photos.
+##### 2020-01-31 morphing-2nd-release | Morphing 2nd release
+Morphing 2nd release
+Lujie Chen
+Jan 31, 2020
+1 min read
+Improved text morphing. The text and base are generated as one body instead of two disconnected, intersecting parts. The text string are aligned properly and the shape of the base is set to rounded rectangle.
+##### 2020-02-06 cookie-cutter-3rd-release | Cookie cutter 3rd release
+Cookie cutter 3rd release
+Lujie Chen
+Feb 6, 2020
+1 min read
+All components of the cookie cutter are generated as one body instead of disconnected parts. Clearance to the inner pattern is added. Base holes generated will not interfere with the inner pattern.
+##### 2020-02-08 password-protected-3d-file | Password-protected 3D file
+Password-protected 3D file
+Lujie Chen
+Feb 8, 2020
+2 min read
+Background
+You sell 3D designs in STL or OBJ formats to clients. Before they make payment, you usually show them a few screenshots of a model but they would want to play with it in real 3D, view it in detail from different angles, and then decide whether to buy it.
+As STL and OBJ are open formats, you cannot just give your clients the original files. You may give them a simplified version but they cannot see the details, which often determine the price of a model.
+Now, you can send your clients a model file in LuBan format protected by a password. They can view it in LuBan in every detail but without the password they cannot modify it or convert it to an open format. After they make payment, you send them the password; then they can unlock the file.
+This feature is free. You do not need a LuBan license in order to set a password to a model.
+What you do
+1. Run LuBan.
+2. Open an STL or OBJ that you hope to protect with a password.
+3. File -> Set password.
+4. File -> Save. Save the model in LuBan format. You will get two files: XXX.fgs and XXX.fgd.
+5. Send both files to your clients.
+What your clients do
+1. Download XXX.fgs and XXX.fgd files.
+2. Run LuBan.
+3. Open XXX.fgs. He can view it anyway he wants in LuBan.
+4. After receiving the password from you, he can File -> Export -> STL or OBJ. Then, the model will be saved in STL or OBJ format. You no longer have any control on the model.
+To unlock a file larger than 5MB, either you or your client should have a LuBan license; however, you can bypass the unlocking feature by giving your client the STL directly after receiving his payment.
+Please note that after unlock, you have no control over the model. Your client can pass the converted STL to anyone. If you hope to know which one of your clients shared a model without your permission, you need a different solution: that is MeshSafe: www.luban3d.com/meshsafe.
+##### 2020-02-09 morphing-3rd-release | Morphing 3rd release
+Morphing 3rd release
+Lujie Chen
+Feb 9, 2020
+1 min read
+Negative morphing
+##### 2020-02-14 extrusion-3rd-release | Extrusion 3rd release
+Extrusion 3rd release
+Lujie Chen
+Feb 14, 2020
+1 min read
+Positive and negative extrusion. Expansion and clearance controls.
+##### 2020-02-17 meshsafe-command-line | MeshSafe command line
+MeshSafe command line
+Lujie Chen
+Feb 17, 2020
+1 min read
+MeshSafe command line interface is created. The program is called mscmd.exe. To use the program, input three strings as shown below.
+mscmd   d:\dino.stl   so29   d:\dino_sign.stl
+String 1: Input 3D model's file name and path.
+String 2: Signature to be signed on the input model.
+String 3: Output signed 3D model's file name and path.
+Signature can be viewed in MeshSafe.exe, via "File -> Scan signature" function, which is a free feature.
+##### 2020-02-21 overlay-photos | Overlay photos
+Overlay photos
+Lujie Chen
+Feb 21, 2020
+1 min read
+In LuBan 2D window, open two photos. Use Draw -> Create -> Image to select a photo and overlay it on the other one.
+Right click on the overlaid photo, select Properties, and then set a Mask RGB value to enable photo overlay with transparency.
+Video tutorial: https://www.youtube.com/watch?v=xV3QRm2Io1Y
+YT: xV3QRm2Io1Y
+##### 2020-03-01 lithophane-update | Lithophane update
+Lithophane update
+Lujie Chen
+Mar 1, 2020
+1 min read
+1. In the previous lithophane functions, the base, lamp socket, and lithophane were generated as disconnected components. In this update, all components are generated as one body.
+2. Flat and Arc lithophane have socket types: O and U.
+3. Rectangle, Hexagon, Octagon, and Dodecagon lithophane have a control over base thickness.
+4. Cylinder, Cone, and Vase lithophane have a solid vs. hollow base option. If using a hollow base, a lamp socket can be generated.
+##### 2020-03-18 puzzle | Puzzle
+Puzzle
+Lujie Chen
+Mar 18, 2020
+1 min read
+Generate 3D puzzle from a picture
+##### 2020-03-19 sphere-lithophane-base | Sphere lithophane base
+Sphere lithophane base
+Lujie Chen
+Mar 19, 2020
+1 min read
+Base socket option is added to sphere lithophane.
+##### 2020-03-22 wave-update | Wave update
+Wave update
+Lujie Chen
+Mar 22, 2020
+1 min read
+Wave oscillation direction has been added to allow for more flexible wave generation.
+##### 2020-03-24 true-color-puzzle | True color puzzle
+True color puzzle
+Lujie Chen
+Mar 24, 2020
+1 min read
+If the selected photo has true color, LuBan will export puzzle parts in OBJ and STL formats. The OBJ format contains the color information, while the STL format is colorless.
+##### 2020-04-09 _spin | Spin
+Spin
+Lujie Chen
+Apr 9, 2020
+1 min read
+Generate a spinning effect from a 3D model.
+##### 2020-04-18 new-connector-claw | New connector: Claw
+New connector: Claw
+Lujie Chen
+Apr 18, 2020
+1 min read
+A new type of connector: Claw offers appealing mechanical properties compared to existing ones: Terrace and Pyramid.
+##### 2020-04-29 spring | Spring
+Spring
+Lujie Chen
+Apr 29, 2020
+1 min read
+Generate a spring model from a 3D model.
+Make Anything YouTube channel has a few good videos about how to 3D print such spring models.
+https://www.youtube.com/watch?v=HgY7ovYWplg&t=374s
+https://www.youtube.com/watch?v=DQ1PZZgt28w
+YT: DQ1PZZgt28w HgY7ovYWplg
+##### 2020-05-10 mesh-box-update | Mesh -> Box update
+Mesh -> Box update
+Lujie Chen
+May 10, 2020
+1 min read
+Add cylindrical and spherical box shapes in addition to a cubic box.
+##### 2020-06-11 lithophane-8th-release | Lithophane 8th release
+Lithophane 8th release
+Lujie Chen
+Jun 11, 2020
+1 min read
+Generate balloon lithophane
+##### 2020-07-04 cookie-cutter-4th-release | Cookie cutter 4th release
+Cookie cutter 4th release
+Lujie Chen
+Jul 4, 2020
+1 min read
+Add an option to generate the cutter and inner pattern as two separate objects.
+##### 2020-07-29 luban-linux-version | LuBan Linux version
+LuBan Linux version
+Lujie Chen
+Jul 30, 2020
+1 min read
+LuBan is in Linux Ubuntu 64 bit. Put MU_License.dat in the same folder as LuBan.
+##### 2020-08-19 __box | Box
+Box
+Lujie Chen
+Aug 19, 2020
+1 min read
+Generate a box from a picture.
+##### 2020-09-11 box-2nd-release | Box 2nd release
+Box 2nd release
+Lujie Chen
+Sep 11, 2020
+1 min read
+Add flat and inlay lid types. In a flat lid, several magnet sinks can be generated to embed button magnets.
+##### 2020-09-15 lithophane-9th-release | Lithophane 9th release
+Lithophane 9th release
+Lujie Chen
+Sep 16, 2020
+1 min read
+Generate a color image for making a color lithophane.
+##### 2020-09-30 box-3rd-release | Box 3rd release
+Box 3rd release
+Lujie Chen
+Sep 30, 2020
+1 min read
+Add an outer size option and a nested box option.
+##### 2020-10-18 morphing-4th-release | Morphing 4th release
+Morphing 4th release
+Lujie Chen
+Oct 18, 2020
+1 min read
+Three-way morphing
+##### 2020-11-07 lithophane-10th-release | Lithophane 10th release
+Lithophane 10th release
+Lujie Chen
+Nov 7, 2020
+1 min read
+Generate a tattoo lithophane based on any 3D model.
+##### 2020-12-11 cocoon | Cocoon
+Cocoon
+Lujie Chen
+Dec 11, 2020
+1 min read
+Generate an outer surface of a 3D model.
+##### 2021-03-13 layering | Layering
+Layering
+Lujie Chen
+Mar 13, 2021
+1 min read
+Generate a multi-layer object from a photo.
+##### 2021-03-30 multi-printer-modular-cut | Multi-printer modular cut
+Multi-printer modular cut
+Lujie Chen
+Mar 30, 2021
+1 min read
+Cut an object based on multiple printers' volume so that the parts can be printed in parallel in these printers.
+##### 2021-04-18 lithophane-11th-release | Lithophane 11th release
+Lithophane 11th release
+Lujie Chen
+Apr 18, 2021
+1 min read
+Generate a stencil lithophane based on a template image and a photo.
+##### 2021-04-26 _cell | Cell
+Cell
+Lujie Chen
+Apr 27, 2021
+1 min read
+Generate a cell structure to represent a photo.
+##### 2021-06-12 moire | Moire
+Moire
+Lujie Chen
+Jun 12, 2021
+1 min read
+Generate a base and a slit image for moire animation from a series of images.
+##### 2021-07-13 eyeglasses | Eyeglasses
+Eyeglasses
+Lujie Chen
+Jul 13, 2021
+1 min read
+Generate an eyeglasses frame based on a template image.
+##### 2021-08-02 eyeglasses-virtual-try-on | Eyeglasses virtual try on
+Eyeglasses virtual try on
+Lujie Chen
+Aug 2, 2021
+1 min read
+Updated: Aug 3, 2021
+Virtually try on eyeglasses using a web camera. This feature is available on Windows OS only.
+##### 2021-09-08 _pipe | Pipe
+Pipe
+Lujie Chen
+Sep 8, 2021
+1 min read
+Convert a 3D model into a structure made of pipes and connectors.
+##### 2021-10-01 painting | Painting
+Painting
+Lujie Chen
+Oct 1, 2021
+1 min read
+Extract color layers from a photo so that it can be 3D printed or laser cut. The assembly of the color layers is a painting based on the photo.
+##### 2021-11-03 puzzle-2nd-release | Puzzle 2nd release
+Puzzle 2nd release
+Lujie Chen
+Nov 4, 2021
+1 min read
+Color layered puzzle. Each puzzle piece consists of several color layers, similar to the Painting method.
+##### 2021-12-02 block | Block
+Block
+Lujie Chen
+Dec 2, 2021
+1 min read
+Convert a 3D model to a block model.
+##### 2021-12-10 lithophane-12th-release | Lithophane 12th release
+Lithophane 12th release
+Lujie Chen
+Dec 10, 2021
+1 min read
+Turn a 3D solid model into a lithophane that feels like being made of bronze.
+##### 2022-02-21 halftone-1 | Halftone
+Halftone
+Lujie Chen
+Feb 21, 2022
+1 min read
+Convert a photo to a halftone image based on various patterns or a template image.
+##### 2022-04-24 folding | Folding
+Folding
+Lujie Chen
+Apr 24, 2022
+1 min read
+Generate folding panels that can be folded back to make a model.
+##### 2022-07-17 _dice | Dice
+Dice
+Lujie Chen
+Jul 17, 2022
+1 min read
+Generate a dice from template images.
+##### 2022-08-02 lithophane-13th-release | Lithophane 13th release
+Lithophane 13th release
+Lujie Chen
+Aug 2, 2022
+1 min read
+Generate a dual lithophane from two photos.
+##### 2022-08-02 lenticule | Lenticule
+Lenticule
+Lujie Chen
+Aug 2, 2022
+1 min read
+Generate a lenticular effect from two photos, visible from a different viewing angle.
+##### 2022-08-24 bamboo-copter | Bamboo-copter
+Bamboo-copter
+Lujie Chen
+Aug 24, 2022
+1 min read
+Generate a bamboo-copter.
+##### 2022-09-12 native-connector | Native connector
+Native connector
+Lujie Chen
+Sep 12, 2022
+1 min read
+Generate a native-shaped connector that follows the shape of a cut section.
+##### 2022-10-31 bottle | Bottle
+Bottle
+Lujie Chen
+Oct 31, 2022
+1 min read
+Generate a bottle model based on a horizontal and a vertical cross-section
+image.
+##### 2022-12-23 lithophane-14th-release | Lithophane 14th release
+Lithophane 14th release
+Lujie Chen
+Dec 23, 2022
+1 min read
+Generate a frustum lithophane.
+##### 2023-02-07 _wire | Wire
+Wire
+Lujie Chen
+Feb 7, 2023
+1 min read
+Generate a wire structure from a photo.
+##### 2023-08-13 slicer | Slicer
+Slicer
+Lujie Chen
+Aug 13, 2023
+1 min read
+Generate gcode from a 3D model for 3D printing.
+##### 2023-09-24 flexi | Flexi
+Flexi
+Lujie Chen
+Sep 24, 2023
+1 min read
+Generate a flexi 3D model from a photo.
+##### 2023-10-23 batch-slicing | Batch slicing
+Batch slicing
+Lujie Chen
+Oct 23, 2023
+1 min read
+Slice a batch of models and optionally nest the models.
+##### 2023-11-15 multi-thread-modular-cut | Multi-thread Modular Cut
+Multi-thread Modular Cut
+Lujie Chen
+Nov 15, 2023
+1 min read
+The cutting speed of Mesh -> Cut, Modular cut is significantly improved by multi-thread programming. The speed enhancement in Windows version is the best, followed by Mac OS 11 or 12, then Mac OS 10, lastly Linux Ubuntu.
+In future, I will also bring Mac and Linux to the same level of speed improvement as Windows.
+Download the latest LuBan and keep your old LuBan version to do a comparison. The speed difference is most obvious when you cut a file larger than 20MB.
+##### 2023-12-09 lithophane-15th-release | Lithophane 15th release
+Lithophane 15th release
+Lujie Chen
+Dec 9, 2023
+1 min read
+Generate a lithophane box.
+##### 2024-01-04 lithophane-16th-release | Lithophane 16th release
+Lithophane 16th release
+Lujie Chen
+Jan 4, 2024
+1 min read
+Generate CMYK color lithophane.
+##### 2024-01-30 lithophane-17th-release | Lithophane 17th release
+Lithophane 17th release
+Lujie Chen
+Jan 30, 2024
+1 min read
+Generate CMYK stencil and box lithophane.
+##### 2024-02-05 vector-image-template | Vector image template
+Vector image template
+Lujie Chen
+Feb 5, 2024
+1 min read
+The stencil and box lithophane can accept a vector image template in DXF or SHP format. This helps to make a box with smooth surface, free from bumpy artifacts when dealing with a bitmap template.
+##### 2024-02-17 _star | Star
+Star
+Lujie Chen
+Feb 17, 2024
+1 min read
+Convert a 3D model to an interlocking, star-like structure.
+##### 2024-03-03 lithophane-18th-release | Lithophane 18th release
+Lithophane 18th release
+Lujie Chen
+Mar 3, 2024
+1 min read
+Generate a double-sided lithophane box.
+##### 2024-04-13 painting-box | Painting box
+Painting box
+Lujie Chen
+Apr 13, 2024
+1 min read
+Generate a painting with a box.
+##### 2024-05-07 double-sided-painting-box | Double-sided painting box
+Double-sided painting box
+Lujie Chen
+May 7, 2024
+1 min read
+Generate a double-sided painting box.
+##### 2024-07-09 string | String
+String
+Lujie Chen
+Jul 9, 2024
+1 min read
+Generate strings to connect 3D objects in a frame.
+##### 2024-07-15 string-art | String art
+String art
+Lujie Chen
+Jul 15, 2024
+1 min read
+Use many lines to represent a photo.
+##### 2024-07-21 halftone-2 | Halftone
+Halftone
+Lujie Chen
+Jul 21, 2024
+1 min read
+Turn a photo into a 3D halftone model.
+##### 2024-07-31 combine | Boolean
+Boolean
+Lujie Chen
+Jul 31, 2024
+1 min read
+Updated: Aug 1, 2024
+Apply a mesh-boolean operation: union, intersection, or subtraction to two or more mesh objects.
+##### 2024-09-09 block-1 | Block
+Block
+Lujie Chen
+Sep 9, 2024
+1 min read
+Turn a photo into many connected blocks.
+##### 2024-09-17 channel | Channel
+Channel
+Lujie Chen
+Sep 17, 2024
+1 min read
+Turn a photo into a channel structure.
+##### 2024-10-06 helix | Helix
+Helix
+Lujie Chen
+Oct 6, 2024
+1 min read
+Generate a pair of inner and outer helix structures from a 3D model.
+##### 2024-11-13 lithophane-19th-release | Lithophane 19th release
+Lithophane 19th release
+Lujie Chen
+Nov 13, 2024
+1 min read
+Generate a perspective frustum lithophane.
+##### 2024-11-23 pendant | Pendant
+Pendant
+Lujie Chen
+Nov 23, 2024
+1 min read
+Turn a photo into a pendant.
+##### 2024-12-18 non-axial-cut | Axial and non-axial cut
+Axial and non-axial cut
+Lujie Chen
+Dec 18, 2024
+1 min read
+Generate non-axial cutting planes in the Modular cut method.
+##### 2024-12-31 conic-cut | Conic cut
+Conic cut
+Lujie Chen
+Dec 31, 2024
+1 min read
+Cut a model by a cone.
+##### 2025-01-15 voronoi-wireframe | Voronoi wireframe
+Voronoi wireframe
+Lujie Chen
+Jan 15, 2025
+1 min read
+Generate a Voronoi wireframe model from a 3D model.
+##### 2025-01-27 tumbler | Tumbler
+Tumbler
+Lujie Chen
+Jan 27, 2025
+1 min read
+Generate a tumbler from a 3D model.
+##### 2025-02-02 lips-connector | Lips connector
+Lips connector
+Lujie Chen
+Feb 2, 2025
+1 min read
+Generate a lips connector to facilitate the assembly of parts.
+##### 2025-02-05 cmyk-lithophane-filament-color | CMYK lithophane filament color
+CMYK lithophane filament color
+Lujie Chen
+Feb 5, 2025
+1 min read
+Apply customized filament colors to generate CMYK lithophane.
+##### 2025-03-01 hash-surface | Hash surface
+Hash surface
+Lujie Chen
+Mar 1, 2025
+1 min read
+Generate surface patches of a hash structure.
+##### 2025-03-22 _grid | Grid
+Grid
+Lujie Chen
+Mar 22, 2025
+1 min read
+Generate a grid model from a 3D model.
+##### 2025-04-06 multi-planar-cut | Multi-planar cut
+Multi-planar cut
+Lujie Chen
+Apr 6, 2025
+1 min read
+Apply multiple planar cuts in one go.
+##### 2025-04-14 separate | Separate
+Separate
+Lujie Chen
+Apr 14, 2025
+1 min read
+Separate and visualize disconnected components of a model as individual model files.
+##### 2025-04-17 fewer-parts-of-the-modular-cut | Fewer parts of the Modular cut
+Fewer parts of the Modular cut
+Lujie Chen
+Apr 17, 2025
+1 min read
+The modular cut method is improved to produce fewer parts when cutting a big model.
+##### 2025-05-01 tiling | Tiling
+Tiling
+Lujie Chen
+May 1, 2025
+1 min read
+Map a texture photo onto a 3D model.
+##### 2025-05-16 mouse-movable-cutting-plane | Mouse-movable cutting plane
+Mouse-movable cutting plane
+Lujie Chen
+May 16, 2025
+1 min read
+In the Planar cut method, cutting planes can now be selected and moved by a mouse device.
+##### 2025-05-25 grid-version-2 | Grid version 2
+Grid version 2
+Lujie Chen
+May 25, 2025
+1 min read
+Several new patterns are added to the Grid method.
+##### 2025-05-29 grid-version-3 | Grid version 3
+Grid version 3
+Lujie Chen
+May 29, 2025
+1 min read
+Patterns loaded from images are accepted by the Grid method.
+##### 2025-07-01 whistle | Whistle
+Whistle
+Lujie Chen
+Jul 1, 2025
+1 min read
+Turn a photo into a whistle.
+##### 2025-07-28 spinner | Spinner
+Spinner
+Lujie Chen
+Jul 28, 2025
+1 min read
+Generate a spinner model from a 3D model.
+##### 2025-08-02 box-intrude-inner-pattern | Box intrude inner pattern
+Box intrude inner pattern
+Lujie Chen
+Aug 2, 2025
+1 min read
+An intrude option is added to the inner pattern of the Photo magic, Box method.
+##### 2025-08-25 slide | Slide
+Slide
+Lujie Chen
+Aug 25, 2025
+1 min read
+Generate a slide model from a 3D model.
+##### 2025-09-01 morphing-grid | Morphing grid
+Morphing grid
+Lujie Chen
+Sep 1, 2025
+1 min read
+Updated: Sep 5, 2025
+A grid option is added to the morphing method.
+##### 2025-09-24 grill | Grill
+Grill
+Lujie Chen
+Sep 24, 2025
+1 min read
+Generate a grill model from a 3D model.
+##### 2025-09-27 id-photo | ID Photo
+ID Photo
+Lujie Chen
+Sep 27, 2025
+1 min read
+Make a set of ID photos from a common photo.
+##### 2025-10-01 ridge | Ridge
+Ridge
+Lujie Chen
+Oct 1, 2025
+1 min read
+Turn a photo into a ridge model.
+##### 2025-10-15 fabric | Fabric
+Fabric
+Lujie Chen
+Oct 15, 2025
+1 min read
+Turn a photo into a fabric model.
+##### 2025-10-18 wormhole | Wormhole
+Wormhole
+Lujie Chen
+Oct 18, 2025
+1 min read
+Turn a photo into a wormhole model.
+##### 2025-11-03 block-version-2 | Block version 2
+Block version 2
+Lujie Chen
+Nov 3, 2025
+1 min read
+Turn a photo into a block chain mail.
+##### 2025-11-13 flexi-cut | Flexi cut
+Flexi cut
+Lujie Chen
+Nov 13, 2025
+1 min read
+Cut a model to convert it to a flexi model.
+##### 2025-12-02 dual-grid | Dual grid
+Dual grid
+Lujie Chen
+Dec 2, 2025
+1 min read
+Generate a dual grid model from a 3D model.
+##### 2025-12-11 cutter-stopper | Cutter stopper
+Cutter stopper
+Lujie Chen
+Dec 11, 2025
+1 min read
+A stopper control is added to the cutter method.
+##### 2025-12-24 glider | Glider
+Glider
+Lujie Chen
+Dec 24, 2025
+1 min read
+Generate a glider model.
+##### 2026-01-03 lithophane-20th-release | Lithophane 20th release
+Lithophane 20th release
+Lujie Chen
+Jan 3
+1 min read
+Generate a double-sided stencil lithophane.
+##### 2026-01-22 lithophane-21st-release | Lithophane 21st release
+Lithophane 21st release
+Lujie Chen
+Jan 22
+1 min read
+Generate a tile lithophane from a 3D model.
+##### 2026-03-05 projection | Projection
+Projection
+Lujie Chen
+Mar 5
+1 min read
+Generate a projection from a photo.
+##### 2026-03-20 fidget | Fidget
+Fidget
+Lujie Chen
+Mar 20
+1 min read
+Turn a photo into a fidget model.
+##### 2026-04-11 lap-joint | Lap joint
+Lap joint
+Lujie Chen
+Apr 11
+1 min read
+Generate a lap joint at a cut section.
+##### 2026-05-09 lap-joint-v2 | Lap joint v2
+Lap joint v2
+Lujie Chen
+May 9
+1 min read
+Improved lap joint generation, now applicable to a solid polygon cut section. The lap joint is useful when cutting a thin-wall structure, where plugs or dowels cannot be generated due to thin cut sections.
+##### 2026-05-26 _mold | Mold
+Mold
+Lujie Chen
+May 26
+1 min read
+Generate a mold model from a 3D model.
+##### 2026-07-28 pandora | Pandora
+Pandora
+Lujie Chen
+Jul 28
+1 min read
+Create a light box to cast a shadow image. The cover of the box can be a customized lithophane.
+##### 2026-08-08 fence | Fence
+Fence
+Lujie Chen
+Aug 8
+1 min read
+Generate a fence projection from an image.
+##### 2026-08-19 moire-1 | Moire
+Moire
+Lujie Chen
+Aug 19
+1 min read
+Generate a moire model from several photos.
+##### 2026-08-28 clicker | Clicker
+Clicker
+Lujie Chen
+Aug 28
+1 min read
+Generate a clicker model from a 3D model.
+##### 2026-09-13 photo-clicker | Photo clicker
+Photo clicker
+Lujie Chen
+Sep 13
+1 min read
+Generate a clicker model from a photo.
+##### 2026-09-23 teacup | Teacup
+Teacup
+Lujie Chen
+Sep 23
+1 min read
+Generate a teacup model from a photo.
+##### 2026-10-01 squama | Squama
+Squama
+Lujie Chen
+Oct 1
+1 min read
+Generate a projection image based on a structure of squama pattern.
+##### 2026-10-14 thermal | Thermal
+Thermal
+Lujie Chen
+5 days ago
+1 min read
+Convert a 3D model to a positive mold, a negative mold, and a flat piece. The flat piece can be thermally treated and then be compressed into the pair of molds to form the shape of the 3D model.

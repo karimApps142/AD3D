@@ -1,0 +1,508 @@
+00:00:00 Hello everyone. In this video, we are
+00:00:03 going to explore a new feature of Lupan.
+00:00:06 going to explore a new feature of Lupan.
+00:00:06 It is called squamama.
+00:00:10 It is called squamama.
+00:00:10 Before we dive into the function, let's
+00:00:13 Before we dive into the function, let's
+00:00:13 take a look at the work of an artist and
+00:00:17 take a look at the work of an artist and
+00:00:17 he has an Instagram account.
+00:00:21 he has an Instagram account.
+00:00:21 This is his homepage on the Instagram.
+00:00:25 This is his homepage on the Instagram.
+00:00:25 He has many creative designs and the
+00:00:28 He has many creative designs and the
+00:00:28 squammer feature is related to one of
+00:00:33 squammer feature is related to one of
+00:00:33 his designs.
+00:00:35 his designs.
+00:00:35 So let's take a look at this this
+00:00:37 So let's take a look at this this
+00:00:37 picture for example.
+00:00:44 Light on, light off, light on, light
+00:00:47 off.
+00:00:49 off.
+00:00:49 So when the light is off and if we only
+00:00:52 So when the light is off and if we only
+00:00:52 have room light or ambient light, you do
+00:00:56 have room light or ambient light, you do
+00:00:56 not see the image. When the light is on,
+00:00:59 not see the image. When the light is on,
+00:00:59 you start.
+00:01:06 So how exactly this is achieved?
+00:01:11 Maybe we can take a
+00:01:15 Maybe we can take a
+00:01:15 take a look.
+00:01:17 take a look.
+00:01:17 So he has to put uh panels
+00:01:22 So he has to put uh panels
+00:01:22 manually on a frame on a very big frame.
+00:01:32 This is ambient light. And then one of
+00:01:35 the the lighting one direction is on. So
+00:01:39 the the lighting one direction is on. So
+00:01:39 this video has a zoom in view to help us
+00:01:42 this video has a zoom in view to help us
+00:01:42 see what's going on.
+00:01:46 see what's going on.
+00:01:46 a lot of small panels and these panels
+00:01:49 a lot of small panels and these panels
+00:01:49 are oriented at slightly different
+00:01:52 are oriented at slightly different
+00:01:52 angle.
+00:01:53 angle.
+00:01:53 So when the light is uh illuminating the
+00:01:57 So when the light is uh illuminating the
+00:01:57 panel for example from the top due to
+00:02:01 panel for example from the top due to
+00:02:01 different angle some pieces will
+00:02:04 different angle some pieces will
+00:02:04 generate a shadow and some pieces will
+00:02:07 generate a shadow and some pieces will
+00:02:07 not generate shadow. So you see black
+00:02:10 not generate shadow. So you see black
+00:02:10 and white or a transition of gray in the
+00:02:13 and white or a transition of gray in the
+00:02:13 image.
+00:02:15 image.
+00:02:15 Uh as for the the in inherent pattern,
+00:02:20 Uh as for the the in inherent pattern,
+00:02:20 this is wooden pattern on the on each
+00:02:23 this is wooden pattern on the on each
+00:02:23 panel. According to this artist, it
+00:02:26 panel. According to this artist, it
+00:02:26 doesn't matter. You can use uh any
+00:02:28 doesn't matter. You can use uh any
+00:02:28 pattern or you can use a panel without
+00:02:31 pattern or you can use a panel without
+00:02:31 pattern.
+00:02:33 pattern.
+00:02:33 So that's the process.
+00:02:40 Let's take a look at another piece of
+00:02:43 work.
+00:02:57 So in this video you can see him placing
+00:03:00 the panel one by one as we are uh
+00:03:06 the panel one by one as we are uh
+00:03:06 dealing with 3D printing. So I think the
+00:03:08 dealing with 3D printing. So I think the
+00:03:08 process can be fully automated. We can
+00:03:11 process can be fully automated. We can
+00:03:11 use 3D printer to print the panels at
+00:03:16 use 3D printer to print the panels at
+00:03:16 slightly different angle. And this is
+00:03:18 slightly different angle. And this is
+00:03:18 what we are going to do in the new
+00:03:21 what we are going to do in the new
+00:03:21 feature squammer. Squamama means fish
+00:03:25 feature squammer. Squamama means fish
+00:03:25 scale. So I didn't use the word scale
+00:03:29 scale. So I didn't use the word scale
+00:03:29 because scale is often used in 3D
+00:03:34 because scale is often used in 3D
+00:03:34 printing to refer to the size of a of an
+00:03:38 printing to refer to the size of a of an
+00:03:38 object. So I try to avoid the word
+00:03:41 object. So I try to avoid the word
+00:03:41 scale. I used squamama. And as you can
+00:03:44 scale. I used squamama. And as you can
+00:03:44 imagine the squamama is under the
+00:03:47 imagine the squamama is under the
+00:03:47 projection menu. It is a projection
+00:03:50 projection menu. It is a projection
+00:03:50 method.
+00:03:54 Set the mode to squamama.
+00:03:58 You can select any photo and we have
+00:04:01 You can select any photo and we have
+00:04:01 several control parameters.
+00:04:04 several control parameters.
+00:04:04 I am going to use a Mona Lisa photo as
+00:04:09 I am going to use a Mona Lisa photo as
+00:04:09 an example.
+00:04:14 I will load
+00:04:17 the picture
+00:04:22 into uh the projection squamma method.
+00:04:28 The pink dots uh are referring to the
+00:04:33 The pink dots uh are referring to the
+00:04:33 direction of the light source.
+00:04:36 direction of the light source.
+00:04:36 Light source control. In this case, the
+00:04:39 Light source control. In this case, the
+00:04:39 light comes from the left on the left
+00:04:42 light comes from the left on the left
+00:04:42 side illuminating the panel.
+00:04:47 side illuminating the panel.
+00:04:47 You can change to right on the right
+00:04:50 You can change to right on the right
+00:04:50 side.
+00:04:52 side.
+00:04:52 Top.
+00:04:54 Top.
+00:04:54 The light comes from the top or bottom.
+00:04:58 The light comes from the top or bottom.
+00:04:58 Okay, [clears throat] I will set it to
+00:05:01 Okay, [clears throat] I will set it to
+00:05:01 left.
+00:05:03 left.
+00:05:03 You can change the model size.
+00:05:07 You can change the model size.
+00:05:07 Currently, it is 300. I will set it to
+00:05:11 Currently, it is 300. I will set it to
+00:05:11 200. Hit the enter key to update the
+00:05:14 200. Hit the enter key to update the
+00:05:14 display.
+00:05:16 display.
+00:05:16 As you can see, the actual model size is
+00:05:19 As you can see, the actual model size is
+00:05:19 slightly smaller than 200.
+00:05:22 slightly smaller than 200.
+00:05:22 And if you set 202
+00:05:26 And if you set 202
+00:05:26 it becomes slightly bigger. So the
+00:05:28 it becomes slightly bigger. So the
+00:05:28 slightly adjusted model size is due to
+00:05:32 slightly adjusted model size is due to
+00:05:32 the cell size. The model size in X and
+00:05:35 the cell size. The model size in X and
+00:05:36 in Z
+00:05:38 in Z
+00:05:38 can only be an integer
+00:05:41 can only be an integer
+00:05:41 multiple of the cell size. Therefore it
+00:05:45 multiple of the cell size. Therefore it
+00:05:45 cannot be any value. If you input a
+00:05:48 cannot be any value. If you input a
+00:05:48 value, hit the enter key, it will be
+00:05:51 value, hit the enter key, it will be
+00:05:51 adjusted to the integer multiple of cell
+00:05:54 adjusted to the integer multiple of cell
+00:05:54 size.
+00:05:56 size.
+00:05:56 If you enable the edge, oh wait a
+00:05:59 If you enable the edge, oh wait a
+00:05:59 second.
+00:06:01 second.
+00:06:01 If you select
+00:06:04 If you select
+00:06:04 these are the lights. If you select the
+00:06:06 these are the lights. If you select the
+00:06:06 panel squamama
+00:06:09 panel squamama
+00:06:09 and you enable the edge, you will see
+00:06:13 and you enable the edge, you will see
+00:06:13 the size of each panel. Okay,
+00:06:17 the size of each panel. Okay,
+00:06:18 the model size is 78
+00:06:20 the model size is 78
+00:06:20 and the size of the panel cell size the
+00:06:24 and the size of the panel cell size the
+00:06:24 size of the cell is six. So we have just
+00:06:27 size of the cell is six. So we have just
+00:06:27 a few number of cells in each direction.
+00:06:31 a few number of cells in each direction.
+00:06:31 Disable.
+00:06:34 Disable.
+00:06:34 If you reduce the cell size, hit the
+00:06:36 If you reduce the cell size, hit the
+00:06:36 enter key
+00:06:40 and then
+00:06:42 there will be more cells.
+00:06:46 there will be more cells.
+00:06:46 Okay,
+00:06:49 light angle refers to
+00:06:53 uh how much how much distance the light
+00:06:58 uh how much how much distance the light
+00:06:58 is
+00:07:00 is
+00:07:00 uh is placed out of the plane.
+00:07:04 uh is placed out of the plane.
+00:07:04 If the light angle is zero, let me
+00:07:07 If the light angle is zero, let me
+00:07:07 reduce it to zero. You can see that the
+00:07:10 reduce it to zero. You can see that the
+00:07:10 light is
+00:07:13 light is
+00:07:13 is nearly in plane with the picture. And
+00:07:17 is nearly in plane with the picture. And
+00:07:17 when you increase it, so I'll increase
+00:07:19 when you increase it, so I'll increase
+00:07:19 it one, two, three. And when I increase
+00:07:22 it one, two, three. And when I increase
+00:07:22 it to 20,
+00:07:25 it to 20,
+00:07:25 the light is illuminating the plane at
+00:07:28 the light is illuminating the plane at
+00:07:28 an angle of 20°.
+00:07:31 an angle of 20°.
+00:07:31 For now, the maximum number is 20°.
+00:07:35 For now, the maximum number is 20°.
+00:07:35 uh if in practice I find it not suitable
+00:07:38 uh if in practice I find it not suitable
+00:07:38 maybe 30 or 40 I will change the maximum
+00:07:41 maybe 30 or 40 I will change the maximum
+00:07:41 number it cannot be too big when it is
+00:07:44 number it cannot be too big when it is
+00:07:44 too big the distortion of each panel
+00:07:47 too big the distortion of each panel
+00:07:47 will be too big for 3D printing so I set
+00:07:51 will be too big for 3D printing so I set
+00:07:51 it to 20 maximum
+00:07:54 it to 20 maximum
+00:07:54 surface angle the surface angle can vary
+00:07:58 surface angle the surface angle can vary
+00:07:58 from 1°
+00:08:00 from 1°
+00:08:00 to 20°
+00:08:03 to 20°
+00:08:03 the var Variation of the surface angle
+00:08:07 the var Variation of the surface angle
+00:08:08 is best described you see by these
+00:08:13 is best described you see by these
+00:08:13 slanted panel.
+00:08:15 slanted panel.
+00:08:15 If it's 20 then the angle can vary
+00:08:20 If it's 20 then the angle can vary
+00:08:20 in two directions by 20°. So we are on
+00:08:23 in two directions by 20°. So we are on
+00:08:24 the left
+00:08:25 the left
+00:08:26 and you can see some panels
+00:08:29 and you can see some panels
+00:08:29 are tilting
+00:08:31 are tilting
+00:08:31 backwards against the light. So they
+00:08:33 backwards against the light. So they
+00:08:33 will be black and some panels will be
+00:08:38 will be black and some panels will be
+00:08:38 tilting in the other way. Let me set it
+00:08:41 tilting in the other way. Let me set it
+00:08:41 to 10.
+00:08:46 Okay. Lastly,
+00:08:49 sickness. Okay. Before we go to
+00:08:51 sickness. Okay. Before we go to
+00:08:51 sickness,
+00:08:53 sickness,
+00:08:53 the smaller the surface angle, which is
+00:08:55 the smaller the surface angle, which is
+00:08:55 the surface angle variation, the smaller
+00:08:59 the surface angle variation, the smaller
+00:08:59 this value is,
+00:09:02 this value is,
+00:09:02 the less the less contrast is in the
+00:09:06 the less the less contrast is in the
+00:09:06 image. The bigger the value, the bigger
+00:09:08 image. The bigger the value, the bigger
+00:09:08 the contrast.
+00:09:11 the contrast.
+00:09:11 So one is the least contrast and 20 is
+00:09:15 So one is the least contrast and 20 is
+00:09:15 the biggest contrast. Again because of
+00:09:18 the biggest contrast. Again because of
+00:09:18 the tilt in the panel
+00:09:23 the tilt in the panel
+00:09:23 uh I set the maximum to 20. If needed I
+00:09:28 uh I set the maximum to 20. If needed I
+00:09:28 can increase this maximum.
+00:09:30 can increase this maximum.
+00:09:30 If the surface angle variation is
+00:09:33 If the surface angle variation is
+00:09:33 increased
+00:09:35 increased
+00:09:35 the tilt will be increased as well. And
+00:09:38 the tilt will be increased as well. And
+00:09:38 I don't think it's a good idea to go
+00:09:40 I don't think it's a good idea to go
+00:09:40 beyond 20 for now because there will be
+00:09:43 beyond 20 for now because there will be
+00:09:43 printing issues
+00:09:45 printing issues
+00:09:45 especially when the light source is from
+00:09:48 especially when the light source is from
+00:09:48 the top or bottom. If it is from the top
+00:09:52 the top or bottom. If it is from the top
+00:09:52 or bottom and when the surface variation
+00:09:55 or bottom and when the surface variation
+00:09:55 is too big, you will have to use support
+00:10:01 is too big, you will have to use support
+00:10:01 to print. For example, the gap here, you
+00:10:04 to print. For example, the gap here, you
+00:10:04 will have to use support to print this
+00:10:07 will have to use support to print this
+00:10:07 vertically.
+00:10:09 vertically.
+00:10:09 And as for printing, I believe a
+00:10:12 And as for printing, I believe a
+00:10:12 squamama picture should be printed
+00:10:15 squamama picture should be printed
+00:10:15 vertically to get the maximum
+00:10:18 vertically to get the maximum
+00:10:18 resolution.
+00:10:19 resolution.
+00:10:19 Just as with a little thing, if you
+00:10:22 Just as with a little thing, if you
+00:10:22 print a little thing or a squammer flat
+00:10:24 print a little thing or a squammer flat
+00:10:24 on bed, the the resolution of this
+00:10:29 on bed, the the resolution of this
+00:10:29 tilted panel will not be printed very
+00:10:31 tilted panel will not be printed very
+00:10:31 well. The resolution will be poor. Now
+00:10:35 well. The resolution will be poor. Now
+00:10:35 only when you print it vertically you
+00:10:37 only when you print it vertically you
+00:10:37 get the best resolution.
+00:10:40 get the best resolution.
+00:10:40 Now come to the last but not the least
+00:10:43 Now come to the last but not the least
+00:10:43 point.
+00:10:44 point.
+00:10:44 Is it possible to visualize squammer in
+00:10:49 Is it possible to visualize squammer in
+00:10:49 Luban software? Because currently it
+00:10:51 Luban software? Because currently it
+00:10:51 doesn't look very clear. The answer is
+00:10:54 doesn't look very clear. The answer is
+00:10:54 yes.
+00:10:56 yes.
+00:10:56 You can change
+00:10:58 You can change
+00:10:58 the lighting angle.
+00:11:01 the lighting angle.
+00:11:01 This is not a often used function in
+00:11:04 This is not a often used function in
+00:11:04 [clears throat] Luban. You can change
+00:11:05 [clears throat] Luban. You can change
+00:11:06 the viewing angle or the lighting angle.
+00:11:10 the viewing angle or the lighting angle.
+00:11:10 Uh
+00:11:12 Uh
+00:11:12 the angle about the xxaxis
+00:11:15 the angle about the xxaxis
+00:11:15 and the angle about the y- axis y axis.
+00:11:17 and the angle about the y- axis y axis.
+00:11:18 Okay, this is referring to the vertical
+00:11:20 Okay, this is referring to the vertical
+00:11:20 axis. So when you select the move light
+00:11:23 axis. So when you select the move light
+00:11:23 mode or under view move light, these are
+00:11:27 mode or under view move light, these are
+00:11:27 the mouse modes. Select move light.
+00:11:32 the mouse modes. Select move light.
+00:11:32 If you drag the mouse horizontally, the
+00:11:36 If you drag the mouse horizontally, the
+00:11:36 light will revolve around the vertical
+00:11:40 light will revolve around the vertical
+00:11:40 axis.
+00:11:42 axis.
+00:11:42 If you drag mouse vertically,
+00:11:45 If you drag mouse vertically,
+00:11:45 the light the direction of lighting
+00:11:49 the light the direction of lighting
+00:11:49 will move around the x-axis.
+00:11:53 will move around the x-axis.
+00:11:54 Currently, our light source is bottom.
+00:11:56 Currently, our light source is bottom.
+00:11:56 This only refers to where the light
+00:11:58 This only refers to where the light
+00:11:58 source is. [clears throat] It doesn't
+00:12:00 source is. [clears throat] It doesn't
+00:12:00 actually simulate the lighting
+00:12:02 actually simulate the lighting
+00:12:02 direction. You have to move
+00:12:06 direction. You have to move
+00:12:06 the mouse vertically or horizontally. Uh
+00:12:09 the mouse vertically or horizontally. Uh
+00:12:09 currently I'm dragging the mouse
+00:12:11 currently I'm dragging the mouse
+00:12:11 downward.
+00:12:13 downward.
+00:12:13 Now you can gradually see the
+00:12:19 Now you can gradually see the
+00:12:19 the face of the Mona. Okay.
+00:12:26 So the light currently is coming from
+00:12:28 downward.
+00:12:29 downward.
+00:12:29 If you change to top top
+00:12:34 If you change to top top
+00:12:34 uh that tells you where the light source
+00:12:36 uh that tells you where the light source
+00:12:36 is but the actual lighting direction has
+00:12:39 is but the actual lighting direction has
+00:12:39 not been moved. So you see a reverse
+00:12:41 not been moved. So you see a reverse
+00:12:41 image. If you see if you set it to right
+00:12:45 image. If you see if you set it to right
+00:12:45 you won't see very clearly. Similarly,
+00:12:48 you won't see very clearly. Similarly,
+00:12:48 if you set to left, you kind of see but
+00:12:53 if you set to left, you kind of see but
+00:12:53 not that clearly. Okay. So, that is what
+00:12:56 not that clearly. Okay. So, that is what
+00:12:56 we have seen in the artist's uh
+00:12:59 we have seen in the artist's uh
+00:12:59 Instagram homepage.
+00:13:02 Instagram homepage.
+00:13:02 At room light, he illuminates all the
+00:13:06 At room light, he illuminates all the
+00:13:06 light around the image around the image
+00:13:09 light around the image around the image
+00:13:09 and you see nothing on the panel. Only
+00:13:12 and you see nothing on the panel. Only
+00:13:12 when he start to illuminate from one
+00:13:15 when he start to illuminate from one
+00:13:15 specific direction and the lighting in
+00:13:18 specific direction and the lighting in
+00:13:18 is installed close to the panel at a
+00:13:22 is installed close to the panel at a
+00:13:22 small incision angle. Can you see the
+00:13:25 small incision angle. Can you see the
+00:13:25 light? Can you see the picture clearly?
+00:13:28 light? Can you see the picture clearly?
+00:13:28 Now I'm going to move light again. Uh in
+00:13:33 Now I'm going to move light again. Uh in
+00:13:34 this case I will move light around the Y
+00:13:36 this case I will move light around the Y
+00:13:36 axis.
+00:13:44 Okay, that's kind of the best I can get.
+00:13:47 Uh, this is not very clear because our
+00:13:50 Uh, this is not very clear because our
+00:13:50 resolution is small. We only have model
+00:13:54 resolution is small. We only have model
+00:13:54 uh we only have model x800. If I set it
+00:13:58 uh we only have model x800. If I set it
+00:13:58 to 200,
+00:14:01 you'll see a much better image.
+00:14:05 for the work by the artist, he has to
+00:14:07 for the work by the artist, he has to
+00:14:07 put the panels manually and in our uh
+00:14:12 put the panels manually and in our uh
+00:14:12 design in our way of uh 3D printing,
+00:14:16 design in our way of uh 3D printing,
+00:14:16 this whole thing is printed
+00:14:17 this whole thing is printed
+00:14:17 automatically. So we can afford to have
+00:14:20 automatically. So we can afford to have
+00:14:20 uh higher resolution and and a lot more
+00:14:24 uh higher resolution and and a lot more
+00:14:24 panels, lot more cells.
+00:14:27 panels, lot more cells.
+00:14:27 The higher the number of cells, the
+00:14:29 The higher the number of cells, the
+00:14:29 bigger the number of cells, the the the
+00:14:32 bigger the number of cells, the the the
+00:14:32 higher the resolution of the picture.
+00:14:35 higher the resolution of the picture.
+00:14:35 Okay.
+00:14:40 So that is the squamma method.
+00:14:44 It depends on the quality of your print
+00:14:47 It depends on the quality of your print
+00:14:47 and also how you install
+00:14:50 and also how you install
+00:14:50 the light.
+00:14:52 the light.
+00:14:52 Thank you for your attention. I hope you
+00:14:56 Thank you for your attention. I hope you
+00:14:56 like this method. I hope you enjoy
+00:14:59 like this method. I hope you enjoy
+00:14:59 playing around with this method.
+00:15:02 playing around with this method.
+00:15:02 See you next
