@@ -21,6 +21,7 @@ bytemuck = "1"
 clap = { version = "4", features = ["derive"] }
 proptest = "1"
 criterion = "0.7"
+rayon = "1"
 
 [profile.release]
 lto = "thin"

@@ -18,6 +18,7 @@ pub mod mesh;
 pub mod orient;
 pub mod payload;
 pub mod relief;
+pub mod sim;
 pub mod squama;
 pub mod synth;
 

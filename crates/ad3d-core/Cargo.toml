@@ -12,6 +12,7 @@ image.workspace = true
 spade.workspace = true
 serde.workspace = true
 bytemuck.workspace = true
+rayon.workspace = true
 # Test oracle only (`--features manifold-oracle`): never enabled by the app or CLI,
 # so normal builds do not compile the C++ library.
 ad3d-manifold = { workspace = true, optional = true }
@@ -33,3 +34,7 @@ harness = false
 [[test]]
 name = "manifold_oracle"
 required-features = ["manifold-oracle"]
+
+[[bench]]
+name = "sim"
+harness = false
