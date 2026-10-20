@@ -1,9 +1,41 @@
-//! Image → per-cell brightness (design §16, spike subset).
+//! Image → per-facet brightness targets (design §16, §12.1 `imageOpts`).
 //!
-//! [`LinearLuma`] holds linear relative luminance in `[0, 1]`, row 0 at the top of
-//! the picture. [`cell_brightness`] averages it exactly over each cell's area
-//! (piecewise-constant pixels, fractional coverage at cell borders). Cell row 0 is
-//! the bottom of the plate (`v = 0`), i.e. the bottom of the picture.
+//! Pipeline (the app crate drives the IO steps, the core does the rest):
+//! 1. [`decode`]: bytes → [`LinearLuma`] with EXIF orientation applied, sRGB → linear
+//!    relative luminance (HEIC on macOS through `heic::decode_with_sips`).
+//! 2. [`working`]: rotate / mirror / crop, area-downsample in linear light to a working
+//!    copy of at most [`working::DEFAULT_MAX_SIDE`] px, optional unsharp mask, stored as
+//!    the perceptual value `v = srgb_encode(Y)` with its histogram (cached by
+//!    [`WorkingKey`]).
+//! 3. [`tone`]: invert → auto-levels → brightness → contrast → gamma on `v`, through a
+//!    4096-entry LUT whose output is linear `g` again.
+//! 4. [`sat`]: summed-area table of `g` (cached by [`TargetKey`]).
+//! 5. [`target`]: exact area means per square cell (O(1)) or per polygon piece (exact
+//!    coverage of piecewise-constant pixels by Green's theorem; hex cells, §6.2).
+//!
+//! [`TargetPipeline`] caches stages 2 and 4 for the app. Everything here except the
+//! decode helpers is pure and deterministic.
+//!
+//! The spike API ([`LinearLuma`], [`CellBrightness`], [`cell_brightness`],
+//! [`synthetic_target`], [`centre_crop`]) is unchanged. [`LinearLuma`] holds linear
+//! relative luminance in `[0, 1]`, row 0 at the top of the picture; cell row 0 is the
+//! bottom of the plate (`v = 0`), i.e. the bottom of the picture.
+
+pub mod decode;
+#[cfg(target_os = "macos")]
+pub mod heic;
+pub mod opts;
+pub mod sat;
+pub mod target;
+pub mod tone;
+pub mod working;
+
+pub use decode::decode_bytes;
+pub use opts::{ImageHash, ImageOpts, TargetKey, ToneKey, Unsharp, WorkingKey};
+pub use sat::Sat;
+pub use target::{Target, TargetPipeline, TargetSampler, prepare_target_for};
+pub use tone::ToneLut;
+pub use working::{WorkingImage, build_working};
 
 use crate::error::{Error, Result};
 
@@ -39,41 +71,37 @@ pub fn srgb_to_linear(c: f32) -> f32 {
     if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }
 }
 
-impl LinearLuma {
-    /// sRGB → linear per channel, then `Y = 0.2126 R + 0.7152 G + 0.0722 B`.
-    pub fn from_dynamic(img: &image::DynamicImage) -> Self {
-        let mut lut = [0f32; 256];
-        for (k, v) in lut.iter_mut().enumerate() {
-            *v = srgb_to_linear(k as f32 / 255.0);
-        }
-        let (w, h) = (img.width(), img.height());
-        let px = match img {
-            image::DynamicImage::ImageLuma8(g) => g.as_raw().iter().map(|&c| lut[c as usize]).collect(),
-            _ => {
-                let rgb = img.to_rgb8();
-                rgb.as_raw()
-                    .chunks_exact(3)
-                    .map(|c| 0.2126 * lut[c[0] as usize] + 0.7152 * lut[c[1] as usize] + 0.0722 * lut[c[2] as usize])
-                    .collect()
-            }
-        };
-        LinearLuma { w, h, px }
+/// sRGB transfer function, encode (linear → code value in [0,1]).
+#[inline]
+pub fn linear_to_srgb(y: f32) -> f32 {
+    if y <= 0.003_130_8 {
+        12.92 * y
+    } else if y >= 1.0 {
+        1.0
+    } else {
+        1.055 * y.powf(1.0 / 2.4) - 0.055
     }
+}
 
-    /// Decodes a file, applies its EXIF orientation and linearises it. This is an IO
-    /// helper for the CLI and app; generators never call it.
-    pub fn load(path: &std::path::Path) -> Result<Self> {
-        use image::ImageDecoder;
-        let reader = image::ImageReader::open(path)
-            .map_err(|e| Error::Io(format!("{}: {e}", path.display())))?
-            .with_guessed_format()
-            .map_err(|e| Error::Io(format!("{}: {e}", path.display())))?;
-        let mut dec = reader.into_decoder().map_err(|e| Error::Io(format!("{}: {e}", path.display())))?;
-        let orient = dec.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
-        let mut img =
-            image::DynamicImage::from_decoder(dec).map_err(|e| Error::Io(format!("{}: {e}", path.display())))?;
-        img.apply_orientation(orient);
-        Ok(Self::from_dynamic(&img))
+/// [`srgb_to_linear`] in f64.
+#[inline]
+pub fn srgb_to_linear_f64(c: f64) -> f64 {
+    if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) }
+}
+
+/// [`linear_to_srgb`] in f64.
+#[inline]
+pub fn linear_to_srgb_f64(y: f64) -> f64 {
+    if y <= 0.003_130_8 { 12.92 * y } else { 1.055 * y.powf(1.0 / 2.4) - 0.055 }
+}
+
+impl LinearLuma {
+    /// `Err(InvalidParams)` unless the image is non-empty and `px.len() == w·h`.
+    pub fn check(&self) -> Result<()> {
+        if self.w == 0 || self.h == 0 || self.px.len() != self.w as usize * self.h as usize {
+            return Err(Error::InvalidParams("empty or malformed image".into()));
+        }
+        Ok(())
     }
 }
 
