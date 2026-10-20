@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Main window: core defaults. App commands are not ACL-gated (no app manifest), so they are allowed by default.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save"]
 }

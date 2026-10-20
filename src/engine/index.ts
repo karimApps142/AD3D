@@ -2,7 +2,7 @@
 
 import type { Engine } from './types';
 
-export type { Engine, MeshPayload, SquamaParams, SquamaParamsDto } from './types';
+export type * from './types';
 
 /** Tauri 2 injects `window.__TAURI_INTERNALS__` before any page script runs. */
 export function isTauri(): boolean {

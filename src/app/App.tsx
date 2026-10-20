@@ -1,6 +1,8 @@
 // Layout: parameters on the left, the 3D view filling the rest; shell overlays (palette, help,
 // settings, prompts) on top.
 
+import { ExportPanel } from '../panels/ExportPanel';
+import { ImagePanel } from '../panels/ImagePanel';
 import { ParamsPanel } from '../panels/ParamsPanel';
 import { ViewPanel } from '../panels/ViewPanel';
 import { useAppStore } from '../state/store';
@@ -28,8 +30,10 @@ export function App() {
           <EngineBadge />
         </header>
         <DocumentTitle />
+        <ImagePanel />
         <ParamsPanel />
         <ViewPanel />
+        <ExportPanel />
       </aside>
       <main className="main">
         <Viewport />

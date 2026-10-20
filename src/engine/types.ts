@@ -22,6 +22,128 @@ export interface SquamaParamsDto {
   baseMm: number;
   /** "synthetic" (built-in test pattern, aspect H/W = 63/50) or a filesystem path to a photo. */
   image: string;
+
+  // ---- M1 additions (docs/design/squama-mesher.md §12.1). All optional, so v1 payloads stay valid.
+  /** 'preview' while a slider drags, 'final' on release. Rust default: 'preview'. */
+  quality?: Quality;
+  /** Requested plate height; snapped to whole cells. Absent = from the crop aspect. */
+  heightMm?: number;
+  layout?: LayoutSpec;
+  /** Overrides the v1 (directional) light fields. Plate space, mm. */
+  light?: { kind: 'point'; posMm: Vec3 };
+  /** Height budget above the base for the optimiser. */
+  maxReliefMm?: number;
+  imageOpts?: ImageOpts;
+  response?: ResponseSpec;
+  optimiser?: OptimiserSpec;
+}
+
+export type Quality = 'preview' | 'final';
+export type HexOrientation = 'pointy' | 'flat';
+export type LayoutSpec = { kind: 'square' } | { kind: 'hex'; orientation: HexOrientation };
+export type ResponseSpec =
+  | { kind: 'lambert'; ambient: number }
+  | { kind: 'measured'; tiltDeg: number[]; brightness: number[] };
+export type OptimiserSpec = { kind: 'none' } | { kind: 'shadow'; maxSweeps?: number };
+
+/** §12.1 imageOpts (§16 tone order: invert, auto-levels, brightness, contrast, gamma). */
+export interface ImageOpts {
+  /** Normalised x0, y0, x1, y1 in the rotated/mirrored image, y down. */
+  crop?: [number, number, number, number];
+  /** 0.2–5, default 1 (v ← v^(1/γ)). */
+  gamma?: number;
+  /** 0–3, default 1, pivot 0.5. */
+  contrast?: number;
+  /** −1…1, default 0, added. */
+  brightness?: number;
+  invert?: boolean;
+  /** Percentiles (lo, hi); null/absent = off. */
+  autoLevels?: [number, number] | null;
+  /** AD3D addition: clockwise quarter turn in degrees (0, 90, 180, 270), applied before the crop. */
+  rotate?: 0 | 90 | 180 | 270;
+  /** AD3D addition: left↔right flip after the rotation. */
+  mirror?: boolean;
+}
+
+export type ExportOrientation = 'standing-auto' | 'standing-q0' | 'standing-q1' | 'standing-q2' | 'standing-q3' | 'flat';
+export type ExportFormat = 'stl' | '3mf';
+
+/** §12.1 SquamaExport. `baseName` (file stem from the save dialog) is an AD3D addition. */
+export interface SquamaExportDto {
+  params: SquamaParamsDto;
+  outDir: string;
+  baseName?: string;
+  formats: ExportFormat[];
+  orientation: ExportOrientation;
+  bedMm?: Vec3;
+  marginMm?: number;
+  keys?: 'none' | 'pegs';
+  stand?: boolean;
+  calibrationTile?: boolean;
+}
+
+export interface CoreWarning {
+  code: string;
+  message: string;
+}
+
+/** What the core reports about one generation (squama_job_info). */
+export interface SquamaJobInfo {
+  jobId: number;
+  quality: Quality;
+  layout: { kind: 'square' | 'hex'; nx: number; ny: number; wMm: number; hMm: number; cellMm: number };
+  warnings: CoreWarning[];
+  genMs: number;
+  triangles: number;
+  validated: boolean | null;
+}
+
+export interface ImageInfo {
+  path: string;
+  widthPx: number;
+  heightPx: number;
+  workingWidthPx: number;
+  workingHeightPx: number;
+}
+
+/** 8-bit sRGB grey image, top row first. */
+export interface GrayImage {
+  width: number;
+  height: number;
+  data: Uint8Array;
+}
+
+/** Cell-averaged target (linear g ∈ [0, 1]), row 0 at the bottom of the plate (v = 0). */
+export interface TargetGrid {
+  nx: number;
+  ny: number;
+  g: Float32Array;
+  /** Simulated appearance from the core's forward model (§15.1), when it provides one. */
+  sim?: Float32Array;
+}
+
+export type ExportEvent =
+  | { kind: 'started'; totalParts: number }
+  | { kind: 'progress'; part: string; index: number; totalParts: number; stage: string; fraction: number }
+  | { kind: 'partWritten'; part: string; path: string; triangles: number }
+  | { kind: 'warning'; code: string; message: string };
+
+export interface ExportPartReport {
+  name: string;
+  files: string[];
+  triangles: number;
+  sizeMm: Vec3;
+  fitsBed: boolean | null;
+  validated: boolean;
+}
+
+export interface ExportResult {
+  outDir: string;
+  files: string[];
+  parts: ExportPartReport[];
+  tiles: { cols: number[]; rows: number[] } | null;
+  warnings: CoreWarning[];
+  elapsedMs: number;
 }
 
 /** The user-editable part of the request (everything but the job id). */
@@ -79,6 +201,22 @@ export interface Engine {
   saveArtifact(name: string, bytes: Uint8Array): Promise<void>;
   /** Hand the machine-readable spike report to the host. The native host may exit afterwards. */
   finishSpike(report: object): Promise<void>;
+
+  // ---- M1 Squama workflow.
+  /** Layout and warnings of a recent generateSquama job, or null when it is unknown. */
+  squamaJobInfo(jobId: number): Promise<SquamaJobInfo | null>;
+  /** Cell-averaged target for the 2D view (same cache as generation). */
+  squamaTarget(params: SquamaParamsDto): Promise<TargetGrid>;
+  /** Native open dialog for a photo; null when cancelled or unavailable. */
+  pickImage(): Promise<string | null>;
+  imageInfo(path: string): Promise<ImageInfo>;
+  imageThumbnail(path: string, maxPx: number, rotate: number, mirror: boolean): Promise<GrayImage>;
+  /** Native save dialog; resolves to the chosen path, or null. */
+  pickSavePath(defaultName: string): Promise<string | null>;
+  exportSquama(dto: SquamaExportDto, onEvent: (e: ExportEvent) => void): Promise<ExportResult>;
+  /** True when an export was running and has been asked to stop. */
+  cancelExport(): Promise<boolean>;
+  revealInFinder(path: string): Promise<void>;
 }
 
 export const ARTIFACT_NAME_RE = /^[A-Za-z0-9._-]+$/;
