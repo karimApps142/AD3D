@@ -67,7 +67,10 @@ pub struct Heights {
     pub apex_w: Vec<f64>,
 }
 
-/// Back-face pocket or rib (M1, §14.3). The spike accepts none.
+/// Back-face pocket (`w_mm > 0`: floor height) or rib (`w_mm < 0`: rib face), §14.3.
+/// The polygon may be given in either orientation; see [`prepare_back_regions`] for
+/// the rules. Its floor/face triangles are `FaceKind::Back` (so the back-area check
+/// still sums to the outline area) and its walls are `FaceKind::Key`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BackRegion {
     pub poly: Vec<DVec2>,
@@ -217,9 +220,6 @@ pub fn mesh_relief_stats(
     tol: &Tol,
     cancel: &CancelToken,
 ) -> Result<(Mesh, MeshStats)> {
-    if !back.is_empty() {
-        return Err(Error::InvalidParams("back regions are not supported until M1".into()));
-    }
     if h.corner.len() != p.rings.len() || h.apex_w.len() != p.pieces.len() {
         return Err(Error::Internal("heights do not match the partition".into()));
     }
@@ -586,11 +586,57 @@ pub fn mesh_relief_stats(
     }
     stats.outline_vertices = nb as u32;
     let pts: Vec<DVec2> = outline.iter().map(|&v| verts[v as usize]).collect();
-    for tri in triangulate_outline(&pts)? {
-        let ids = tri.map(|k| line_start[outline[k as usize] as usize]);
-        // CDT triangles are CCW from +w; the back faces −w.
-        tris.push([ids[0], ids[2], ids[1]]);
-        kinds.push(FaceKind::Back);
+    if back.is_empty() {
+        for tri in triangulate_outline(&pts)? {
+            let ids = tri.map(|k| line_start[outline[k as usize] as usize]);
+            // CDT triangles are CCW from +w; the back faces −w.
+            tris.push([ids[0], ids[2], ids[1]]);
+            kinds.push(FaceKind::Back);
+        }
+    } else {
+        // §14.3: back regions are holes in the back face, each with a floor (pocket,
+        // w > 0) or face (rib, w < 0) and vertical walls between 0 and w.
+        let min_top = ring_h.iter().copied().min().unwrap_or(0) as f64 * tol.q;
+        let regions = prepare_back_regions(back, &pts, min_top, tol)?;
+        let holes: Vec<&[DVec2]> = regions.iter().map(|r| r.0.as_slice()).collect();
+        // Back-level vertex ids: the outline's base vertices, then one per region vertex.
+        let mut ids: Vec<u32> = outline.iter().map(|&v| line_start[v as usize]).collect();
+        let mut ring0: Vec<(usize, usize)> = Vec::with_capacity(regions.len());
+        for (poly, _) in &regions {
+            let s = ids.len();
+            for q in poly {
+                ids.push(pos.len() as u32);
+                pos.push([q.x, q.y, 0.0]);
+            }
+            ring0.push((s, poly.len()));
+        }
+        for tri in triangulate_with_holes(&pts, &holes)? {
+            let t = tri.map(|k| ids[k as usize]);
+            tris.push([t[0], t[2], t[1]]);
+            kinds.push(FaceKind::Back);
+        }
+        for ((poly, w), &(s, n)) in regions.iter().zip(&ring0) {
+            let base = pos.len() as u32;
+            for q in poly {
+                pos.push([q.x, q.y, *w]);
+            }
+            // Floor / rib face: CCW from +w, emitted reversed so it faces −w.
+            for tri in triangulate_outline(poly)? {
+                tris.push([base + tri[0], base + tri[2], base + tri[1]]);
+                kinds.push(FaceKind::Back);
+            }
+            // Walls between the hole edge a0 → b0 and the floor edge a1 → b1. The
+            // same two triangles face into a pocket (w > 0) or out of a rib (w < 0).
+            for k in 0..n {
+                let k1 = (k + 1) % n;
+                let (a0, b0) = (ids[s + k], ids[s + k1]);
+                let (a1, b1) = (base + k as u32, base + k1 as u32);
+                tris.push([b0, a0, a1]);
+                tris.push([b0, a1, b1]);
+                kinds.push(FaceKind::Key);
+                kinds.push(FaceKind::Key);
+            }
+        }
     }
     debug_assert!(outline.iter().all(|&v| line_h[line_start[v as usize] as usize] == 0));
     let _ = n_line;
@@ -750,6 +796,154 @@ pub fn triangulate_outline_cdt(pts: &[DVec2]) -> Result<Vec<[u32; 3]>> {
             }
         }
         out.push(t);
+    }
+    Ok(out)
+}
+
+/// Back regions stay at least this far from each other and from the outline (§14.3).
+pub const BACK_REGION_GAP_MM: f64 = 1.0;
+/// A pocket floor stays at least this far below the lowest facet corner (§14.3).
+pub const POCKET_CLEARANCE_MM: f64 = 0.8;
+
+/// Checks the §14.3 rules and returns each region as a CCW polygon with its `w`.
+///
+/// - at least 3 finite vertices, edges ≥ 4δ, non-adjacent edges ≥ δ apart (so the
+///   polygon is simple and its vertices are distinct);
+/// - `|w| ≥ 4δ`; a pocket (`w > 0`) has `w ≤ min_top − 0.8 mm`, where `min_top` is
+///   the lowest facet corner of the part being meshed;
+/// - inside the outline and at least 1 mm from it; pairwise at least 1 mm apart.
+pub fn prepare_back_regions(
+    back: &[BackRegion],
+    outline: &[DVec2],
+    min_top: f64,
+    tol: &Tol,
+) -> Result<Vec<(Vec<DVec2>, f64)>> {
+    let bad = |i: usize, why: String| Error::InvalidParams(format!("back region {i}: {why}"));
+    let gap = BACK_REGION_GAP_MM - 1e-9;
+    let mut out: Vec<(Vec<DVec2>, f64)> = Vec::with_capacity(back.len());
+    let mut boxes: Vec<(DVec2, DVec2)> = Vec::with_capacity(back.len());
+    for (i, r) in back.iter().enumerate() {
+        let n = r.poly.len();
+        if n < 3 {
+            return Err(bad(i, format!("{n} vertices")));
+        }
+        if !r.w_mm.is_finite() || r.poly.iter().any(|p| !p.is_finite()) {
+            return Err(bad(i, "non-finite value".into()));
+        }
+        if r.w_mm.abs() < 4.0 * tol.delta {
+            return Err(bad(i, format!("depth {} mm below 4δ", r.w_mm)));
+        }
+        if r.w_mm > 0.0 && r.w_mm > min_top - POCKET_CLEARANCE_MM + 1e-9 {
+            return Err(bad(
+                i,
+                format!("pocket floor {} mm is less than {POCKET_CLEARANCE_MM} mm below the lowest facet ({min_top} mm)", r.w_mm),
+            ));
+        }
+        let mut poly = r.poly.clone();
+        if partition::polygon_area(poly.iter().copied()) < 0.0 {
+            poly.reverse();
+        }
+        for k in 0..n {
+            let (a, b) = (poly[k], poly[(k + 1) % n]);
+            if (b - a).length() < 4.0 * tol.delta - 1e-12 {
+                return Err(bad(i, format!("edge {k} shorter than 4δ")));
+            }
+            for m in k + 2..n {
+                if k == 0 && m == n - 1 {
+                    continue;
+                }
+                let (c, d) = (poly[m], poly[(m + 1) % n]);
+                if seg_seg_dist(a, b, c, d) < tol.delta {
+                    return Err(bad(i, format!("edges {k} and {m} closer than δ (not simple)")));
+                }
+            }
+        }
+        if !point_in_polygon(poly[0], outline) {
+            return Err(bad(i, "outside the outline".into()));
+        }
+        let no = outline.len();
+        for k in 0..n {
+            let (a, b) = (poly[k], poly[(k + 1) % n]);
+            for m in 0..no {
+                if seg_seg_dist(a, b, outline[m], outline[(m + 1) % no]) < gap {
+                    return Err(bad(i, format!("closer than {BACK_REGION_GAP_MM} mm to the outline")));
+                }
+            }
+        }
+        let lo = poly.iter().fold(DVec2::splat(f64::INFINITY), |m, p| m.min(*p));
+        let hi = poly.iter().fold(DVec2::splat(f64::NEG_INFINITY), |m, p| m.max(*p));
+        for (j, (q, _)) in out.iter().enumerate() {
+            let (qlo, qhi) = boxes[j];
+            if lo.x > qhi.x + gap || lo.y > qhi.y + gap || qlo.x > hi.x + gap || qlo.y > hi.y + gap {
+                continue;
+            }
+            if point_in_polygon(poly[0], q) || point_in_polygon(q[0], &poly) {
+                return Err(bad(i, format!("overlaps back region {j}")));
+            }
+            let nq = q.len();
+            for k in 0..n {
+                for m in 0..nq {
+                    if seg_seg_dist(poly[k], poly[(k + 1) % n], q[m], q[(m + 1) % nq]) < gap {
+                        return Err(bad(i, format!("closer than {BACK_REGION_GAP_MM} mm to back region {j}")));
+                    }
+                }
+            }
+        }
+        boxes.push((lo, hi));
+        out.push((poly, r.w_mm));
+    }
+    Ok(out)
+}
+
+fn point_seg_dist(p: DVec2, a: DVec2, b: DVec2) -> f64 {
+    let e = b - a;
+    let l2 = e.length_squared();
+    let t = if l2 > 0.0 { ((p - a).dot(e) / l2).clamp(0.0, 1.0) } else { 0.0 };
+    (a + e * t - p).length()
+}
+
+/// Distance between two closed segments (0 when they intersect).
+pub fn seg_seg_dist(a: DVec2, b: DVec2, c: DVec2, d: DVec2) -> f64 {
+    let o = |p: DVec2, q: DVec2, r: DVec2| (q - p).perp_dot(r - p);
+    let (d1, d2, d3, d4) = (o(a, b, c), o(a, b, d), o(c, d, a), o(c, d, b));
+    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0)) {
+        return 0.0;
+    }
+    point_seg_dist(a, c, d).min(point_seg_dist(b, c, d)).min(point_seg_dist(c, a, b)).min(point_seg_dist(d, a, b))
+}
+
+/// Constrained Delaunay triangulation of a simple CCW outline with simple CCW
+/// holes, without Steiner points. Indices run over `outline` then each hole in turn.
+/// Returns CCW triangles covering the outline minus the holes.
+pub fn triangulate_with_holes(outline: &[DVec2], holes: &[&[DVec2]]) -> Result<Vec<[u32; 3]>> {
+    use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation};
+    let mut vertices: Vec<Point2<f64>> = outline.iter().map(|p| Point2::new(p.x, p.y)).collect();
+    let mut edges: Vec<[usize; 2]> = (0..outline.len()).map(|k| [k, (k + 1) % outline.len()]).collect();
+    for h in holes {
+        let s = vertices.len();
+        vertices.extend(h.iter().map(|p| Point2::new(p.x, p.y)));
+        edges.extend((0..h.len()).map(|k| [s + k, s + (k + 1) % h.len()]));
+    }
+    let n = vertices.len();
+    let mut conflicts = 0usize;
+    let cdt: ConstrainedDelaunayTriangulation<Point2<f64>> =
+        ConstrainedDelaunayTriangulation::try_bulk_load_cdt(vertices, edges, |_| conflicts += 1)
+            .map_err(|e| Error::Internal(format!("CDT: {e:?}")))?;
+    if conflicts > 0 || cdt.num_vertices() != n {
+        return Err(Error::Internal(format!(
+            "back face CDT: {conflicts} crossing constraints, {} of {n} vertices",
+            cdt.num_vertices()
+        )));
+    }
+    let all: Vec<DVec2> = outline.iter().chain(holes.iter().flat_map(|h| h.iter())).copied().collect();
+    let mut out = Vec::with_capacity(n + 2 * holes.len());
+    for f in cdt.inner_faces() {
+        let vs = f.vertices();
+        let t = [vs[0].fix().index() as u32, vs[1].fix().index() as u32, vs[2].fix().index() as u32];
+        let c = (all[t[0] as usize] + all[t[1] as usize] + all[t[2] as usize]) / 3.0;
+        if point_in_polygon(c, outline) && !holes.iter().any(|h| point_in_polygon(c, h)) {
+            out.push(t);
+        }
     }
     Ok(out)
 }

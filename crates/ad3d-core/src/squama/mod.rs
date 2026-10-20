@@ -1,10 +1,13 @@
 //! Squama-style shadow plate (design §2–§5, M0 subset): square grid, one
 //! directional light, centre pivot, Lambert inverse, `Quality::Preview` (no optimiser).
 
+pub mod export;
 pub mod layout;
 pub mod light;
+pub mod parts;
 pub mod response;
 pub mod solve;
+pub mod tiles;
 
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -110,7 +113,7 @@ impl Default for GenOptions {
     }
 }
 
-fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(SquamaParams, Vec<Warning>)> {
+pub(crate) fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(SquamaParams, Vec<Warning>)> {
     let mut w = Vec::new();
     let mut p = *p;
     let finite = [p.width_mm, p.cell_mm, p.light_azimuth, p.light_elevation, p.max_tilt, p.base_mm]
