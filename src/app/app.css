@@ -10,6 +10,12 @@
   --accent-dim: #8a6a33;
   --ok: #5fd38d;
   --danger: #ff6b6b;
+  --track: #2a303a;
+  --scrim: rgba(8, 10, 13, 0.55);
+  --selection: rgba(242, 181, 76, 0.16);
+  --overlay-bg: rgba(14, 16, 20, 0.8);
+  --hud-bg: rgba(25, 29, 36, 0.85);
+  --hud-bg-strong: rgba(25, 29, 36, 0.92);
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
@@ -18,6 +24,28 @@
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Light theme (Settings → Theme, or System when the OS is light). The shell sets data-theme. */
+:root[data-theme='light'] {
+  --bg: #eef0f3;
+  --panel: #f8f9fb;
+  --panel-raised: #ffffff;
+  --border: #d5d9e0;
+  --text: #1c2027;
+  --muted: #5b6372;
+  --faint: #8a92a0;
+  --accent: #c98a16;
+  --accent-dim: #e2b866;
+  --ok: #1f9d55;
+  --danger: #d63c3c;
+  --track: #d5d9e0;
+  --scrim: rgba(30, 34, 40, 0.25);
+  --selection: rgba(201, 138, 22, 0.14);
+  --overlay-bg: rgba(248, 249, 251, 0.85);
+  --hud-bg: rgba(255, 255, 255, 0.85);
+  --hud-bg-strong: rgba(255, 255, 255, 0.92);
+  color-scheme: light;
 }
 
 * {
@@ -226,7 +254,7 @@ input[type='range']:focus {
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: #2a303a;
+  background: var(--track);
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -247,7 +275,7 @@ input[type='range']:focus-visible::-webkit-slider-thumb {
 input[type='range']::-moz-range-track {
   height: 4px;
   border-radius: 2px;
-  background: #2a303a;
+  background: var(--track);
 }
 
 input[type='range']::-moz-range-thumb {
@@ -330,7 +358,7 @@ input[type='range']:disabled {
   padding: 8px 10px;
   font: 11px/1.4 var(--mono);
   color: var(--text);
-  background: rgba(14, 16, 20, 0.8);
+  background: var(--overlay-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   pointer-events: none;
@@ -376,7 +404,7 @@ input[type='range']:disabled {
   font-size: 11.5px;
   padding: 2px 9px;
   border-radius: 999px;
-  background: rgba(25, 29, 36, 0.85);
+  background: var(--hud-bg);
 }
 
 .banner {
@@ -386,7 +414,7 @@ input[type='range']:disabled {
   max-width: calc(100% - 260px);
   padding: 6px 12px;
   font-size: 12px;
-  background: rgba(25, 29, 36, 0.92);
+  background: var(--hud-bg-strong);
   border: 1px solid var(--border);
   border-radius: 8px;
 }

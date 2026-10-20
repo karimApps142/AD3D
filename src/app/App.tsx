@@ -1,25 +1,15 @@
-// Layout: parameters on the left, the 3D view filling the rest.
+// Layout: parameters on the left, the 3D view filling the rest; shell overlays (palette, help,
+// settings, prompts) on top.
 
-import { useEffect } from 'react';
 import { ParamsPanel } from '../panels/ParamsPanel';
 import { ViewPanel } from '../panels/ViewPanel';
 import { useAppStore } from '../state/store';
 import { Viewport } from '../viewport/Viewport';
+import { DocumentTitle } from './DocumentTitle';
+import { ShellOverlays } from './ShellOverlays';
 import { SpikeBanner } from './SpikeBanner';
+import { useAppShell } from './useAppShell';
 import { useEngineBoot } from './useEngineBoot';
-
-function useShortcuts(): void {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && (target as HTMLInputElement).type !== 'range') return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'f' || e.key === 'F') useAppStore.getState().requestFit();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-}
 
 function EngineBadge() {
   const engine = useAppStore((s) => s.engine);
@@ -29,7 +19,7 @@ function EngineBadge() {
 
 export function App() {
   useEngineBoot();
-  useShortcuts();
+  useAppShell();
   return (
     <div className="app">
       <aside className="sidebar">
@@ -37,6 +27,7 @@ export function App() {
           <h1>AD3D</h1>
           <EngineBadge />
         </header>
+        <DocumentTitle />
         <ParamsPanel />
         <ViewPanel />
       </aside>
@@ -44,6 +35,7 @@ export function App() {
         <Viewport />
         <SpikeBanner />
       </main>
+      <ShellOverlays />
     </div>
   );
 }
