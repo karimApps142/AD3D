@@ -25,7 +25,7 @@ fn bench_squama(c: &mut Criterion) {
         assert_eq!((l.nx, l.ny), (nx, ny));
         let cb = cell_brightness(&img, l.nx, l.ny, None).unwrap();
         let facets = solve_facets(&cb, &l, &p, &tol);
-        let part = build_partition(&l);
+        let part = build_partition(&l, &[]).unwrap();
         let heights = quantise(&part, &facets, p.base_mm, &tol).unwrap();
 
         let outline: Vec<glam::DVec2> = part.outline.iter().map(|&v| part.verts[v as usize]).collect();
