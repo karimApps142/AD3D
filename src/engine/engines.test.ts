@@ -4,7 +4,7 @@ import { createMockEngine } from './mockEngine';
 import { encodeMeshPayload } from './payload';
 
 const invoke = vi.fn();
-vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args: unknown[]) => invoke(...args) }));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args: unknown[]) => invoke(...args), Channel: class {} }));
 
 describe('mock engine (inline, no Worker)', () => {
   const engine = createMockEngine({ useWorker: false });

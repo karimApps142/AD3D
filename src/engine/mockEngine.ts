@@ -4,8 +4,28 @@
 
 import { runMockJob, type MockJob } from './mockCore';
 import type { MockWorkerRequest, MockWorkerResponse } from './mockWorker';
+import { mockTarget, mockThumbnail, MOCK_IMAGE_PX } from './mockTarget';
 import { parseMeshPayload } from './payload';
-import { assertArtifactName, type Engine, type MeshPayload } from './types';
+import { predictLayout, predictWarnings } from './squamaChecks';
+import { useSquamaInfo } from './squamaInfo';
+import { assertArtifactName, type Engine, type MeshPayload, type SquamaJobInfo, type SquamaParamsDto } from './types';
+
+/** Photos, dialogs and export need the native core. */
+export const NATIVE_ONLY = 'needs the desktop app (the browser mock only has the built-in test image)';
+
+/** What the mock reports for a job: the mock mesher always uses the synthetic aspect. */
+export function mockJobInfo(params: SquamaParamsDto): SquamaJobInfo {
+  const l = predictLayout(params.widthMm, params.cellMm, MOCK_IMAGE_PX[0], MOCK_IMAGE_PX[1]);
+  return {
+    jobId: params.jobId,
+    quality: params.quality ?? 'preview',
+    layout: { kind: 'square', ...l },
+    warnings: predictWarnings(params),
+    genMs: 0,
+    triangles: 0,
+    validated: null,
+  };
+}
 
 interface Arrival {
   buffer: ArrayBuffer;
@@ -23,6 +43,7 @@ export function createMockEngine(options: MockEngineOptions = {}): Engine {
   let nextId = 1;
   const pending = new Map<number, { resolve: (a: Arrival) => void; reject: (e: Error) => void }>();
   const artifacts = new Map<string, Uint8Array>();
+  const jobs = new Map<number, SquamaJobInfo>();
 
   function failAll(error: Error) {
     for (const p of pending.values()) p.reject(error);
@@ -94,7 +115,14 @@ export function createMockEngine(options: MockEngineOptions = {}): Engine {
       if (params.image !== 'synthetic') {
         console.warn(`[mock] cannot read ${params.image} in the browser; using the synthetic image`);
       }
-      return fetchMesh({ kind: 'squama', params: { ...params } });
+      const job = { ...params };
+      const info = mockJobInfo(job);
+      jobs.set(info.jobId, info);
+      if (jobs.size > 16) jobs.delete(jobs.keys().next().value as number);
+      return fetchMesh({ kind: 'squama', params: job }).then((payload) => {
+        useSquamaInfo.getState().publish({ ...info, genMs: payload.genMs, triangles: payload.triangleCount });
+        return payload;
+      });
     },
     syntheticMesh(nTriangles) {
       return fetchMesh({ kind: 'synthetic', nTriangles });
@@ -113,6 +141,37 @@ export function createMockEngine(options: MockEngineOptions = {}): Engine {
     async finishSpike(report) {
       if (typeof window !== 'undefined') window.__SPIKE_REPORT__ = report;
       console.log('[spike] report ' + JSON.stringify(report));
+    },
+    async squamaJobInfo(jobId) {
+      return jobs.get(jobId) ?? null;
+    },
+    async squamaTarget(params) {
+      return mockTarget(params);
+    },
+    async pickImage() {
+      console.warn(`[mock] opening a photo ${NATIVE_ONLY}`);
+      return null;
+    },
+    async imageInfo(path) {
+      if (path !== 'synthetic') throw new Error(`reading ${path} ${NATIVE_ONLY}`);
+      const [w, h] = MOCK_IMAGE_PX;
+      return { path, widthPx: w, heightPx: h, workingWidthPx: w, workingHeightPx: h };
+    },
+    async imageThumbnail(path, maxPx, rotate, mirror) {
+      if (path !== 'synthetic') throw new Error(`reading ${path} ${NATIVE_ONLY}`);
+      return mockThumbnail(maxPx, rotate, mirror);
+    },
+    async pickSavePath() {
+      return null;
+    },
+    async exportSquama() {
+      throw new Error(`Export ${NATIVE_ONLY}`);
+    },
+    async cancelExport() {
+      return false;
+    },
+    async revealInFinder() {
+      throw new Error(`Reveal in Finder ${NATIVE_ONLY}`);
     },
   };
 }
