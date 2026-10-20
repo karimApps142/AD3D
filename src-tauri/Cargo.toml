@@ -1,0 +1,21 @@
+[package]
+name = "ad3d-app"
+description = "AD3D desktop app (Tauri 2 shell around ad3d-core)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+default-run = "ad3d-app"
+
+[lib]
+name = "ad3d_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+ad3d-core.workspace = true
+tauri = { version = "2.12", features = [] }
+serde.workspace = true
+serde_json.workspace = true

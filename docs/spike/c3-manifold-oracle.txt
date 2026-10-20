@@ -1,0 +1,12 @@
+    Finished `release` profile [optimized] target(s) in 0.43s
+     Running tests/manifold_oracle.rs (target/release/deps/manifold_oracle-b0fbcd45f01d5f15)
+
+running 3 tests
+test luban_default_plate ... ok
+test spike_plate_100x126 ... ok
+test random_params_and_noise_images ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s
+
+cargo test -p ad3d-core --features manifold-oracle --release --test   1.37s user 0.33s system 110% cpu 1.541 total
+exit=0

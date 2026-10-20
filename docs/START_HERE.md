@@ -76,6 +76,20 @@ Two independent architecture proposals were written and then attacked by an adve
 - **Laser:** a "3015" machine (3000 × 1500 mm class). Model not given; whether it is a fiber (metal) or CO2 laser is UNCONFIRMED.
 - **CNC:** a "1325" router (1300 × 2500 mm class). Model, spindle and tooling not given.
 
+## Building and running the app (added 2026-10-20, after the spike)
+
+Spike results and their conditions: [spike/REPORT.md](spike/REPORT.md).
+
+- **Toolchain:** `rust-toolchain.toml` pins Rust 1.99.1 with both macOS targets, and `package.json` pins pnpm 10.33.2 (`packageManager`). On a fresh Mac: install rustup, Node 22 and pnpm; the first `cargo` call installs the pinned toolchain and targets.
+- **Universal app:** `pnpm install && pnpm build:mac` runs `tauri build --target universal-apple-darwin --bundles app` and writes `target/universal-apple-darwin/release/bundle/macos/AD3D.app`.
+- **CMake** is needed only for `cargo build --workspace` / `cargo test --workspace`, because that includes the optional `ad3d-manifold` C++ wrapper. The app build does not need it.
+- **Copying the app to the Apple Silicon Mac:** the app is signed ad hoc (no Developer ID, no notarisation; none is needed for personal use). If it arrives by AirDrop, a browser, Messages or a cloud download, macOS marks it as downloaded and macOS 15+ refuses to open it (the old right-click → Open bypass is gone). Either:
+  - copy it with `rsync -a`, `scp -r` or a USB drive, which does not add the quarantine flag; or
+  - after copying, run `xattr -dr com.apple.quarantine AD3D.app`; or
+  - allow it once in System Settings → Privacy & Security → Open Anyway.
+  Building natively on that Mac with `pnpm build:mac` avoids the question.
+- **Still owed for C6:** the arm64 half has only been checked statically. On the Apple Silicon Mac run `open -n AD3D.app`, then `AD3D_SPIKE=1 AD3D_SPIKE_OUT=/tmp/ad3d-arm AD3D.app/Contents/MacOS/ad3d-app` (it writes `report.json` there and quits), and once `arch -x86_64 AD3D.app/Contents/MacOS/ad3d-app` to check the x86_64 half under Rosetta.
+
 ## Open questions for the owner
 
 1. **Laser type:** is the 3015 a fiber laser (metal sheet) or a CO2 laser (wood/acrylic)? It sets the kerf and material defaults for M4.

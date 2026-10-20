@@ -1,0 +1,4 @@
+   Compiling ad3d-core v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/crates/ad3d-core)
+   Compiling ad3d-cli v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/crates/ad3d-cli)
+    Finished `release` profile [optimized] target(s) in 40.36s
+exit=0

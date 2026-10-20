@@ -1,0 +1,149 @@
+   Compiling ad3d-app v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/src-tauri)
+    Finished `test` profile [optimized + debuginfo] target(s) in 10.78s
+     Running unittests src/lib.rs (target/debug/deps/ad3d_app_lib-fa64ed80458561b6)
+
+running 2 tests
+test tests::artifact_names ... ok
+test tests::squama_payload_echoes_job_and_true_bbox ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running unittests src/main.rs (target/debug/deps/ad3d_app-a2e5230b8b74d1e6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/ad3d-8d6c31128bd4d72c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/ad3d_core-337cd2e2c4c0cb43)
+
+running 13 tests
+test orient::tests::auto_puts_light_below ... ok
+test orient::tests::all_options_are_proper_rotations ... ok
+test orient::tests::q2_example_from_design ... ok
+test squama::tests::decimal_tie_snaps_half_up ... ok
+test squama::tests::lambert_inverse_endpoints ... ok
+test image::tests::row_zero_is_bottom_of_picture ... ok
+test image::tests::exact_area_average_with_fractional_cells ... ok
+test squama::tests::luban_snapping ... ok
+test image::tests::uniform_image_gives_uniform_cells ... ok
+test payload::tests::roundtrip_and_header ... ok
+test mesh::validate::tests::cube_is_valid ... ok
+test image::tests::mean_is_preserved ... ok
+test synth::tests::torus_is_closed_genus_one ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/relief_cases.rs (target/debug/deps/relief_cases-3259b4bb45b3be93)
+
+running 22 tests
+test single_flat_cell ... ok
+test near_ties_cluster_up ... ok
+test equal_profiles_share_an_edge ... ok
+test crossing_clamped_away_from_edge_end ... ok
+test saddle_with_corner_heights_only ... ok
+test crossing_wall ... ok
+test saddle_ac_high_is_split ... ok
+test saddle_bd_high_is_split ... ok
+test non_saddle_four_way_vertex_is_not_split ... ok
+test far_from_origin_f32 ... ok
+test single_tilted_cell ... ok
+test one_by_n_and_n_by_one ... ok
+test subset_of_pieces_meshes_as_its_own_part ... ok
+test ties_everywhere_make_no_interior_walls ... ok
+test saddle_at_every_vertex ... ok
+test wedge_point_at_a ... ok
+test wedge_point_at_b ... ok
+test wedge_both_orientations_and_sides ... ok
+test back_face_strip_and_cdt_cover_the_outline ... ok
+test adversarial_alphabet_heights ... ok
+test random_integer_heights ... ok
+test random_facets_through_quantise ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/squama_props.rs (target/debug/deps/squama_props-5274b32045c8194a)
+
+running 14 tests
+test invalid_params_are_rejected ... ok
+test cancellation_returns_cancelled ... ok
+test one_by_n_and_n_by_one ... ok
+test synthetic_aspect ... ok
+test image_source_with_height_crops ... ok
+test extreme_params ... ok
+test image_kinds ... ok
+test warnings ... ok
+test deterministic ... ok
+test luban_default_synthetic ... ok
+test large_plate_2048 ... ok
+test hundred_by_126 ... ok
+test random_params_and_images ... ok
+test random_images_through_sampling ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.58s
+
+     Running tests/validate_mutations.rs (target/debug/deps/validate_mutations-d6fac17323d96db2)
+
+running 10 tests
+test two_fans_at_one_vertex_is_pinched ... ok
+test zero_area_triangle ... ok
+test facet_below_base_is_caught ... ok
+test flipped_triangle_gives_inconsistent_winding ... ok
+test duplicate_vertex_at_same_position ... ok
+test removed_triangle_gives_boundary_edges ... ok
+test near_vertices_fail_gate_and_slicer_stage ... ok
+test repeated_index_triangle ... ok
+test pinch_inside_a_generated_plate ... ok
+test stl_roundtrip_validates_as_soup ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/debug/deps/ad3d_manifold-264718146d9f3126)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/manifold.rs (target/debug/deps/manifold-5520e571350b9fc6)
+
+running 12 tests
+test malformed_buffers_are_caught_before_ffi ... ok
+test vendored_version ... ok
+test bad_indices_and_coordinates_are_rejected ... ok
+test flipped_triangle_is_rejected ... ok
+test mesh_with_a_missing_triangle_is_rejected ... ok
+test cube_from_meshgl_is_valid ... ok
+test triangle_soup_needs_merge ... ok
+test union_and_intersection_of_overlapping_cubes ... ok
+test work_moves_across_threads ... ok
+test meshgl_round_trip_preserves_the_solid ... ok
+test cancelled_context_stops_evaluation ... ok
+test cube_minus_cylinder_has_expected_volume ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests ad3d_app_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ad3d_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ad3d_manifold
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+cargo test --workspace  12.20s user 6.82s system 82% cpu 23.141 total
+exit=0

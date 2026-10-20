@@ -1,0 +1,7 @@
+# Pinned so a fresh Mac builds with the same compiler as the spike measurements.
+# The universal app needs both macOS targets (on Apple Silicon, rustup adds
+# x86_64-apple-darwin from this list on first use).
+[toolchain]
+channel = "1.99.1"
+targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
+profile = "minimal"

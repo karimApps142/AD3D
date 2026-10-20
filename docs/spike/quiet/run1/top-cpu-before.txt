@@ -1,0 +1,8 @@
+ %CPU COMM
+240.2 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine
+ 89.6 /Applications/Docker.app/Contents/MacOS/com.docker.backend
+ 70.5 /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+  9.8 /Users/apple/Library/Application Support/Herd/bin/php84
+  7.8 /Users/apple/Library/Application Support/Herd/bin/php84
+  2.9 /usr/libexec/lsd
+  2.5 /bin/bash

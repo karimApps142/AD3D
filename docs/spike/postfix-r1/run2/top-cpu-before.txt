@@ -1,0 +1,8 @@
+ %CPU COMM
+291.2 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine
+ 97.2 /Users/apple/Library/Application Support/Herd/bin/php84
+ 76.5 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 22.7 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/MacOS/Code Helper
+ 15.3 /Applications/Docker.app/Contents/MacOS/com.docker.backend
+ 15.2 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)
+ 10.6 /Users/apple/.vscode/extensions/anthropic.claude-code-2.1.301-darwin-x64/resources/native-binary/claude

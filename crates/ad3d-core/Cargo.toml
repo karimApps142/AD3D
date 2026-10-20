@@ -1,0 +1,35 @@
+[package]
+name = "ad3d-core"
+description = "AD3D geometry core: generators, mesh validation, IO. No UI dependencies."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+glam.workspace = true
+image.workspace = true
+spade.workspace = true
+serde.workspace = true
+bytemuck.workspace = true
+# Test oracle only (`--features manifold-oracle`): never enabled by the app or CLI,
+# so normal builds do not compile the C++ library.
+ad3d-manifold = { workspace = true, optional = true }
+
+[features]
+default = []
+# Cross-checks generated meshes against manifold's own manifoldness test.
+manifold-oracle = ["dep:ad3d-manifold"]
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
+serde_json.workspace = true
+
+[[bench]]
+name = "squama"
+harness = false
+
+[[test]]
+name = "manifold_oracle"
+required-features = ["manifold-oracle"]

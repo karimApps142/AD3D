@@ -6,3 +6,24 @@ src-tauri/target/
 __pycache__/
 .venv/
 *.log
+docs/wip/spike/design-review/venv/
+
+# manifold spike: build outputs and downloaded sources
+docs/wip/spike/manifold-spike/target*/
+docs/wip/spike/manifold-spike/crates/ad3d-manifold/vendor/
+
+# Rust core / CLI outputs
+out/**/*.stl
+
+# Generated meshes and screenshots anywhere in the tree. The small run evidence
+# (report.json, app logs, the *.txt/*.json per criterion) stays tracked, and so does
+# the one reference screenshot docs/spike/viewport.png.
+**/out/**/*.stl
+**/core-out/
+docs/spike/run*/*.png
+docs/spike/probe-runs/run*/*.png
+docs/spike/postfix-*/run*/*.png
+docs/wip/spike/audit-run*/*.png
+
+# Paused-session drafts, superseded by docs/spec/FEATURES.md and crates/
+docs/wip/

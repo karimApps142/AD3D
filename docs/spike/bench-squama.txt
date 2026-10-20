@@ -1,0 +1,230 @@
+   Compiling ad3d-core v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/crates/ad3d-core)
+    Finished `bench` profile [optimized] target(s) in 31.86s
+     Running benches/squama.rs (target/release/deps/squama-1d247719537d73c4)
+Gnuplot not found, using plotters backend
+Benchmarking back-face CDT 50x63
+Benchmarking back-face CDT 50x63: Warming up for 3.0000 s
+Benchmarking back-face CDT 50x63: Collecting 100 samples in estimated 5.0487 s (354k iterations)
+Benchmarking back-face CDT 50x63: Analyzing
+back-face CDT 50x63     time:   [13.848 µs 13.926 µs 14.025 µs]
+                        change: [−15.822% −4.2799% +5.7692%] (p = 0.60 > 0.05)
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking mesh_relief 50x63
+Benchmarking mesh_relief 50x63: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 7.3s, enable flat sampling, or reduce sample count to 50.
+Benchmarking mesh_relief 50x63: Collecting 100 samples in estimated 7.3250 s (5050 iterations)
+Benchmarking mesh_relief 50x63: Analyzing
+mesh_relief 50x63       time:   [1.2818 ms 1.2931 ms 1.3047 ms]
+                        change: [−34.457% −23.989% −12.943%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking quantise+mesh 50x63
+Benchmarking quantise+mesh 50x63: Warming up for 3.0000 s
+Benchmarking quantise+mesh 50x63: Collecting 100 samples in estimated 5.0029 s (1700 iterations)
+Benchmarking quantise+mesh 50x63: Analyzing
+quantise+mesh 50x63     time:   [1.7025 ms 1.7121 ms 1.7223 ms]
+                        change: [−33.056% −22.320% −13.465%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking end-to-end generate 50x63
+Benchmarking end-to-end generate 50x63: Warming up for 3.0000 s
+Benchmarking end-to-end generate 50x63: Collecting 100 samples in estimated 5.2046 s (1900 iterations)
+Benchmarking end-to-end generate 50x63: Analyzing
+end-to-end generate 50x63
+                        time:   [1.9819 ms 2.0068 ms 2.0340 ms]
+                        change: [−32.263% −19.593% −8.7198%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+
+Benchmarking end-to-end generate 50x63 noise
+Benchmarking end-to-end generate 50x63 noise: Warming up for 3.0000 s
+Benchmarking end-to-end generate 50x63 noise: Collecting 100 samples in estimated 5.2399 s (1000 iterations)
+Benchmarking end-to-end generate 50x63 noise: Analyzing
+end-to-end generate 50x63 noise
+                        time:   [3.1625 ms 3.1816 ms 3.2013 ms]
+                        change: [−22.156% −14.182% −7.1815%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 6 outliers among 100 measurements (6.00%)
+  6 (6.00%) high mild
+
+Benchmarking payload encode 50x63
+Benchmarking payload encode 50x63: Warming up for 3.0000 s
+Benchmarking payload encode 50x63: Collecting 100 samples in estimated 5.3484 s (76k iterations)
+Benchmarking payload encode 50x63: Analyzing
+payload encode 50x63    time:   [38.708 µs 39.176 µs 39.818 µs]
+                        change: [−10.202% −3.5246% +2.3066%] (p = 0.33 > 0.05)
+                        No change in performance detected.
+Found 11 outliers among 100 measurements (11.00%)
+  1 (1.00%) high mild
+  10 (10.00%) high severe
+
+Benchmarking back-face CDT 100x126
+Benchmarking back-face CDT 100x126: Warming up for 3.0000 s
+Benchmarking back-face CDT 100x126: Collecting 100 samples in estimated 5.0853 s (106k iterations)
+Benchmarking back-face CDT 100x126: Analyzing
+back-face CDT 100x126   time:   [32.838 µs 33.047 µs 33.289 µs]
+                        change: [−22.207% −14.449% −7.1788%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 7 outliers among 100 measurements (7.00%)
+  3 (3.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking mesh_relief 100x126
+Benchmarking mesh_relief 100x126: Warming up for 3.0000 s
+Benchmarking mesh_relief 100x126: Collecting 100 samples in estimated 5.6629 s (500 iterations)
+Benchmarking mesh_relief 100x126: Analyzing
+mesh_relief 100x126     time:   [7.1221 ms 7.1641 ms 7.2099 ms]
+                        change: [−28.585% −19.141% −10.182%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking quantise+mesh 100x126
+Benchmarking quantise+mesh 100x126: Warming up for 3.0000 s
+Benchmarking quantise+mesh 100x126: Collecting 100 samples in estimated 5.1401 s (300 iterations)
+Benchmarking quantise+mesh 100x126: Analyzing
+quantise+mesh 100x126   time:   [8.6881 ms 8.7549 ms 8.8289 ms]
+                        change: [−3.9254% −1.1993% +1.3671%] (p = 0.39 > 0.05)
+                        No change in performance detected.
+Found 6 outliers among 100 measurements (6.00%)
+  4 (4.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking end-to-end generate 100x126
+Benchmarking end-to-end generate 100x126: Warming up for 3.0000 s
+Benchmarking end-to-end generate 100x126: Collecting 100 samples in estimated 5.6082 s (400 iterations)
+Benchmarking end-to-end generate 100x126: Analyzing
+end-to-end generate 100x126
+                        time:   [9.1861 ms 9.2676 ms 9.3590 ms]
+                        change: [−20.126% −8.1721% +2.5064%] (p = 0.26 > 0.05)
+                        No change in performance detected.
+Found 5 outliers among 100 measurements (5.00%)
+  4 (4.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking end-to-end generate 100x126 noise
+Benchmarking end-to-end generate 100x126 noise: Warming up for 3.0000 s
+Benchmarking end-to-end generate 100x126 noise: Collecting 100 samples in estimated 5.6374 s (200 iterations)
+Benchmarking end-to-end generate 100x126 noise: Analyzing
+end-to-end generate 100x126 noise
+                        time:   [13.750 ms 13.935 ms 14.145 ms]
+                        change: [−18.156% −7.9504% +0.3621%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 6 outliers among 100 measurements (6.00%)
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking payload encode 100x126
+Benchmarking payload encode 100x126: Warming up for 3.0000 s
+Benchmarking payload encode 100x126: Collecting 100 samples in estimated 5.3739 s (25k iterations)
+Benchmarking payload encode 100x126: Analyzing
+payload encode 100x126  time:   [151.68 µs 152.64 µs 153.71 µs]
+                        change: [−9.6710% −1.6238% +5.2512%] (p = 0.74 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+
+Benchmarking back-face CDT 150x189
+Benchmarking back-face CDT 150x189: Warming up for 3.0000 s
+Benchmarking back-face CDT 150x189: Collecting 100 samples in estimated 5.3094 s (50k iterations)
+Benchmarking back-face CDT 150x189: Analyzing
+back-face CDT 150x189   time:   [48.393 µs 48.691 µs 49.049 µs]
+                        change: [−3.8662% +2.0885% +7.2972%] (p = 0.51 > 0.05)
+                        No change in performance detected.
+Found 14 outliers among 100 measurements (14.00%)
+  2 (2.00%) low severe
+  1 (1.00%) low mild
+  3 (3.00%) high mild
+  8 (8.00%) high severe
+
+Benchmarking mesh_relief 150x189
+Benchmarking mesh_relief 150x189: Warming up for 3.0000 s
+Benchmarking mesh_relief 150x189: Collecting 100 samples in estimated 7.1898 s (300 iterations)
+Benchmarking mesh_relief 150x189: Analyzing
+mesh_relief 150x189     time:   [16.126 ms 16.520 ms 16.967 ms]
+                        change: [−8.7204% +3.3608% +13.814%] (p = 0.63 > 0.05)
+                        No change in performance detected.
+Found 11 outliers among 100 measurements (11.00%)
+  4 (4.00%) high mild
+  7 (7.00%) high severe
+
+Benchmarking quantise+mesh 150x189
+Benchmarking quantise+mesh 150x189: Warming up for 3.0000 s
+Benchmarking quantise+mesh 150x189: Collecting 100 samples in estimated 6.8270 s (200 iterations)
+Benchmarking quantise+mesh 150x189: Analyzing
+quantise+mesh 150x189   time:   [18.548 ms 18.723 ms 18.910 ms]
+                        change: [−8.0314% +2.3563% +10.862%] (p = 0.71 > 0.05)
+                        No change in performance detected.
+Found 9 outliers among 100 measurements (9.00%)
+  9 (9.00%) high mild
+
+Benchmarking end-to-end generate 150x189
+Benchmarking end-to-end generate 150x189: Warming up for 3.0000 s
+Benchmarking end-to-end generate 150x189: Collecting 100 samples in estimated 7.2514 s (200 iterations)
+Benchmarking end-to-end generate 150x189: Analyzing
+end-to-end generate 150x189
+                        time:   [22.928 ms 23.740 ms 24.639 ms]
+                        change: [+17.024% +29.056% +39.414%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 8 outliers among 100 measurements (8.00%)
+  6 (6.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking end-to-end generate 150x189 noise
+Benchmarking end-to-end generate 150x189 noise: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 7.1s, or reduce sample count to 70.
+Benchmarking end-to-end generate 150x189 noise: Collecting 100 samples in estimated 7.0549 s (100 iterations)
+Benchmarking end-to-end generate 150x189 noise: Analyzing
+end-to-end generate 150x189 noise
+                        time:   [34.108 ms 34.845 ms 35.613 ms]
+                        change: [+26.037% +35.070% +43.298%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+Benchmarking payload encode 150x189
+Benchmarking payload encode 150x189: Warming up for 3.0000 s
+Benchmarking payload encode 150x189: Collecting 100 samples in estimated 5.0840 s (2300 iterations)
+Benchmarking payload encode 150x189: Analyzing
+payload encode 150x189  time:   [1.1184 ms 1.1372 ms 1.1565 ms]
+                        change: [−16.464% +8.2018% +38.828%] (p = 0.59 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+Benchmarking sampling/cell_brightness 12MP -> 100x75
+Benchmarking sampling/cell_brightness 12MP -> 100x75: Warming up for 3.0000 s
+Benchmarking sampling/cell_brightness 12MP -> 100x75: Collecting 20 samples in estimated 5.8583 s (60 iterations)
+Benchmarking sampling/cell_brightness 12MP -> 100x75: Analyzing
+sampling/cell_brightness 12MP -> 100x75
+                        time:   [63.849 ms 67.853 ms 72.595 ms]
+                        change: [+52.948% +71.202% +89.891%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 1 outliers among 20 measurements (5.00%)
+  1 (5.00%) high mild
+Benchmarking sampling/cell_brightness 12MP -> 150x113
+Benchmarking sampling/cell_brightness 12MP -> 150x113: Warming up for 3.0000 s
+Benchmarking sampling/cell_brightness 12MP -> 150x113: Collecting 20 samples in estimated 6.1605 s (40 iterations)
+Benchmarking sampling/cell_brightness 12MP -> 150x113: Analyzing
+sampling/cell_brightness 12MP -> 150x113
+                        time:   [69.724 ms 72.002 ms 74.387 ms]
+                        change: [+45.275% +61.932% +77.935%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+exit=0
+11:20  up  3:08, 4 users, load averages: 38.44 17.82 17.82

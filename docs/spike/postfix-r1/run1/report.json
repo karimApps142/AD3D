@@ -1,0 +1,483 @@
+{
+  "criteria": {
+    "C1": {
+      "artifact": "viewport.png",
+      "canvas": {
+        "height": 1566,
+        "width": 2280
+      },
+      "lightMoveChangedFraction": 0.3031,
+      "lightMoveChangedPixels": 1082217,
+      "note": "Frontend evidence; the native run also shows that the Tauri app launched.",
+      "pass": true,
+      "pngBytes": 1093384,
+      "shadowedFraction": 0.0494,
+      "shadowedPixels": 176466,
+      "shadows": {
+        "bias": -0.0001,
+        "enabled": true,
+        "expectedMapSize": 4096,
+        "frustumMm": {
+          "depth": 305.04,
+          "height": 35.99,
+          "width": 383.83
+        },
+        "mapSize": 4096,
+        "type": "pcf"
+      }
+    },
+    "C4": {
+      "cold": {
+        "median": {
+          "encodeMs": 6.18,
+          "frameMs": 66,
+          "genMs": 52.01,
+          "geometryMs": 0,
+          "gpuSyncMs": 44,
+          "ipcMs": 57,
+          "parseMs": 0,
+          "renderCpuMs": 18,
+          "totalMs": 121
+        },
+        "modes": [
+          "new",
+          "new",
+          "new",
+          "new",
+          "new"
+        ],
+        "pass": true,
+        "runs": [
+          {
+            "bytes": 18000064,
+            "encodeMs": 6.45,
+            "frameMs": 64,
+            "genMs": 52.01,
+            "geometryMode": "new",
+            "geometryMs": 0,
+            "gpuSyncMs": 47,
+            "ipcMs": 47,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 16,
+            "totalMs": 111,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 5.92,
+            "frameMs": 64,
+            "genMs": 52.01,
+            "geometryMode": "new",
+            "geometryMs": 0,
+            "gpuSyncMs": 44,
+            "ipcMs": 57,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 19,
+            "totalMs": 121,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 6.18,
+            "frameMs": 66,
+            "genMs": 52.01,
+            "geometryMode": "new",
+            "geometryMs": 1,
+            "gpuSyncMs": 44,
+            "ipcMs": 50,
+            "parseMs": 1,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 18,
+            "totalMs": 117,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 8,
+            "frameMs": 66,
+            "genMs": 52.01,
+            "geometryMode": "new",
+            "geometryMs": 0,
+            "gpuSyncMs": 43,
+            "ipcMs": 69,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 21,
+            "totalMs": 135,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 3.73,
+            "frameMs": 66,
+            "genMs": 52.01,
+            "geometryMode": "new",
+            "geometryMs": 1,
+            "gpuSyncMs": 47,
+            "ipcMs": 60,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 18,
+            "totalMs": 127,
+            "triangles": 1000000,
+            "vertices": 500000
+          }
+        ]
+      },
+      "definition": "ipcMs = request → bytes on the UI thread; geometryMs = bytes → parsed + BufferGeometry attached; frameMs = attached → next frame rendered + GPU sync (1-px readPixels); totalMs = request → frame. cold = new GPU buffers every run (small plate shown in between); warm = buffers reused in place. The mesh is cached in Rust (generation excluded, encode included); shared-vertex torus (V = T/2).",
+      "median": {
+        "encodeMs": 6.18,
+        "frameMs": 66,
+        "genMs": 52.01,
+        "geometryMs": 0,
+        "gpuSyncMs": 44,
+        "ipcMs": 57,
+        "parseMs": 0,
+        "renderCpuMs": 18,
+        "totalMs": 121
+      },
+      "pass": true,
+      "targetMs": 150,
+      "triangles": 1000000,
+      "warm": {
+        "median": {
+          "encodeMs": 4.43,
+          "frameMs": 65,
+          "genMs": 52.01,
+          "geometryMs": 0,
+          "gpuSyncMs": 45,
+          "ipcMs": 59,
+          "parseMs": 0,
+          "renderCpuMs": 20,
+          "totalMs": 124
+        },
+        "modes": [
+          "swap",
+          "swap",
+          "swap",
+          "swap",
+          "swap"
+        ],
+        "pass": true,
+        "runs": [
+          {
+            "bytes": 18000064,
+            "encodeMs": 10.26,
+            "frameMs": 70,
+            "genMs": 52.01,
+            "geometryMode": "swap",
+            "geometryMs": 0,
+            "gpuSyncMs": 48,
+            "ipcMs": 68,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 20,
+            "totalMs": 138,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 4.43,
+            "frameMs": 65,
+            "genMs": 52.01,
+            "geometryMode": "swap",
+            "geometryMs": 0,
+            "gpuSyncMs": 44,
+            "ipcMs": 59,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 21,
+            "totalMs": 124,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 5.71,
+            "frameMs": 67,
+            "genMs": 52.01,
+            "geometryMode": "swap",
+            "geometryMs": 0,
+            "gpuSyncMs": 45,
+            "ipcMs": 62,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 21,
+            "totalMs": 129,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 3.33,
+            "frameMs": 65,
+            "genMs": 52.01,
+            "geometryMode": "swap",
+            "geometryMs": 0,
+            "gpuSyncMs": 45,
+            "ipcMs": 57,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 20,
+            "totalMs": 122,
+            "triangles": 1000000,
+            "vertices": 500000
+          },
+          {
+            "bytes": 18000064,
+            "encodeMs": 3.16,
+            "frameMs": 51,
+            "genMs": 52.01,
+            "geometryMode": "swap",
+            "geometryMs": 0,
+            "gpuSyncMs": 35,
+            "ipcMs": 52,
+            "parseMs": 0,
+            "payloadZeroCopy": true,
+            "renderCpuMs": 16,
+            "totalMs": 103,
+            "triangles": 1000000,
+            "vertices": 500000
+          }
+        ]
+      },
+      "warmup": {
+        "bytes": 18000064,
+        "encodeMs": 19.72,
+        "frameMs": 68,
+        "genMs": 52.01,
+        "geometryMode": "new",
+        "geometryMs": 0,
+        "gpuSyncMs": 49,
+        "ipcMs": 74,
+        "parseMs": 0,
+        "payloadZeroCopy": true,
+        "renderCpuMs": 17,
+        "totalMs": 142,
+        "triangles": 1000000,
+        "vertices": 500000
+      }
+    },
+    "C5": {
+      "conditions": {
+        "hasFocus": true,
+        "rafHz": 58.8,
+        "rafIntervalMs": {
+          "p50": 17,
+          "p95": 18
+        },
+        "throttled": false,
+        "visibilityState": "visible"
+      },
+      "medianUpdatesPerSec": 60,
+      "pass": true,
+      "raf": {
+        "coalescedFraction": 0,
+        "driver": "raf",
+        "durationMs": 5006,
+        "engineGenMs": {
+          "p50": 2.6,
+          "p95": 5.08
+        },
+        "errors": 0,
+        "frameIntervalMs": {
+          "p50": 17,
+          "p95": 20.3
+        },
+        "framesRendered": 296,
+        "inputEvents": 297,
+        "inputToFrameMs": {
+          "p50": 17,
+          "p95": 20
+        },
+        "meanUpdatesPerSec": 59.2,
+        "medianUpdatesPerSec": 60,
+        "paramChanges": 297,
+        "pass": true,
+        "plate": {
+          "expected": {
+            "nx": 50,
+            "ny": 63
+          },
+          "measured": {
+            "nx": 50,
+            "ny": 63
+          },
+          "ok": true,
+          "triangles": 20836,
+          "vertices": 10420
+        },
+        "renderCpuMs": {
+          "p50": 1,
+          "p95": 1
+        },
+        "requestToBytesMs": {
+          "p50": 5,
+          "p95": 10
+        },
+        "requestsSent": 297,
+        "responsesApplied": 297,
+        "responsesDropped": 0,
+        "slider": "maxTiltDeg swept 2–18° (triangle wave, 1.6 s period), native value setter + input event every animation frame",
+        "targetUpdatesPerSec": 30,
+        "updatesPerSecondWindows": [
+          56,
+          60,
+          60,
+          60,
+          60
+        ],
+        "valueChanges": 297
+      },
+      "targetUpdatesPerSec": 30,
+      "throttled": false,
+      "timer": {
+        "coalescedFraction": 0.093,
+        "driver": "timer",
+        "durationMs": 5005,
+        "engineGenMs": {
+          "p50": 2.54,
+          "p95": 5.83
+        },
+        "errors": 0,
+        "frameIntervalMs": {
+          "p50": 17,
+          "p95": 26.9
+        },
+        "framesRendered": 284,
+        "inputEvents": 565,
+        "inputToFrameMs": {
+          "p50": 12,
+          "p95": 27
+        },
+        "meanUpdatesPerSec": 56.2,
+        "medianUpdatesPerSec": 59,
+        "paramChanges": 560,
+        "pass": true,
+        "plate": {
+          "expected": {
+            "nx": 50,
+            "ny": 63
+          },
+          "measured": {
+            "nx": 50,
+            "ny": 63
+          },
+          "ok": true,
+          "triangles": 20836,
+          "vertices": 10420
+        },
+        "renderCpuMs": {
+          "p50": 1,
+          "p95": 1
+        },
+        "requestToBytesMs": {
+          "p50": 8,
+          "p95": 16
+        },
+        "requestsSent": 508,
+        "responsesApplied": 507,
+        "responsesDropped": 0,
+        "slider": "maxTiltDeg swept 2–18° (triangle wave, 1.6 s period), native value setter + input event every 4 ms (timer, independent of rAF)",
+        "targetUpdatesPerSec": 30,
+        "updatesPerSecondWindows": [
+          59,
+          60,
+          59,
+          48,
+          55
+        ],
+        "valueChanges": 560
+      },
+      "timerMedianUpdatesPerSec": 59
+    }
+  },
+  "durationMs": 14474,
+  "engine": {
+    "isNative": true,
+    "name": "tauri"
+  },
+  "env": {
+    "antialias": true,
+    "canvasSize": {
+      "cssHeight": 783,
+      "cssWidth": 1140,
+      "height": 1566,
+      "width": 2280
+    },
+    "devicePixelRatio": 2,
+    "hardwareConcurrency": 8,
+    "maskedRenderer": "WebKit WebGL",
+    "maxTextureSize": 16384,
+    "platform": "MacIntel",
+    "react": "19.3.1",
+    "three": "186",
+    "unmaskedRenderer": "Apple GPU",
+    "unmaskedVendor": "Apple Inc.",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "visibilityState": "visible",
+    "webglRenderer": "Apple GPU",
+    "webglVendor": "WebKit",
+    "webglVersion": "WebGL 2.0"
+  },
+  "errors": [],
+  "finishedAt": "2026-10-20T09:48:45.595Z",
+  "kind": "ad3d-spike-frontend",
+  "startedAt": "2026-10-20T09:48:31.121Z",
+  "summary": {
+    "C1_pass": true,
+    "C4_coldMedianTotalMs": 121,
+    "C4_medianTotalMs": 121,
+    "C4_pass": true,
+    "C4_warmMedianTotalMs": 124,
+    "C4_warmupTotalMs": 142,
+    "C5_medianUpdatesPerSec": 60,
+    "C5_pass": true,
+    "C5_throttled": false,
+    "C5_timerMedianUpdatesPerSec": 59
+  },
+  "url": "tauri://localhost",
+  "version": 1,
+  "host": {
+    "loadAvgBefore": [
+      19.71,
+      41.64,
+      36.59
+    ],
+    "loadAvgAfter": [
+      27.89,
+      41.99,
+      36.83
+    ],
+    "maxLoad": 8,
+    "quiet": false,
+    "maximized": false,
+    "topCpuBefore": [
+      "%CPU COMM",
+      "510.9 /Applications/Docker.app/Contents/MacOS/com.docker.backend",
+      "105.6 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine",
+      " 30.0 /Users/apple/.vscode/extensions/anthropic.claude-code-2.1.301-darwin-x64/resources/native-binary/claude",
+      " 25.3 (lsof)",
+      " 24.6 (lsof)",
+      " 21.9 (lsof)",
+      " 20.9 lsof"
+    ],
+    "topCpuAfter": [
+      "%CPU COMM",
+      "582.7 /Applications/Docker.app/Contents/MacOS/com.docker.backend",
+      "144.2 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine",
+      " 56.2 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer",
+      " 40.2 /Users/apple/Library/Application Support/Herd/bin/php84",
+      " 36.5 (lsof)",
+      " 27.2 (lsof)",
+      " 26.2 (lsof)"
+    ]
+  }
+}

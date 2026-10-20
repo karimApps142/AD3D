@@ -1,0 +1,15 @@
+[package]
+name = "ad3d-cli"
+description = "Headless AD3D generators and mesh checks."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "ad3d"
+path = "src/main.rs"
+
+[dependencies]
+ad3d-core.workspace = true
+clap.workspace = true

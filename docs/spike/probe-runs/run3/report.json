@@ -1,0 +1,243 @@
+{
+  "criteria": {
+    "C1": {
+      "artifact": "viewport.png",
+      "canvas": {
+        "height": 1566,
+        "width": 2280
+      },
+      "lightMoveChangedFraction": 0.3031,
+      "lightMoveChangedPixels": 1082217,
+      "note": "Frontend evidence; the native run also shows that the Tauri app launched.",
+      "pass": true,
+      "pngBytes": 1093384,
+      "shadowedFraction": 0.0494,
+      "shadowedPixels": 176466,
+      "shadows": {
+        "bias": -0.0001,
+        "enabled": true,
+        "expectedMapSize": 4096,
+        "frustumMm": {
+          "depth": 305.04,
+          "height": 35.99,
+          "width": 383.83
+        },
+        "mapSize": 4096,
+        "type": "pcf"
+      }
+    },
+    "C4": {
+      "definition": "ipcMs = request → bytes on the UI thread; geometryMs = bytes → parsed + BufferGeometry attached; frameMs = attached → next frame rendered + GPU sync (1-px readPixels); totalMs = request → frame",
+      "median": {
+        "encodeMs": 4.96,
+        "frameMs": 76,
+        "genMs": 53.11,
+        "geometryMs": 5,
+        "gpuSyncMs": 53,
+        "ipcMs": 71,
+        "parseMs": 0,
+        "renderCpuMs": 24,
+        "totalMs": 151
+      },
+      "pass": false,
+      "runs": [
+        {
+          "bytes": 18000064,
+          "encodeMs": 4.96,
+          "frameMs": 79,
+          "genMs": 53.11,
+          "geometryMode": "copy",
+          "geometryMs": 5,
+          "gpuSyncMs": 55,
+          "ipcMs": 73,
+          "parseMs": 0,
+          "renderCpuMs": 24,
+          "totalMs": 157,
+          "triangles": 1000000,
+          "vertices": 500000,
+          "zeroCopy": true
+        },
+        {
+          "bytes": 18000064,
+          "encodeMs": 4.88,
+          "frameMs": 77,
+          "genMs": 53.11,
+          "geometryMode": "copy",
+          "geometryMs": 5,
+          "gpuSyncMs": 53,
+          "ipcMs": 69,
+          "parseMs": 0,
+          "renderCpuMs": 24,
+          "totalMs": 151,
+          "triangles": 1000000,
+          "vertices": 500000,
+          "zeroCopy": true
+        },
+        {
+          "bytes": 18000064,
+          "encodeMs": 4.91,
+          "frameMs": 76,
+          "genMs": 53.11,
+          "geometryMode": "copy",
+          "geometryMs": 5,
+          "gpuSyncMs": 52,
+          "ipcMs": 71,
+          "parseMs": 0,
+          "renderCpuMs": 24,
+          "totalMs": 152,
+          "triangles": 1000000,
+          "vertices": 500000,
+          "zeroCopy": true
+        },
+        {
+          "bytes": 18000064,
+          "encodeMs": 5.17,
+          "frameMs": 75,
+          "genMs": 53.11,
+          "geometryMode": "copy",
+          "geometryMs": 4,
+          "gpuSyncMs": 52,
+          "ipcMs": 72,
+          "parseMs": 0,
+          "renderCpuMs": 22,
+          "totalMs": 151,
+          "triangles": 1000000,
+          "vertices": 500000,
+          "zeroCopy": true
+        },
+        {
+          "bytes": 18000064,
+          "encodeMs": 5.87,
+          "frameMs": 76,
+          "genMs": 53.11,
+          "geometryMode": "copy",
+          "geometryMs": 4,
+          "gpuSyncMs": 53,
+          "ipcMs": 61,
+          "parseMs": 0,
+          "renderCpuMs": 22,
+          "totalMs": 141,
+          "triangles": 1000000,
+          "vertices": 500000,
+          "zeroCopy": true
+        }
+      ],
+      "targetMs": 150,
+      "triangles": 1000000,
+      "warmup": {
+        "bytes": 18000064,
+        "encodeMs": 26.53,
+        "frameMs": 111,
+        "genMs": 53.11,
+        "geometryMode": "new",
+        "geometryMs": 23,
+        "gpuSyncMs": 71,
+        "ipcMs": 116,
+        "parseMs": 0,
+        "renderCpuMs": 38,
+        "totalMs": 250,
+        "triangles": 1000000,
+        "vertices": 500000,
+        "zeroCopy": true
+      }
+    },
+    "C5": {
+      "coalescedFraction": 0,
+      "durationMs": 5022,
+      "engineGenMs": {
+        "p50": 3.63,
+        "p95": 4.7
+      },
+      "errors": 0,
+      "frameIntervalMs": {
+        "p50": 26,
+        "p95": 40
+      },
+      "framesRendered": 193,
+      "inputEvents": 194,
+      "inputToFrameMs": {
+        "p50": 28,
+        "p95": 39.6
+      },
+      "meanUpdatesPerSec": 37.8,
+      "medianUpdatesPerSec": 38,
+      "paramChanges": 194,
+      "pass": true,
+      "plate": {
+        "expected": {
+          "nx": 50,
+          "ny": 63
+        },
+        "measured": {
+          "nx": 50,
+          "ny": 63
+        },
+        "ok": true,
+        "triangles": 20836,
+        "vertices": 10420
+      },
+      "renderCpuMs": {
+        "p50": 1,
+        "p95": 2
+      },
+      "requestToBytesMs": {
+        "p50": 9.5,
+        "p95": 14
+      },
+      "requestsSent": 194,
+      "responsesApplied": 194,
+      "responsesDropped": 0,
+      "slider": "maxTiltDeg swept 2–18° (triangle wave, 1.6 s period), native value setter + input event every animation frame",
+      "targetUpdatesPerSec": 30,
+      "updatesPerSecondWindows": [
+        38,
+        44,
+        38,
+        34,
+        35
+      ],
+      "valueChanges": 194
+    }
+  },
+  "durationMs": 7322,
+  "engine": {
+    "isNative": true,
+    "name": "tauri"
+  },
+  "env": {
+    "antialias": true,
+    "canvasSize": {
+      "cssHeight": 783,
+      "cssWidth": 1140,
+      "height": 1566,
+      "width": 2280
+    },
+    "devicePixelRatio": 2,
+    "hardwareConcurrency": 8,
+    "maskedRenderer": "WebKit WebGL",
+    "maxTextureSize": 16384,
+    "platform": "MacIntel",
+    "react": "19.3.1",
+    "three": "186",
+    "unmaskedRenderer": "Apple GPU",
+    "unmaskedVendor": "Apple Inc.",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "visibilityState": "visible",
+    "webglRenderer": "Apple GPU",
+    "webglVendor": "WebKit",
+    "webglVersion": "WebGL 2.0"
+  },
+  "errors": [],
+  "finishedAt": "2026-10-20T06:41:44.687Z",
+  "kind": "ad3d-spike-frontend",
+  "startedAt": "2026-10-20T06:41:37.365Z",
+  "summary": {
+    "C1_pass": true,
+    "C4_medianTotalMs": 151,
+    "C4_pass": false,
+    "C5_medianUpdatesPerSec": 38,
+    "C5_pass": true
+  },
+  "url": "tauri://localhost",
+  "version": 1
+}

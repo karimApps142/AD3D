@@ -1,0 +1,8 @@
+ %CPU COMM
+582.7 /Applications/Docker.app/Contents/MacOS/com.docker.backend
+144.2 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine
+ 56.2 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 40.2 /Users/apple/Library/Application Support/Herd/bin/php84
+ 36.5 (lsof)
+ 27.2 (lsof)
+ 26.2 (lsof)

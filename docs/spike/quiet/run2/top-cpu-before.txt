@@ -1,0 +1,8 @@
+ %CPU COMM
+358.9 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine
+ 91.8 /Users/apple/Library/Application Support/Herd/bin/php84
+ 77.7 /Applications/Docker.app/Contents/MacOS/com.docker.backend
+ 36.3 /Applications/Docker.app/Contents/MacOS/Docker Desktop.app/Contents/Frameworks/Docker Desktop Helper (Renderer).app/Contents/MacOS/Docker Desktop Helper (Renderer)
+ 26.4 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)
+ 21.3 /usr/libexec/duetexpertd
+ 20.3 node

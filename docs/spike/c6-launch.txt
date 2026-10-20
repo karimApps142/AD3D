@@ -1,0 +1,10 @@
+## launch via open, +10 s
+24934 ad3d-app
+  PID ELAPSED    RSS  %CPU COMM
+24934   00:11  57124  10.1 /Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app/Contents/MacOS/ad3d-app
+macos/AD3D.app/Contents/MacOS/ad3d-app
+## on-screen windows (CGWindowListCopyWindowInfo)
+owner=AD3D pid=24934 layer=0 bounds=1440x811@48,30
+## display GPU with app open
+      Chipset Model: Intel UHD Graphics 630
+quit ok

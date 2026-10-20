@@ -1,0 +1,6 @@
+# One macOS deployment target for rustc, cc and CMake, on both slices of the
+# universal build. Without it, rustc links for 10.12 (x86_64) / 11.0 (arm64)
+# while cc/cmake compile C++ for the SDK version (15.5 here), silently.
+# Keep it equal to bundle.macOS.minimumSystemVersion in tauri.conf.json.
+[env]
+MACOSX_DEPLOYMENT_TARGET = "11.0"

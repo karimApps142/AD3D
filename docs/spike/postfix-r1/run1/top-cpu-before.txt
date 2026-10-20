@@ -1,0 +1,8 @@
+ %CPU COMM
+510.9 /Applications/Docker.app/Contents/MacOS/com.docker.backend
+105.6 /System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine
+ 30.0 /Users/apple/.vscode/extensions/anthropic.claude-code-2.1.301-darwin-x64/resources/native-binary/claude
+ 25.3 (lsof)
+ 24.6 (lsof)
+ 21.9 (lsof)
+ 20.9 lsof

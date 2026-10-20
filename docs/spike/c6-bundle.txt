@@ -1,0 +1,46 @@
+## lipo -info
+Architectures in the fat file: AD3D.app/Contents/MacOS/ad3d-app are: x86_64 arm64 
+## file
+AD3D.app/Contents/MacOS/ad3d-app: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]
+AD3D.app/Contents/MacOS/ad3d-app (for architecture x86_64):	Mach-O 64-bit executable x86_64
+AD3D.app/Contents/MacOS/ad3d-app (for architecture arm64):	Mach-O 64-bit executable arm64
+## codesign -dv
+Executable=/Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app/Contents/MacOS/ad3d-app
+Identifier=dev.ad3d.app
+Format=app bundle with Mach-O universal (x86_64 arm64)
+CodeDirectory v=20500 size=72973 flags=0x10002(adhoc,runtime) hashes=2274+3 location=embedded
+Signature=adhoc
+Info.plist entries=14
+TeamIdentifier=not set
+Runtime Version=15.5.0
+Sealed Resources version=2 rules=13 files=1
+Internal requirements count=0 size=12
+## codesign --verify
+verify-ok
+## sizes
+ 17M	AD3D.app
+17868	AD3D.app
+-rwxr-xr-x  1 apple  staff  18182448 Oct 20 11:35 AD3D.app/Contents/MacOS/ad3d-app
+## minos
+x86_64
+    minos 11.0
+      sdk 15.5
+arm64
+    minos 11.0
+      sdk 15.5
+## linked libs (x86_64)
+AD3D.app/Contents/MacOS/ad3d-app:
+	/System/Library/Frameworks/WebKit.framework/Versions/A/WebKit (compatibility version 1.0.0, current version 621.2.5)
+	/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices (compatibility version 1.0.0, current version 65.0.0)
+	/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics (compatibility version 64.0.0, current version 1889.5.3)
+	/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon (compatibility version 2.0.0, current version 170.0.0)
+	/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo (compatibility version 1.2.0, current version 1.5.0)
+	/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 3502.1.255)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
+	/usr/lib/libiconv.2.dylib (compatibility version 7.0.0, current version 7.0.0)
+	/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2575.60.5)
+	/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore (compatibility version 1.2.0, current version 1.11.0)
+	/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 3502.1.255)
+	/usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)
+	/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync (compatibility version 1.0.0, current version 3777.4.1)
+	/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices (compatibility version 1.0.0, current version 1226.0.0)

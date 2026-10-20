@@ -1,0 +1,47 @@
+11:24  up  3:12, 4 users, load averages: 7.12 13.59 16.18
+
+> ad3d@0.0.0 tauri /Users/apple/Desktop/workspace/nextjs/AD3D
+> tauri build --target universal-apple-darwin --bundles app
+
+        Info Looking up installed tauri packages to check mismatched versions...
+        Warn The bundle identifier "dev.ad3d.app" set in `"tauri.conf.json" identifier` ends with `.app`. This is not recommended because it conflicts with the application bundle extension on macOS.
+     Running beforeBuildCommand `pnpm build`
+
+> ad3d@0.0.0 build /Users/apple/Desktop/workspace/nextjs/AD3D
+> tsc -b && vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 610 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                          0.47 kB │ gzip:   0.29 kB
+dist/assets/mockWorker-DkZZ6M4o.js       6.87 kB
+dist/assets/index-B2fGGU4N.css           5.09 kB │ gzip:   1.72 kB
+dist/assets/tauriEngine-BU-im-Qx.js      0.88 kB │ gzip:   0.52 kB
+dist/assets/types-C1E1qe3G.js            4.32 kB │ gzip:   1.84 kB
+dist/assets/mockEngine-CviewV32.js       6.16 kB │ gzip:   2.98 kB
+dist/assets/index-DEokOUqN.js        1,193.58 kB │ gzip: 330.83 kB
+
+✓ built in 656ms
+   Compiling ad3d-app v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/src-tauri)
+   Compiling ad3d-core v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/crates/ad3d-core)
+    Finished `release` profile [optimized] target(s) in 7m 53s
+   Compiling ad3d-core v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/crates/ad3d-core)
+   Compiling ad3d-app v0.1.0 (/Users/apple/Desktop/workspace/nextjs/AD3D/src-tauri)
+    Finished `release` profile [optimized] target(s) in 3m 03s
+       Built application at: /Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/ad3d-app
+    Bundling AD3D.app (/Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app)
+     Signing with identity "-"
+Signing with identity "-"
+Signing /Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app/Contents/MacOS/ad3d-app
+Signing with identity "-"
+Signing /Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app
+/Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app: replacing existing signature
+        Warn skipping app notarization, no APPLE_ID & APPLE_PASSWORD & APPLE_TEAM_ID or APPLE_API_KEY & APPLE_API_ISSUER & APPLE_API_KEY_PATH environment variables found
+    Finished 1 bundle at:
+        /Users/apple/Desktop/workspace/nextjs/AD3D/target/universal-apple-darwin/release/bundle/macos/AD3D.app (17.44 MiB)
+
+pnpm tauri build --target universal-apple-darwin --bundles app  904.61s user 43.07s system 143% cpu 11:01.81 total
+exit=0
+11:35  up  3:23, 4 users, load averages: 7.16 22.33 21.98

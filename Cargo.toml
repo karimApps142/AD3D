@@ -1,0 +1,35 @@
+[workspace]
+resolver = "3"
+members = ["crates/ad3d-core", "crates/ad3d-cli", "crates/ad3d-manifold", "src-tauri"]
+default-members = ["crates/ad3d-core", "crates/ad3d-cli", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "UNLICENSED"
+publish = false
+
+[workspace.dependencies]
+ad3d-core = { path = "crates/ad3d-core" }
+ad3d-manifold = { path = "crates/ad3d-manifold" }
+glam = "0.30"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "tiff", "webp", "bmp"] }
+spade = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bytemuck = "1"
+clap = { version = "4", features = ["derive"] }
+proptest = "1"
+criterion = "0.7"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+lto = "thin"
+codegen-units = 1
+
+# Tests run the property suites; keep them reasonably fast.
+[profile.test]
+opt-level = 1

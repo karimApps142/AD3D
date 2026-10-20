@@ -1,0 +1,3 @@
+[ad3d] spike: synthetic 1M-triangle mesh ready (33.2 ms)
+[ad3d] saved /Users/apple/Desktop/workspace/nextjs/AD3D/docs/spike/run6/viewport.png (1093384 bytes)
+[ad3d] spike report written to /Users/apple/Desktop/workspace/nextjs/AD3D/docs/spike/run6/report.json
