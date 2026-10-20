@@ -15,6 +15,10 @@
 //! when that is unset. No build-machine path is compiled into the binary.
 //! `AD3D_SPIKE_MAXIMIZE=1` maximises the window before the harness starts.
 
+mod menu;
+mod project;
+mod settings;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -69,6 +73,11 @@ fn require_spike(command: &str) -> Result<(), String> {
 
 fn spike_flag() -> bool {
     std::env::var("AD3D_SPIKE").is_ok_and(|v| v == "1")
+}
+
+/// Spike mode, for the app-shell modules (the close guard is off in spike runs).
+pub(crate) fn spike_mode() -> bool {
+    spike_flag()
 }
 
 async fn blocking<T, F>(f: F) -> Result<T, String>
@@ -249,8 +258,14 @@ async fn finish_spike(report: serde_json::Value, app: AppHandle) -> Result<(), S
 pub fn run() {
     let state = Arc::new(AppState::default());
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(state.clone())
+        .on_window_event(menu::on_window_event)
         .setup(move |app| {
+            menu::manage(app.handle());
+            if let Err(e) = menu::install(app.handle()) {
+                eprintln!("[ad3d] menu: {e}");
+            }
             if let Some(win) = app.get_webview_window("main") {
                 // A hidden or unfocused window lets WebKit throttle timers and rAF,
                 // which would starve the preview loop and the spike harness.
@@ -276,10 +291,23 @@ pub fn run() {
             synthetic_mesh,
             get_launch_flags,
             save_artifact,
-            finish_spike
+            finish_spike,
+            menu::menu_set_state,
+            menu::confirm_close,
+            project::pick_open_path,
+            project::pick_save_path,
+            project::pick_folder,
+            project::project_read,
+            project::project_write,
+            settings::settings_load,
+            settings::settings_save,
+            settings::recent_add,
+            settings::recent_clear,
+            settings::printer_profiles_list
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running the AD3D app");
+        .build(tauri::generate_context!())
+        .expect("error while building the AD3D app")
+        .run(|app, event| menu::on_run_event(app, &event));
 }
 
 #[cfg(test)]
