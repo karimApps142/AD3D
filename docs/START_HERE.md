@@ -70,11 +70,16 @@ Two independent architecture proposals were written and then attacked by an adve
 
 **Deliberately not copied:** LuBan's binaries and installers, strings dumped from them, and the video file itself. Re-download the video with `yt-dlp https://www.youtube.com/watch?v=Wd26qsSIRY8` if needed.
 
+## Owner's machines (answered 2026-10-19)
+
+- **3D printer:** Creality CR-6 SE, build volume 235 × 235 × 250 mm (X × Y × Z). It is a bed-slinger (the bed moves in Y), so tall, thin parts printed standing should have their face parallel to Y.
+- **Laser:** a "3015" machine (3000 × 1500 mm class). Model not given; whether it is a fiber (metal) or CO2 laser is UNCONFIRMED.
+- **CNC:** a "1325" router (1300 × 2500 mm class). Model, spindle and tooling not given.
+
 ## Open questions for the owner
 
-1. **Printer:** model and bed size, needed for tiling Squama and for cut-to-bed.
-2. **Laser cutter or CNC:** do you have one? Kerf and sheet thickness matter for M4.
-3. **Order after Squama:** lithophane → cut-to-bed → laser slicing is the default. Change it?
+1. **Laser type:** is the 3015 a fiber laser (metal sheet) or a CO2 laser (wood/acrylic)? It sets the kerf and material defaults for M4.
+2. **Order after Squama:** lithophane → cut-to-bed → laser slicing is the default. Change it?
 
 ## Next steps
 
