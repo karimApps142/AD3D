@@ -1,17 +1,33 @@
 //! Squama-style shadow plate (design §2–§5, M0 subset): square grid, one
 //! directional light, centre pivot, Lambert inverse, `Quality::Preview` (no optimiser).
 
+pub mod layout;
+pub mod light;
+pub mod response;
+pub mod solve;
+
 use std::f64::consts::PI;
 use std::time::Instant;
 
-use glam::DVec2;
 use serde::{Deserialize, Serialize};
 
 use crate::cancel::CancelToken;
 use crate::error::{Error, Result, Warning};
-use crate::image::{CellBrightness, Crop, LinearLuma, cell_brightness, centre_crop, synthetic_target};
+use crate::image::{CellBrightness, LinearLuma, cell_brightness, synthetic_target};
 use crate::mesh::Mesh;
-use crate::relief::{Facet, MeshStats, Partition, PieceSet, Tol, mesh_relief_stats, quantise, square_grid};
+use crate::relief::{MeshStats, PieceSet, Tol, mesh_relief_stats, quantise};
+
+pub use layout::{
+    HexOrientation, Layout, LayoutKind, TileCut, build_partition, cell_e_max, e_max, facet_brightness, layout, layout_for,
+    min_cell_mm,
+};
+use layout::{snap, to_um};
+pub use light::{CellLight, Light};
+pub use response::{Response, ResponseCurve, tilt_from_brightness};
+pub use solve::{
+    Limits, PivotRule, PlateOutput, PlateSpec, Quality, SolveOpts, SolveReport, Solved, generate_plate, generate_plate_cut,
+    solve_facets, solve_facets_ex,
+};
 
 /// Generator parameters, millimetres and radians.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -80,25 +96,6 @@ impl SquamaParamsDto {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-pub enum LayoutKind {
-    Square,
-}
-
-/// Snapped plate geometry (§2.1).
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
-pub struct Layout {
-    pub kind: LayoutKind,
-    pub w_mm: f64,
-    pub h_mm: f64,
-    pub cell_mm: f64,
-    pub nx: u32,
-    pub ny: u32,
-    /// Image crop used to fill the plate (normalised, y down), when cropping.
-    #[serde(skip)]
-    pub crop: Option<Crop>,
-}
-
 /// Generator options that are not user parameters.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GenOptions {
@@ -111,15 +108,6 @@ impl Default for GenOptions {
     fn default() -> Self {
         GenOptions { tol: Tol::default(), relief_guard: true }
     }
-}
-
-fn to_um(x: f64) -> i64 {
-    (x * 1000.0).round() as i64
-}
-
-/// Half-up integer snap `max(1, (len + cell/2) / cell)`.
-fn snap(len_um: i64, cell_um: i64) -> u32 {
-    ((len_um + cell_um / 2) / cell_um).max(1) as u32
 }
 
 fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(SquamaParams, Vec<Warning>)> {
@@ -178,59 +166,6 @@ fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(SquamaParams, Ve
         w.push(Warning { code: "low_elevation", message: "light elevation below 3°".into() });
     }
     Ok((p, w))
-}
-
-/// `e_max` for square cells: the largest `|a · (corner − centre)|`.
-pub fn e_max(cell: f64, azimuth: f64) -> f64 {
-    0.5 * cell * (azimuth.cos().abs() + azimuth.sin().abs())
-}
-
-/// §2.1: snapped layout from params and the image size (or crop size) in pixels.
-pub fn layout(p: &SquamaParams, img_px: (u32, u32)) -> Result<Layout> {
-    let cell_um = to_um(p.cell_mm);
-    if cell_um <= 0 {
-        return Err(Error::InvalidParams("cell must be positive".into()));
-    }
-    let nx = snap(to_um(p.width_mm), cell_um);
-    let (ny, crop) = match p.height_mm {
-        Some(h) => {
-            let ny = snap(to_um(h), cell_um);
-            let crop = centre_crop(img_px.0.max(1), img_px.1.max(1), nx as f64, ny as f64);
-            (ny, Some(crop))
-        }
-        None => {
-            let (cw, ch) = (img_px.0.max(1) as u64, img_px.1.max(1) as u64);
-            let ny = ((2 * nx as u64 * ch + cw) / (2 * cw)).max(1);
-            (ny as u32, None)
-        }
-    };
-    let cell = cell_um as f64 / 1000.0;
-    Ok(Layout { kind: LayoutKind::Square, w_mm: nx as f64 * cell, h_mm: ny as f64 * cell, cell_mm: cell, nx, ny, crop })
-}
-
-/// §3: Lambert-inverse tilt for linear brightness `g`.
-#[inline]
-pub fn tilt_from_brightness(g: f64, elevation: f64, max_tilt: f64) -> f64 {
-    let g = if g.is_finite() { g.clamp(0.0, 1.0) } else { 0.0 };
-    let e_min = (elevation - max_tilt).sin().max(0.0);
-    let e_maxv = (elevation + max_tilt).sin();
-    let e = e_min + g * (e_maxv - e_min);
-    (e.clamp(-1.0, 1.0).asin() - elevation).clamp(-max_tilt, max_tilt)
-}
-
-/// §3–§4: one facet per cell, centre pivot `h = T + e_max·tan S + q`.
-pub fn solve_facets(cb: &CellBrightness, l: &Layout, p: &SquamaParams, tol: &Tol) -> Vec<Facet> {
-    let a = DVec2::new(p.light_azimuth.cos(), p.light_azimuth.sin());
-    let c = p.base_mm + e_max(l.cell_mm, p.light_azimuth) * p.max_tilt.tan() + tol.q;
-    let mut out = Vec::with_capacity((l.nx * l.ny) as usize);
-    for j in 0..l.ny {
-        for i in 0..l.nx {
-            let th = tilt_from_brightness(cb.at(i, j) as f64, p.light_elevation, p.max_tilt);
-            let pivot = DVec2::new((i as f64 + 0.5) * l.cell_mm, (j as f64 + 0.5) * l.cell_mm);
-            out.push(Facet { pivot, h: c, grad: -th.tan() * a });
-        }
-    }
-    out
 }
 
 /// Timings (ms) and counts from one run.
@@ -324,7 +259,7 @@ pub fn generate_ex(p: &SquamaParams, cb: &CellBrightness, opts: &GenOptions, can
     let tol = opts.tol;
     let facets = solve_facets(cb, &l, &p, &tol);
     let t1 = Instant::now();
-    let part = build_partition(&l);
+    let part = build_partition(&l, &[])?;
     let heights = quantise(&part, &facets, p.base_mm, &tol)?;
     let t2 = Instant::now();
     cancel.check()?;
@@ -346,11 +281,6 @@ pub fn generate_ex(p: &SquamaParams, cb: &CellBrightness, opts: &GenOptions, can
         min_facet_w: p.base_mm - tol.q / 2.0,
         back_area: l.w_mm * l.h_mm,
     })
-}
-
-/// §6: the square-grid partition for a layout.
-pub fn build_partition(l: &Layout) -> Partition {
-    square_grid(l.nx, l.ny, l.cell_mm, DVec2::ZERO)
 }
 
 /// `validate()` options matching a generated plate (plate space, given transform).

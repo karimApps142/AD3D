@@ -30,7 +30,7 @@ fn main() {
         let l = layout(&p, SYNTHETIC_PX).unwrap();
         let cb = cell_brightness(&img, l.nx, l.ny, None).unwrap();
         let facets = solve_facets(&cb, &l, &p, &tol);
-        let part = build_partition(&l);
+        let part = build_partition(&l, &[]).unwrap();
         let h = quantise(&part, &facets, p.base_mm, &tol).unwrap();
         let (a, am) = min_ms(n, || {
             std::hint::black_box(mesh_relief(&part, PieceSet::All, &h, &[], &tol, &cancel).unwrap());
