@@ -12,6 +12,10 @@ image.workspace = true
 spade.workspace = true
 serde.workspace = true
 bytemuck.workspace = true
+serde_json.workspace = true
+flate2.workspace = true
+crc32fast.workspace = true
+quick-xml.workspace = true
 # Test oracle only (`--features manifold-oracle`): never enabled by the app or CLI,
 # so normal builds do not compile the C++ library.
 ad3d-manifold = { workspace = true, optional = true }
@@ -24,7 +28,6 @@ manifold-oracle = ["dep:ad3d-manifold"]
 [dev-dependencies]
 proptest.workspace = true
 criterion.workspace = true
-serde_json.workspace = true
 
 [[bench]]
 name = "squama"

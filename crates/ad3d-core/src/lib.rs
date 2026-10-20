@@ -17,6 +17,8 @@ pub mod io;
 pub mod mesh;
 pub mod orient;
 pub mod payload;
+pub mod profiles;
+pub mod project;
 pub mod relief;
 pub mod squama;
 pub mod synth;
