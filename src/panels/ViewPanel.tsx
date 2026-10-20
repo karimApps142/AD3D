@@ -25,20 +25,7 @@ export function ViewPanel() {
         <h2>Preview</h2>
       </header>
       <div className="group">
-        <Slider
-          param="ambient" label="Ambient light" unit="%" min={0} max={50} step={1}
-          value={Math.round(view.ambient * 100)}
-          hint="Room light as a share of the lamp. More of it washes the image out"
-          onChange={(v) => setView({ ambient: v / 100 })}
-        />
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={view.followDesignLight}
-            onChange={(e) => setView({ followDesignLight: e.currentTarget.checked })}
-          />
-          Light follows the design light
-        </label>
+        <p className="note">Room light and “lock to design light” are in the view's toolbar.</p>
         <Slider
           param="previewAzimuthDeg" label="Light azimuth" unit="°" min={0} max={359} step={1}
           value={Math.round(light.azimuthDeg)}

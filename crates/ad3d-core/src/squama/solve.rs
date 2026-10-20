@@ -195,18 +195,7 @@ pub fn solve_facets_ex(
         }
     }
     let relief = 2.0 * e_all * s_eff.tan();
-    if relief < 3.0 * tol.delta && opts.relief_guard {
-        return Err(Error::InvalidParams(format!(
-            "relief {relief:.3} mm below {:.2} mm; raise max tilt, max relief or cell size",
-            3.0 * tol.delta
-        )));
-    }
-    if relief < 8.0 * tol.delta {
-        warnings.push(Warning {
-            code: "low_relief",
-            message: format!("relief {relief:.3} mm below printable detail; raise max tilt or cell size"),
-        });
-    }
+    super::relief_checks(relief, &super::GenOptions { tol: *tol, relief_guard: opts.relief_guard }, &mut warnings)?;
 
     // Response ranges.
     let ref_el = light.reference(l.w_mm, l.h_mm, lim.base_mm)?.el;

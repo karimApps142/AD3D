@@ -45,7 +45,7 @@ use crate::image::CellBrightness;
 use crate::relief::{Facet, Partition, Tol, square_grid};
 use crate::sim::{
     FacetLight, Light, LineSet, MatchScore, Response, Sweep, absolute_targets, facet_count, facet_lights,
-    invert_direct, line_set, match_score, shade_lines, target_range,
+    invert_direct, line_set, match_score, prepare_response, shade_lines, target_range, ResponseCurve,
 };
 
 /// Geometric limits on facets (§12), shared with the solver. For the optimiser,
@@ -296,12 +296,13 @@ pub fn lambert_facets(
         return Err(Error::InvalidParams(format!("{} targets for {nf} facets", g.len())));
     }
     let geo = geometry(p, facet_centroids(p), light, lim)?;
-    let range = target_range(&geo.lights, geo.s, resp)?;
+    let curve = prepare_response(p, light, resp, lim.base_mm)?;
+    let range = target_range(&geo.lights, geo.s, &curve)?;
     let tg = absolute_targets(&g[..nf], range);
-    let sh = resp.shadowed();
+    let sh = curve.shadowed();
     Ok((0..nf)
         .map(|f| {
-            let th = invert_direct(&geo.lights[f], geo.s, resp, tg[f] - sh);
+            let th = invert_direct(&geo.lights[f], geo.s, &curve, tg[f] - sh);
             let pr = geo.project(f, Param { th, h: geo.c_common }, false);
             geo.facet(f, pr)
         })
@@ -356,6 +357,10 @@ pub fn optimise_from(
         return Err(Error::InvalidParams(format!("{} targets / {} facets for {nf} facets", g.len(), init.len())));
     }
     let geo = geometry(p, init[..nf].iter().map(|f| f.pivot).collect(), light, lim)?;
+    // The same prepared curve (reference elevation at the plate centre, base
+    // height) as `solve_facets_ex`, so the optimiser aims at the solver's response.
+    let curve = prepare_response(p, light, resp, lim.base_mm)?;
+    let resp = &curve;
     let range = target_range(&geo.lights, geo.s, resp)?;
     let target = absolute_targets(&g[..nf], range);
     let mut params: Vec<Param> = (0..nf)
@@ -550,7 +555,7 @@ struct Ctx<'a> {
     ls: &'a LineSet,
     geo: &'a Geometry,
     target: &'a [f64],
-    resp: &'a Response,
+    resp: &'a ResponseCurve,
     shadowed: f64,
     dr: f64,
     vary_height: bool,
@@ -581,7 +586,7 @@ struct Win {
 }
 
 impl<'a> Ctx<'a> {
-    fn new(ls: &'a LineSet, geo: &'a Geometry, target: &'a [f64], resp: &'a Response, dr: f64, vary_height: bool) -> Self {
+    fn new(ls: &'a LineSet, geo: &'a Geometry, target: &'a [f64], resp: &'a ResponseCurve, dr: f64, vary_height: bool) -> Self {
         let x = ls
             .segs
             .iter()
@@ -596,7 +601,7 @@ impl<'a> Ctx<'a> {
     #[inline]
     fn direct(&self, f: usize, th: f64) -> f64 {
         let fl = &self.geo.lights[f];
-        self.resp.direct(fl.cos_tilt(th), fl.el, fl.irr)
+        self.resp.direct(fl.cos_tilt(th), fl.irr)
     }
 
     /// Lit measure of segment `i` given the horizon `state` (advanced).

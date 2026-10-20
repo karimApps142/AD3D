@@ -120,6 +120,26 @@ export function simulateLambert(g: ArrayLike<number>, elevationDeg: number, maxT
   return { values, contrast };
 }
 
+/**
+ * The core's simulated appearance (§15.1: unnormalised radiance per facet, the lamp alone, cast
+ * shadows included) as the 3D preview shows it: plus the preview ambient, relative to the
+ * brightest facet. Same terms as the heightfield shader (`irr · max(0, N·L) · vis + ambient`).
+ * `contrast` is p99 / p1 of the displayed radiance, so it follows the ambient slider.
+ */
+export function appearanceFromCore(sim: ArrayLike<number>, ambient: number): Appearance {
+  const amb = Math.max(0, ambient);
+  let top = 0;
+  for (let k = 0; k < sim.length; k++) top = Math.max(top, sim[k]);
+  top += amb;
+  const values = new Float32Array(sim.length);
+  for (let k = 0; k < sim.length; k++) values[k] = top > 0 ? (Math.max(0, sim[k]) + amb) / top : 0;
+  const sorted = Array.from(values).sort((a, b) => a - b);
+  const pct = (q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor(q * (sorted.length - 1))))] ?? 0;
+  const lo = pct(0.01);
+  const contrast = lo > 0 ? pct(0.99) / lo : Number.POSITIVE_INFINITY;
+  return { values, contrast };
+}
+
 // ---- Predicted warnings (codes match the core where the core has the same check).
 
 /** Ledge depth above which a down-facing step is flagged (FEATURES `ledge_warn_mm`). */

@@ -9,7 +9,7 @@
 use glam::DVec2;
 use rayon::prelude::*;
 
-use super::{FacetLight, LineSet, Light, Response, facet_lights, line_set, shade_lines};
+use super::{FacetLight, LineSet, Light, Response, ResponseCurve, base_estimate, facet_lights, line_set, prepare_response, shade_lines};
 use crate::error::{Error, Result};
 use crate::image::LinearLuma;
 use crate::relief::{Facet, Partition};
@@ -37,7 +37,12 @@ pub const MAX_RENDER_PX: u64 = 64 << 20;
 /// `[0, 1]` (`brightness / white`, clamped), row 0 at the top of the plate
 /// (`v` max), column 0 at `u` min. Pixels outside the outline are 0.
 pub fn render(p: &Partition, facets: &[Facet], light: &Light, resp: &Response, o: &RenderOpts) -> Result<LinearLuma> {
-    resp.check()?;
+    let curve = prepare_response(p, light, resp, base_estimate(facets))?;
+    render_curve(p, facets, light, &curve, o)
+}
+
+/// [`render`] with a prepared response (e.g. the one the solver used).
+pub fn render_curve(p: &Partition, facets: &[Facet], light: &Light, resp: &ResponseCurve, o: &RenderOpts) -> Result<LinearLuma> {
     if !(o.px_per_mm.is_finite() && o.px_per_mm > 0.0) || o.supersample == 0 {
         return Err(Error::InvalidParams("render needs px_per_mm > 0 and supersample ≥ 1".into()));
     }
@@ -91,8 +96,8 @@ pub fn render(p: &Partition, facets: &[Facet], light: &Light, resp: &Response, o
     Ok(LinearLuma { w: w as u32, h: h as u32, px })
 }
 
-fn direct_of(fl: &FacetLight, f: &Facet, resp: &Response) -> f64 {
-    resp.direct(fl.cos_facet(f), fl.el, fl.irr)
+fn direct_of(fl: &FacetLight, f: &Facet, resp: &ResponseCurve) -> f64 {
+    resp.direct(fl.cos_facet(f), fl.irr)
 }
 
 fn sample(ls: &LineSet, lit_start: &[f64], direct: &[f64], shadowed: f64, q: DVec2) -> Option<f64> {

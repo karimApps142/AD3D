@@ -12,6 +12,11 @@ export const DEFAULT_PARAMS: SquamaParams = {
   maxTiltDeg: 10,
   baseMm: 3,
   image: 'synthetic',
+  // Not document state (see paramsHistory TRANSIENT_KEYS): only a slider drag asks for 'preview'.
+  quality: 'final',
+  // The shadow-aware optimiser is cheap at final quality (PLAN §4): on by default.
+  // An explicit { kind: 'none' } turns it off (and survives save/open).
+  optimiser: { kind: 'shadow', maxSweeps: 8 },
 };
 
 export interface ViewSettings {

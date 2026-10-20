@@ -112,6 +112,13 @@ describe('DTO building', () => {
     );
   });
 
+  it('keeps the bed motion when the bed size is edited (custom printer)', () => {
+    const custom = { ...DEFAULT_EXPORT, printerId: 'custom', bedMm: [235, 235, 200] as [number, number, number] };
+    expect(buildExportDto(DEFAULT_PARAMS, custom, '/x/p.3mf').bedMotion).toBe('y');
+    expect(buildExportDto(DEFAULT_PARAMS, { ...custom, bedMotion: 'none' }, '/x/p.3mf').bedMotion).toBe('none');
+    expect(DEFAULT_EXPORT.keys).toBe('auto');
+  });
+
   it('names files and splits save paths', () => {
     expect(splitSavePath('/a/b/plate.v2.3mf')).toEqual({ outDir: '/a/b', baseName: 'plate.v2' });
     expect(splitSavePath('/plate.stl')).toEqual({ outDir: '/', baseName: 'plate' });
@@ -155,6 +162,9 @@ describe('tile plan (mirrors squama_cmds.rs)', () => {
     expect(printSize(300, 378, 4, 1)).toEqual([378, 4, 300]);
     expect(printSize(300, 378, 4, 0)).toEqual([300, 4, 378]);
     expect(printSize(300, 378, 4, null)).toEqual([300, 378, 4]);
+    // A bed that moves in Y: the face runs along Y (core standing_xform), depth along X.
+    expect(printSize(300, 378, 4, 1, 'y')).toEqual([4, 378, 300]);
+    expect(printSize(300, 378, 4, 0, 'y')).toEqual([4, 300, 378]);
     expect(fitsBed([150, 4, 200], [235, 235, 250], 5)).toBe(true);
     expect(fitsBed([378, 4, 300], [235, 235, 250], 5)).toBe(false);
     expect(fitsBed([4, 225, 240], [235, 235, 250], 5)).toBe(true);

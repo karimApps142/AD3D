@@ -7,6 +7,7 @@ import { getEngine } from '../engine';
 import type { SquamaParams, TilePlan } from '../engine/types';
 import { tileLabel, type TilePlanOverlay } from '../viewport/tiles';
 import { useViewportStore } from '../viewport/viewportStore';
+import { useAppStore } from '../state/store';
 import { buildExportDto } from './squamaDto';
 import type { ExportSettings } from './squamaDto';
 
@@ -30,7 +31,9 @@ export function overlayFromPlan(plan: TilePlan): TilePlanOverlay {
 
 export function useCoreTilePlan(params: SquamaParams, settings: ExportSettings): TilePlan | null {
   const [plan, setPlan] = useState<TilePlan | null>(null);
-  const key = JSON.stringify([params, settings]);
+  // Quality is preview-loop state: a drag must not re-plan (the core plan runs a final solve).
+  const { quality: _q, ...doc } = params;
+  const key = JSON.stringify([doc, settings]);
   useEffect(() => {
     let live = true;
     const t = setTimeout(async () => {
@@ -40,7 +43,7 @@ export function useCoreTilePlan(params: SquamaParams, settings: ExportSettings):
           if (live) setPlan(null);
           return;
         }
-        const p = await engine.squamaTilePlan(buildExportDto(params, settings, '/plan/plate.3mf'));
+        const p = await engine.squamaTilePlan(buildExportDto(useAppStore.getState().params, settings, '/plan/plate.3mf'));
         if (live) setPlan(p);
       } catch {
         if (live) setPlan(null);

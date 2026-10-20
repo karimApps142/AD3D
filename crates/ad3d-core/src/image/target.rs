@@ -229,6 +229,57 @@ pub fn prepare_target_for(img: &LinearLuma, opts: &ImageOpts, plate_mm: (f64, f6
     TargetSampler::new(&wk, &lut).facet_targets(p, plate_mm)
 }
 
+/// Long side of the level a [`TargetPipeline`] keeps of a large source (2 × the full
+/// working size, so the working copy is still built from oversampled pixels).
+pub const PYRAMID_MAX_SIDE: u32 = 4096;
+
+/// Box-filters `img` by the smallest integer factor that brings its long side to at
+/// most `max_side` (linear light, so the mean brightness is kept).
+pub fn downsample_box(img: &LinearLuma, max_side: u32) -> LinearLuma {
+    let f = img.w.max(img.h).div_ceil(max_side.max(1)).max(1);
+    if f == 1 {
+        return img.clone();
+    }
+    let (w, h) = (img.w.div_ceil(f), img.h.div_ceil(f));
+    let mut px = vec![0.0f32; (w * h) as usize];
+    px.par_chunks_mut(w as usize).enumerate().for_each(|(y, row)| {
+        let y0 = y as u32 * f;
+        let y1 = (y0 + f).min(img.h);
+        for (x, out) in row.iter_mut().enumerate() {
+            let x0 = x as u32 * f;
+            let x1 = (x0 + f).min(img.w);
+            let mut sum = 0.0f64;
+            for yy in y0..y1 {
+                let r = (yy * img.w) as usize;
+                for xx in x0..x1 {
+                    sum += img.px[r + xx as usize] as f64;
+                }
+            }
+            *out = (sum / ((y1 - y0) * (x1 - x0)) as f64) as f32;
+        }
+    });
+    LinearLuma { w, h, px }
+}
+
+/// Builds the working copy (unless given) and the toned SAT for `opts` at `max_side`
+/// from `src`, without touching a cache, so callers can build outside a lock and
+/// then [`TargetPipeline::insert`].
+pub fn build_sampler(
+    src: &LinearLuma,
+    opts: &ImageOpts,
+    max_side: u32,
+    working: Option<Arc<WorkingImage>>,
+) -> Result<(Arc<WorkingImage>, Arc<TargetSampler>)> {
+    opts.check()?;
+    let wk = match working {
+        Some(w) => w,
+        None => Arc::new(build_working(src, opts, max_side)?),
+    };
+    let lut = ToneLut::new(opts, Some(&wk.hist));
+    let s = Arc::new(TargetSampler::new(&wk, &lut));
+    Ok((wk, s))
+}
+
 const CACHE_SLOTS: usize = 2;
 
 /// Small most-recent-first cache.
@@ -269,8 +320,29 @@ impl TargetPipeline {
     }
 
     /// Uses a hash the caller already has (for example [`ImageHash::of_bytes`] of the file).
+    /// A source longer than [`PYRAMID_MAX_SIDE`] on its long side is kept only as a
+    /// box-filtered level of at most that size: working copies (≤ 2048 px) are built
+    /// from it, so a crop or rotation of a 24 MP photo no longer reads every pixel.
     pub fn with_hash(src: Arc<LinearLuma>, hash: ImageHash) -> Self {
+        let src = if src.w.max(src.h) > PYRAMID_MAX_SIDE { Arc::new(downsample_box(&src, PYRAMID_MAX_SIDE)) } else { src };
         TargetPipeline { hash, src, working: Lru(Vec::new()), samplers: Lru(Vec::new()) }
+    }
+
+    /// The cached sampler for `opts` at `max_side`, if any (no building).
+    pub fn cached_sampler(&mut self, opts: &ImageOpts, max_side: u32) -> Result<Option<Arc<TargetSampler>>> {
+        opts.check()?;
+        Ok(self.samplers.get(&opts.target_key(self.hash, max_side)))
+    }
+
+    /// The cached working copy for `opts` at `max_side`, if any (no building).
+    pub fn cached_working(&mut self, opts: &ImageOpts, max_side: u32) -> Option<Arc<WorkingImage>> {
+        self.working.get(&opts.working_key(self.hash, max_side))
+    }
+
+    /// Stores stages built outside the cache's lock with [`build_sampler`].
+    pub fn insert(&mut self, opts: &ImageOpts, max_side: u32, working: Arc<WorkingImage>, sampler: Arc<TargetSampler>) {
+        self.working.put(opts.working_key(self.hash, max_side), working);
+        self.samplers.put(opts.target_key(self.hash, max_side), sampler);
     }
 
     pub fn image_hash(&self) -> ImageHash {
@@ -312,6 +384,23 @@ impl TargetPipeline {
 mod tests {
     use super::*;
     use crate::relief::square_grid;
+
+    #[test]
+    fn large_sources_keep_a_box_filtered_level() {
+        let img = LinearLuma { w: 9000, h: 30, px: (0..9000 * 30).map(|k| (k % 9000) as f32 / 9000.0).collect() };
+        let d = downsample_box(&img, PYRAMID_MAX_SIDE);
+        assert_eq!((d.w, d.h), (3000, 10));
+        let mean = |v: &[f32]| v.iter().map(|&x| x as f64).sum::<f64>() / v.len() as f64;
+        assert!((mean(&d.px) - mean(&img.px)).abs() < 1e-4);
+        let mut p = TargetPipeline::new(Arc::new(img));
+        assert_eq!(p.source().w, 3000);
+        // Built outside the cache, then inserted: the next lookup hits.
+        let o = ImageOpts::default();
+        assert!(p.cached_sampler(&o, 1024).unwrap().is_none());
+        let (w, s) = build_sampler(&p.source().clone(), &o, 1024, None).unwrap();
+        p.insert(&o, 1024, w, s.clone());
+        assert!(Arc::ptr_eq(&p.cached_sampler(&o, 1024).unwrap().unwrap(), &s));
+    }
 
     fn checker(w: u32, h: u32) -> LinearLuma {
         LinearLuma { w, h, px: (0..w * h).map(|k| if (k % w + k / w) % 2 == 0 { 0.9 } else { 0.1 }).collect() }

@@ -4,6 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { useImage } from '../app/actions';
 import { getEngine } from '../engine';
 import type { ImageOpts, SquamaParams } from '../engine/types';
 import { useSquamaInfo } from '../engine/squamaInfo';
@@ -77,7 +78,8 @@ export function ImagePanel() {
   const engine = useAppStore((s) => s.engine);
   const ui = useSquamaUi(useShallow((s) => ({ image: s.image, thumbnail: s.thumbnail, imageError: s.imageError, target: s.target, targetError: s.targetError })));
   const setUi = useSquamaUi((s) => s.set);
-  const { patch, image, commit } = useParamSetter();
+  const imageLoading = useSquamaUi((s) => s.imageLoading);
+  const { image, commit } = useParamSetter();
   const o: ImageOpts = params.imageOpts ?? {};
   const rotate = o.rotate ?? 0;
   const plate = predictPlate(params, ui.image);
@@ -90,10 +92,7 @@ export function ImagePanel() {
         if (!e.isNative) setUi({ imageError: 'Opening photos needs the desktop app; the browser mock uses the test pattern.' });
         return;
       }
-      const info = await e.imageInfo(path);
-      setUi({ image: info, imageError: null });
-      // A new photo starts uncropped, unrotated, with the height from its aspect (LuBan behaviour).
-      patch({ image: path, imageOpts: undefined, heightMm: undefined });
+      await useImage(path);
     } catch (err) {
       setUi({ imageError: String(err instanceof Error ? err.message : err) });
     }
@@ -122,12 +121,13 @@ export function ImagePanel() {
           <button type="button" onClick={openPhoto} title={engine?.isNative ? 'Open a photo' : 'Needs the desktop app'}>
             Open photo…
           </button>
-          <button type="button" onClick={() => patch({ image: 'synthetic', imageOpts: undefined, heightMm: undefined })} disabled={params.image === 'synthetic'}>
+          <button type="button" onClick={() => void useImage('synthetic')} disabled={params.image === 'synthetic'}>
             Test pattern
           </button>
         </div>
         <p className="note" title={params.image}>
           {fileName(params.image)}
+          {imageLoading && ' · opening photo…'}
           {ui.image && ui.image.path === params.image && ` · ${ui.image.widthPx} × ${ui.image.heightPx} px`}
         </p>
         {ui.thumbnail && (

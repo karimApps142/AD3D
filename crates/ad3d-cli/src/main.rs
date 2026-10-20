@@ -52,6 +52,8 @@ enum OptimiseArg {
 enum KeysArg {
     None,
     Pegs,
+    /// Pegs when the plate is tiled and the base leaves room (default).
+    Auto,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -219,9 +221,14 @@ enum Cmd {
         /// Minimum distinct-vertex distance gate in mm (0 disables).
         #[arg(long, default_value_t = 0.05)]
         min_distance: f64,
-        /// Expected number of closed shells (per 3MF object).
-        #[arg(long, default_value_t = 1)]
-        components: usize,
+        /// Expected number of closed shells for every object. Default: 1, except
+        /// for multi-shell parts (3MF objects or STL files named `*key_splints*`),
+        /// which may have any number N of shells with Euler number 2·N.
+        #[arg(long)]
+        components: Option<usize>,
+        /// Allow any number N ≥ 1 of closed genus-0 shells (Euler = 2·N) for every object.
+        #[arg(long)]
+        multi_shell: bool,
         /// Smallest allowed triangle altitude in mm (0 disables the sliver gate).
         #[arg(long, default_value_t = ad3d_core::mesh::validate::DEFAULT_MIN_ALTITUDE_MM)]
         min_altitude: f64,
@@ -418,6 +425,7 @@ fn squama_job(a: &SquamaArgs) -> R<(Value, ExportSettings, Option<PathBuf>, Prin
     match a.keys {
         Some(KeysArg::Pegs) => export.keys = KeysDto::Pegs,
         Some(KeysArg::None) => export.keys = KeysDto::None,
+        Some(KeysArg::Auto) => export.keys = KeysDto::Auto,
         None => {}
     }
     export.stand |= a.stand;
@@ -472,9 +480,19 @@ struct Written {
 }
 
 /// Writes every part in every format. STL: one file per part (`stem.stl` when
-/// there is a single part, else `stem_<part>.stl`). 3MF: one file, parts laid
-/// out on the bed.
-fn write_parts(o: &Outputs, parts: &[ExportPart], meta: &Meta, bed: &Bed, thumb: Option<&[u8]>, cancel: &CancelToken) -> R<Vec<Written>> {
+/// there is a single part, else `stem_<part>.stl`). 3MF: with `beds` (the core's
+/// placements, already in each bed's own coordinates) one file per bed —
+/// `stem.3mf`, then `stem_bed2.3mf`, … — with no re-packing; without, one file
+/// with the parts packed on the bed.
+fn write_parts(
+    o: &Outputs,
+    parts: &[ExportPart],
+    beds: Option<&[u32]>,
+    meta: &Meta,
+    bed: &Bed,
+    thumb: Option<&[u8]>,
+    cancel: &CancelToken,
+) -> R<Vec<Written>> {
     std::fs::create_dir_all(&o.dir).map_err(|e| format!("{}: {e}", o.dir.display()))?;
     let stem = safe_file_name(&o.stem);
     let mut out = Vec::new();
@@ -488,20 +506,42 @@ fn write_parts(o: &Outputs, parts: &[ExportPart], meta: &Meta, bed: &Bed, thumb:
                     out.push(Written { bytes: std::fs::metadata(&path)?.len(), path });
                 }
             }
-            ExportFormat::ThreeMf => {
-                let path = o.dir.join(format!("{stem}.3mf"));
-                let p3: Vec<Part3mf> = parts.iter().map(|p| Part3mf { name: &p.name, mesh: &p.mesh, transform: p.transform }).collect();
-                let rep = write_3mf(&path, &p3, meta, Some(bed), thumb, cancel)?;
-                if rep.beds > 1 {
-                    println!("note: {} parts need {} beds; extra beds are placed beside the first in {}", parts.len(), rep.beds, path.display());
-                }
-                for (pl, ob) in rep.placements.iter().zip(&rep.objects) {
-                    if !pl.fits {
-                        println!("warning: {} does not fit the bed even alone", ob.name);
+            ExportFormat::ThreeMf => match beds {
+                Some(beds) => {
+                    let n = beds.iter().copied().max().map_or(0, |b| b + 1);
+                    for b in 0..n {
+                        let p3: Vec<Part3mf> = parts
+                            .iter()
+                            .zip(beds)
+                            .filter(|(_, pb)| **pb == b)
+                            .map(|(p, _)| Part3mf { name: &p.name, mesh: &p.mesh, transform: p.transform })
+                            .collect();
+                        let path = o.dir.join(if b == 0 { format!("{stem}.3mf") } else { format!("{stem}_bed{}.3mf", b + 1) });
+                        let mut m = meta.clone();
+                        if b > 0 {
+                            m.title = m.title.map(|t| format!("{t} (bed {})", b + 1));
+                        }
+                        write_3mf(&path, &p3, &m, None, if b == 0 { thumb } else { None }, cancel)?;
+                        let names: Vec<&str> = p3.iter().map(|p| p.name).collect();
+                        println!("bed {}: {} -> {}", b + 1, names.join(", "), path.display());
+                        out.push(Written { bytes: std::fs::metadata(&path)?.len(), path });
                     }
                 }
-                out.push(Written { bytes: std::fs::metadata(&path)?.len(), path });
-            }
+                None => {
+                    let path = o.dir.join(format!("{stem}.3mf"));
+                    let p3: Vec<Part3mf> = parts.iter().map(|p| Part3mf { name: &p.name, mesh: &p.mesh, transform: p.transform }).collect();
+                    let rep = write_3mf(&path, &p3, meta, Some(bed), thumb, cancel)?;
+                    if rep.beds > 1 {
+                        println!("note: {} parts need {} beds; extra beds are placed beside the first in {}", parts.len(), rep.beds, path.display());
+                    }
+                    for (pl, ob) in rep.placements.iter().zip(&rep.objects) {
+                        if !pl.fits {
+                            println!("warning: {} does not fit the bed even alone", ob.name);
+                        }
+                    }
+                    out.push(Written { bytes: std::fs::metadata(&path)?.len(), path });
+                }
+            },
         }
     }
     Ok(out)
@@ -532,9 +572,9 @@ fn run_squama(
     let s = &r.plate.timings;
     println!("source: {source}");
     println!("printer: {} | bed {} x {} x {} mm, margin {} mm", printer.name, bed.x_mm, bed.y_mm, bed.z_mm, bed.margin_mm);
-    println!("grid: {} x {} cells of {} mm -> plate {} x {} mm", l.nx, l.ny, l.cell_mm, l.w_mm, l.h_mm);
+    println!("grid: {} x {} cells of {} mm -> plate {:.1} x {:.1} mm", l.nx, l.ny, l.cell_mm, l.w_mm, l.h_mm);
     println!(
-        "plate mesh: {} vertices, {} triangles | preview timings (ms): target {:.3} solve {:.3} quantise {:.3} mesh {:.3} | all parts {:.1}",
+        "plate mesh: {} vertices, {} triangles | whole-plate stage timings (ms): target {:.3} solve {:.3} quantise {:.3} mesh {:.3} | generate + export all parts {:.1}",
         r.plate.mesh.vertex_count(),
         r.plate.mesh.triangle_count(),
         s.target_ms,
@@ -558,6 +598,12 @@ fn run_squama(
     for w in &r.warnings {
         println!("warning [{}]: {}", w.code, w.message);
     }
+    if r.report.beds_used > 1 {
+        println!("beds: {} (one 3MF per bed)", r.report.beds_used);
+    }
+    if let Some(b) = &r.report.brim {
+        println!("print advice: {b}");
+    }
     let mut ok = true;
     for gp in &r.parts {
         let t = Instant::now();
@@ -568,13 +614,21 @@ fn run_squama(
             Some(k) => format!("standing, {k} quarter turn(s)"),
             None => "flat".into(),
         };
+        let foot = (size[0].min(size[1]) as f64).max(1e-9);
+        let ratio = size[2] as f64 / foot;
+        let ledge = gp.max_ledge_mm.map(|l| format!(", max downward ledge {l:.2} mm")).unwrap_or_default();
         println!(
-            "part {}: {} triangles, print size {:.1} x {:.1} x {:.1} mm, {} | validate {} ({:.1} ms)",
+            "part {}: {} triangles, bed {}, print size {:.1} x {:.1} x {:.1} mm (footprint {:.1} mm wide, height/footprint {:.1}{}){}, {} | validate {} ({:.1} ms)",
             gp.part.name,
             gp.part.mesh.triangle_count(),
+            gp.bed + 1,
             size[0],
             size[1],
             size[2],
+            foot,
+            ratio,
+            if ratio > ad3d_core::squama::export::BRIM_RATIO { ", needs a brim" } else { "" },
+            ledge,
             turns,
             if rep.ok { "OK" } else { "FAILED" },
             ms(t)
@@ -599,7 +653,8 @@ fn run_squama(
     let thumb = render_relief_png(&r.plate.mesh, r.job.params.light_azimuth, r.job.params.light_elevation, 256).ok();
     let parts: Vec<ExportPart> = r.parts.iter().map(|g| g.part.clone()).collect();
     let t = Instant::now();
-    let written = write_parts(outs, &parts, &meta, &bed, thumb.as_deref(), &cancel)?;
+    let beds: Vec<u32> = r.parts.iter().map(|g| g.bed).collect();
+    let written = write_parts(outs, &parts, Some(&beds), &meta, &bed, thumb.as_deref(), &cancel)?;
     let w_ms = ms(t);
     for w in &written {
         println!("wrote {} ({} bytes)", w.path.display(), w.bytes);
@@ -614,15 +669,40 @@ fn run_squama(
     Ok((if ok { ExitCode::SUCCESS } else { ExitCode::from(1) }, r))
 }
 
-fn validate_mesh(m: &Mesh, min_distance: f64, components: usize, min_altitude: f64, strict: bool) -> ad3d_core::mesh::validate::Report {
-    let opts = ValidateOpts {
+/// Shell-count rule for one validated object.
+#[derive(Clone, Copy)]
+enum Shells {
+    Exactly(usize),
+    /// Any N ≥ 1 genus-0 shells (Euler = 2·N).
+    Any,
+}
+
+/// The rule for an object named `name`: an explicit `--components`, `--multi-shell`,
+/// or by part kind (key splints are one multi-shell part).
+fn shells_for(name: &str, components: Option<usize>, multi_shell: bool) -> Shells {
+    match components {
+        Some(n) => Shells::Exactly(n),
+        None if multi_shell || name.contains("key_splints") => Shells::Any,
+        None => Shells::Exactly(1),
+    }
+}
+
+fn validate_mesh(m: &Mesh, min_distance: f64, shells: Shells, min_altitude: f64, strict: bool) -> ad3d_core::mesh::validate::Report {
+    let mut opts = ValidateOpts {
         soup: true,
         min_distance: if min_distance > 0.0 { Some(min_distance) } else { None },
-        expect_components: components,
+        expect_components: 1,
         min_altitude: if min_altitude > 0.0 { Some(min_altitude) } else { None },
         check_self_intersection: strict,
         ..Default::default()
     };
+    if let Shells::Exactly(n) = shells {
+        opts.expect_components = n;
+        return validate(m, &opts);
+    }
+    // Count the shells with a cheap pass, then require Euler = 2 × that count.
+    let probe = validate(m, &ValidateOpts { check_self_intersection: false, min_distance: None, ..opts.clone() });
+    opts.expect_components = probe.written.components.max(1);
     validate(m, &opts)
 }
 
@@ -697,7 +777,7 @@ fn real_main() -> R<ExitCode> {
                 ..Default::default()
             };
             let part = ExportPart { name: "calibration".into(), kind: ad3d_core::io::sink::PartKind::Calibration, mesh: tile.mesh.clone(), transform: x };
-            for w in write_parts(&outs, &[part], &meta, &printer.bed(), None, &CancelToken::new())? {
+            for w in write_parts(&outs, &[part], None, &meta, &printer.bed(), None, &CancelToken::new())? {
                 println!("wrote {} ({} bytes)", w.path.display(), w.bytes);
             }
             let key_path = outs.dir.join(format!("{}.key.json", safe_file_name(&outs.stem)));
@@ -705,7 +785,7 @@ fn real_main() -> R<ExitCode> {
             println!("wrote {}", key_path.display());
             Ok(if rep.ok { ExitCode::SUCCESS } else { ExitCode::from(1) })
         }
-        Cmd::Validate { file, min_distance, components, min_altitude, strict } => {
+        Cmd::Validate { file, min_distance, components, multi_shell, min_altitude, strict } => {
             let t0 = Instant::now();
             let is_3mf = file.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("3mf"));
             let mut all_ok = true;
@@ -717,7 +797,7 @@ fn real_main() -> R<ExitCode> {
                     all_ok = false;
                 }
                 for o in &m.objects {
-                    let rep = validate_mesh(&o.mesh, min_distance, components, min_altitude, strict);
+                    let rep = validate_mesh(&o.mesh, min_distance, shells_for(&o.name, components, multi_shell), min_altitude, strict);
                     if let Some(b) = o.mesh.bounds() {
                         let s = b.size();
                         println!("object {} {:?}: {} triangles, size {:.3} x {:.3} x {:.3} mm", o.id, o.name, o.mesh.triangle_count(), s[0], s[1], s[2]);
@@ -727,7 +807,8 @@ fn real_main() -> R<ExitCode> {
                 }
             } else {
                 let m = read_stl(&file)?;
-                let rep = validate_mesh(&m, min_distance, components, min_altitude, strict);
+                let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                let rep = validate_mesh(&m, min_distance, shells_for(name, components, multi_shell), min_altitude, strict);
                 println!("file: {} ({} triangles)", file.display(), m.triangle_count());
                 if let Some(b) = m.bounds() {
                     let s = b.size();

@@ -27,72 +27,50 @@ use crate::relief::{Facet, Partition, PartitionKind};
 pub use lines::{LineGeom, LineSet, Seg, Sweep};
 
 // `Light` and `Response` are the §12/§15.2/§15.4 contract types, defined once in
-// `squama::{light, response}` and re-exported here. The forward-model methods on
-// `Response` (`shadowed`, `direct`, `inverse`) live below.
+// `squama::{light, response}` and re-exported here. The forward model evaluates a
+// response through the same prepared [`ResponseCurve`] as the solver (PAV + PCHIP
+// fit, read at `θ + el − ref_el`), so the optimiser, the match score and the
+// simulated appearance aim at the curve the plate was solved for.
 pub use crate::squama::light::Light;
-pub use crate::squama::response::Response;
+pub use crate::squama::response::{Response, ResponseCurve};
 
 impl Response {
-    /// Brightness of a part in cast shadow.
-    pub fn shadowed(&self) -> f64 {
-        match self {
-            Response::Lambert { ambient } => *ambient,
-            Response::Measured { brightness, .. } => brightness.iter().copied().fold(f64::INFINITY, f64::min),
-        }
-    }
-
     pub(crate) fn check(&self) -> Result<()> {
-        match self {
-            Response::Lambert { ambient } => {
-                if !ambient.is_finite() || *ambient < 0.0 {
-                    return Err(Error::InvalidParams(format!("ambient {ambient} must be finite and ≥ 0")));
-                }
-            }
-            Response::Measured { tilt_rad, brightness } => {
-                if tilt_rad.len() < 2 || tilt_rad.len() != brightness.len() {
-                    return Err(Error::InvalidParams("measured response needs ≥ 2 (tilt, brightness) pairs".into()));
-                }
-                if !tilt_rad.windows(2).all(|w| w[1] > w[0]) || !tilt_rad.iter().chain(brightness).all(|x| x.is_finite())
-                {
-                    return Err(Error::InvalidParams("measured response tilts must be finite and ascending".into()));
-                }
-            }
-        }
-        Ok(())
+        self.prepare(0.0).map(|_| ())
     }
+}
 
-    /// §15.2 `θ = resp.inverse(target)`: the tilt in `[−max_tilt, max_tilt]` whose
-    /// unshadowed brightness reaches the absolute `target`, restricted to the
-    /// response's monotone range (see [`invert_direct`]).
-    pub fn inverse(&self, fl: &FacetLight, max_tilt: f64, target: f64) -> f64 {
-        invert_direct(fl, max_tilt, self, target - self.shadowed())
-    }
-
-    /// Unshadowed lamp term (above `shadowed()`) for a facet whose normal makes
-    /// `n·L = cos_inc` with a light of elevation `el` and irradiance `irr`.
-    #[inline]
-    pub fn direct(&self, cos_inc: f64, el: f64, irr: f64) -> f64 {
-        match self {
-            Response::Lambert { .. } => irr * cos_inc.max(0.0),
-            Response::Measured { tilt_rad, brightness } => {
-                let th = cos_inc.clamp(-1.0, 1.0).asin() - el;
-                irr * (interp(tilt_rad, brightness, th) - self.shadowed()).max(0.0)
-            }
+/// Elevation of the design light at the plate centre (the outline's bounding-box
+/// centre) at height `w0`: the elevation a measured response table refers to.
+/// Matches `Light::reference` as the solver calls it (`w0` = base).
+pub fn reference_elevation(p: &Partition, light: &Light, w0: f64) -> Result<f64> {
+    match *light {
+        Light::Directional { el, .. } => Ok(el.max(crate::squama::light::MIN_ELEVATION_DEG.to_radians())),
+        Light::Point { .. } => {
+            let (lo, hi) = p.outline.iter().map(|&v| p.verts[v as usize]).fold(
+                (DVec2::splat(f64::INFINITY), DVec2::splat(f64::NEG_INFINITY)),
+                |(a, b), q| (a.min(q), b.max(q)),
+            );
+            let c = if lo.x.is_finite() { 0.5 * (lo + hi) } else { DVec2::ZERO };
+            let (v, _) = light.cell_lights(&[c], w0)?;
+            Ok(v[0].el)
         }
     }
 }
 
-fn interp(x: &[f64], y: &[f64], t: f64) -> f64 {
-    let n = x.len();
-    if t <= x[0] {
-        return y[0];
+/// Prepares `resp` for the forward model of `light` on `p`, with the reference
+/// elevation taken at height `w0` (the plate's base).
+pub fn prepare_response(p: &Partition, light: &Light, resp: &Response, w0: f64) -> Result<ResponseCurve> {
+    match resp {
+        Response::Lambert { .. } => resp.prepare(0.0),
+        Response::Measured { .. } => resp.prepare(reference_elevation(p, light, w0)?),
     }
-    if t >= x[n - 1] {
-        return y[n - 1];
-    }
-    let k = x.partition_point(|&v| v <= t).clamp(1, n - 1);
-    let u = (t - x[k - 1]) / (x[k] - x[k - 1]);
-    y[k - 1] + u * (y[k] - y[k - 1])
+}
+
+/// Lowest facet pivot height (an estimate of the base when only facets are known).
+pub(crate) fn base_estimate(f: &[Facet]) -> f64 {
+    let m = f.iter().map(|x| x.h).fold(f64::INFINITY, f64::min);
+    if m.is_finite() { m.max(0.0) } else { 0.0 }
 }
 
 /// The light as one facet sees it.
@@ -261,7 +239,7 @@ pub fn sweep_all(ls: &LineSet, facets: &[Facet]) -> Vec<f64> {
 }
 
 /// Brightness per facet on a prepared line set.
-pub fn shade_lines(ls: &LineSet, facets: &[Facet], lights: &[FacetLight], resp: &Response) -> Shading {
+pub fn shade_lines(ls: &LineSet, facets: &[Facet], lights: &[FacetLight], resp: &ResponseCurve) -> Shading {
     let lit_start = sweep_all(ls, facets);
     let nf = ls.n_facets();
     let mut lit = vec![0.0; nf];
@@ -277,7 +255,7 @@ pub fn shade_lines(ls: &LineSet, facets: &[Facet], lights: &[FacetLight], resp: 
         let m = ls.facet_meas[f];
         let frac = if m > 0.0 { (lit[f] / m).clamp(0.0, 1.0) } else { 0.0 };
         let fl = &lights[f];
-        let direct = resp.direct(fl.cos_facet(&facets[f]), fl.el, fl.irr);
+        let direct = resp.direct(fl.cos_facet(&facets[f]), fl.irr);
         brightness.push(sh + direct * frac);
         lit_fraction.push(frac);
     }
@@ -287,8 +265,16 @@ pub fn shade_lines(ls: &LineSet, facets: &[Facet], lights: &[FacetLight], resp: 
 /// §15.1 forward model: perceived brightness per facet under `light`, with cast
 /// shadows. `samples_per_piece` is the number of light lines per mean cell width
 /// (0 = automatic, see [`line_set`]).
+///
+/// A measured response refers to the light's elevation at the plate centre at the
+/// lowest facet pivot height; [`shade_curve`] takes an explicitly prepared curve.
 pub fn shade(p: &Partition, f: &[Facet], light: &Light, resp: &Response, samples_per_piece: u32) -> Result<Vec<f64>> {
-    resp.check()?;
+    let curve = prepare_response(p, light, resp, base_estimate(f))?;
+    shade_curve(p, f, light, &curve, samples_per_piece)
+}
+
+/// [`shade`] with a prepared response (e.g. the one the solver used).
+pub fn shade_curve(p: &Partition, f: &[Facet], light: &Light, resp: &ResponseCurve, samples_per_piece: u32) -> Result<Vec<f64>> {
     let ls = line_set(p, f, light, samples_per_piece)?;
     let centres: Vec<(DVec2, f64)> = f.iter().map(|x| (x.pivot, x.h)).collect();
     let lights = facet_lights(p, &centres, light)?;
@@ -299,7 +285,7 @@ pub fn shade(p: &Partition, f: &[Facet], light: &Light, resp: &Response, samples
 /// `[ambient + E_min, ambient + E_max]` for a directional light; for a point
 /// light the range every facet can reach (§15.4); for a measured response the
 /// table's range over `[−S, S]`.
-pub fn target_range(lights: &[FacetLight], max_tilt: f64, resp: &Response) -> Result<(f64, f64)> {
+pub fn target_range(lights: &[FacetLight], max_tilt: f64, resp: &ResponseCurve) -> Result<(f64, f64)> {
     let sh = resp.shadowed();
     let (mut lo, mut hi) = (f64::NEG_INFINITY, f64::INFINITY);
     for fl in lights {
@@ -319,44 +305,38 @@ pub fn target_range(lights: &[FacetLight], max_tilt: f64, resp: &Response) -> Re
 }
 
 /// Unshadowed direct-term range of one facet over tilts `[−S, S]`.
-pub fn direct_range(fl: &FacetLight, s: f64, resp: &Response) -> (f64, f64) {
-    match resp {
-        Response::Lambert { .. } => (fl.irr * (fl.el - s).sin().max(0.0), fl.irr * (fl.el + s).sin()),
-        Response::Measured { .. } => {
-            let mut lo = f64::INFINITY;
-            let mut hi = f64::NEG_INFINITY;
-            for k in 0..=256 {
-                let th = -s + 2.0 * s * k as f64 / 256.0;
-                let v = resp.direct(fl.cos_tilt(th), fl.el, fl.irr);
-                lo = lo.min(v);
-                hi = hi.max(v);
-            }
-            (lo, hi)
-        }
+pub fn direct_range(fl: &FacetLight, s: f64, resp: &ResponseCurve) -> (f64, f64) {
+    if resp.is_lambert() {
+        return (fl.irr * (fl.el - s).sin().max(0.0), fl.irr * (fl.el + s).sin());
     }
+    let mut lo = f64::INFINITY;
+    let mut hi = f64::NEG_INFINITY;
+    for k in 0..=256 {
+        let th = -s + 2.0 * s * k as f64 / 256.0;
+        let v = resp.direct(fl.cos_tilt(th), fl.irr);
+        lo = lo.min(v);
+        hi = hi.max(v);
+    }
+    (lo, hi)
 }
 
 /// Inverse of the direct term on its monotone range: the smallest tilt in
 /// `[−S, S]` whose (running-max) direct term reaches `want`.
-pub fn invert_direct(fl: &FacetLight, s: f64, resp: &Response, want: f64) -> f64 {
-    match resp {
-        Response::Lambert { .. } => {
-            let e = (want / fl.irr).clamp(-1.0, 1.0);
-            (e.asin() - fl.el).clamp(-s, s)
-        }
-        Response::Measured { .. } => {
-            let n = 1024;
-            let mut best = f64::NEG_INFINITY;
-            for k in 0..=n {
-                let th = -s + 2.0 * s * k as f64 / n as f64;
-                best = best.max(resp.direct(fl.cos_tilt(th), fl.el, fl.irr));
-                if best >= want {
-                    return th;
-                }
-            }
-            s
+pub fn invert_direct(fl: &FacetLight, s: f64, resp: &ResponseCurve, want: f64) -> f64 {
+    if resp.is_lambert() {
+        let e = (want / fl.irr).clamp(-1.0, 1.0);
+        return (e.asin() - fl.el).clamp(-s, s);
+    }
+    let n = 1024;
+    let mut best = f64::NEG_INFINITY;
+    for k in 0..=n {
+        let th = -s + 2.0 * s * k as f64 / n as f64;
+        best = best.max(resp.direct(fl.cos_tilt(th), fl.irr));
+        if best >= want {
+            return th;
         }
     }
+    s
 }
 
 /// How well a simulated appearance matches its target.

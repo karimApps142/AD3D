@@ -4,7 +4,7 @@
 // shadows, which is labelled as such.
 
 import { useEffect, useMemo, useRef } from 'react';
-import { simulateLambert } from '../engine/squamaChecks';
+import { appearanceFromCore, simulateLambert } from '../engine/squamaChecks';
 import { useSquamaInfo } from '../engine/squamaInfo';
 import type { TargetGrid } from '../engine/types';
 import { gridToRgba, paint } from './gridImage';
@@ -19,15 +19,19 @@ export interface TargetViewProps {
 export function TargetView({ target, elevationDeg, maxTiltDeg, ambient }: TargetViewProps) {
   const tCanvas = useRef<HTMLCanvasElement>(null);
   const aCanvas = useRef<HTMLCanvasElement>(null);
-  const sim = useMemo(() => simulateLambert(target.g, elevationDeg, maxTiltDeg, ambient), [target, elevationDeg, maxTiltDeg, ambient]);
+  // The core's forward model when present (with the preview ambient added, as the shader does),
+  // else the Lambert estimate. The caption's contrast is computed from what is shown.
+  const sim = useMemo(
+    () => (target.sim ? appearanceFromCore(target.sim, ambient) : simulateLambert(target.g, elevationDeg, maxTiltDeg, ambient)),
+    [target, elevationDeg, maxTiltDeg, ambient],
+  );
 
   useEffect(() => {
     paint(tCanvas.current, gridToRgba(target.g, target.nx, target.ny), target.nx, target.ny);
   }, [target]);
   useEffect(() => {
     // Appearance values are linear radiance relative to the brightest facet.
-    const values = target.sim ?? sim.values;
-    paint(aCanvas.current, gridToRgba(values, target.nx, target.ny), target.nx, target.ny);
+    paint(aCanvas.current, gridToRgba(sim.values, target.nx, target.ny), target.nx, target.ny);
   }, [target, sim]);
 
   const score = useSquamaInfo((s) => s.info?.score ?? null);

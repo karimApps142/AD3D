@@ -18,7 +18,7 @@ use crate::mesh::validate::validate;
 use crate::orient::{BedMotion, Orientation, QuarterTurns, down_in_plate, max_downward_ledge};
 use crate::relief::{BackRegion, PieceSet, mesh_relief, quantise};
 use crate::squama::parts::{
-    KeySpec, LayoutItem, Part, PartKind, StandSpec, engrave_regions, key_layout, key_regions, layout_on_beds, layout_on_beds_lenient, mesh_box,
+    KeySpec, LayoutItem, Part, PartKind, STAND_KEY_CLEARANCE_MM, StandSpec, engrave_regions, key_layout, key_regions, layout_on_beds, layout_on_beds_lenient, mesh_box,
     splints_mesh, stand_mesh,
 };
 use crate::squama::calibration::{CalibrationKey, CalibrationSpec, calibration_tile};
@@ -26,7 +26,7 @@ use crate::squama::job::SquamaJob;
 use crate::squama::layout::TileCut as LayoutCut;
 use crate::squama::pipeline::{dedup_warnings, job_layout, prepare_target, solve_job};
 use crate::squama::solve::Quality;
-use crate::squama::tiles::{Bed, CutAxis, DRect, SeamPolicy, TileOpts, plan_tiles, seam_step_cost, tile_xform};
+use crate::squama::tiles::{Bed, CutAxis, DRect, MAX_STANDING_RATIO, SeamPolicy, TileOpts, plan_tiles, seam_step_cost, tile_xform};
 use crate::squama::{GenOptions, Layout, LayoutKind, SquamaParams, SquamaParamsDto, build_partition, check_params};
 use glam::DVec2;
 
@@ -38,6 +38,9 @@ pub enum KeyKind {
     /// Blind holes in the back plus splints with pegs (§14.2).
     #[default]
     Pegs,
+    /// Pegs whenever the plate is tiled and the base and tiles leave room for
+    /// them; otherwise none (with a warning when tiled).
+    Auto,
 }
 
 /// Tile grid request: automatic (fewest tiles that fit the bed), none (one part),
@@ -186,9 +189,23 @@ pub struct PartReport {
     /// is closer than twice the δ gate.
     pub min_distinct_distance_mm: Option<f64>,
     pub self_intersections: Option<usize>,
-    /// Largest downward-facing ledge (standing tiles only).
+    /// Largest downward-facing ledge (standing tiles and the calibration tile).
     pub max_downward_ledge_mm: Option<f64>,
+    /// Whether the part fits the usable bed (its placement).
+    pub fits_bed: bool,
+    /// Print-space footprint (X × Y) and height (Z), mm.
+    pub footprint_mm: [f64; 2],
+    pub height_mm: f64,
+    /// `height / min(footprint)`: above [`BRIM_RATIO`] the part needs a brim.
+    pub height_ratio: f64,
 }
+
+/// Height-to-footprint ratio above which a part should be printed with a brim.
+pub const BRIM_RATIO: f64 = 10.0;
+
+/// The brim advice for tall, thin standing parts (FDM, 0.4 mm nozzle).
+pub const BRIM_ADVICE: &str =
+    "brim 6–8 mm, outer only, brim-object gap 0.1 mm; 3–4 perimeters or 100 % infill; 0.12–0.16 mm layers; elephant-foot compensation 0.2 mm";
 
 /// What the export did.
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -214,6 +231,8 @@ pub struct ExportReport {
     pub v_edges_mm: Vec<f64>,
     /// Set when the shadow-aware optimiser ran.
     pub optimise: Option<ExportOptimise>,
+    /// Print advice when a part is tall and thin (height / footprint > [`BRIM_RATIO`]).
+    pub brim: Option<String>,
 }
 
 /// What the optimiser achieved for an export.
@@ -229,6 +248,8 @@ pub struct ExportOptimise {
 /// Receives validated parts one at a time. A sink must not keep a part's mesh
 /// unless it needs it; `finish` runs after the last part, `abort` on any error.
 pub trait PartSink {
+    /// Progress before any part exists (solving, optimising, planning).
+    fn stage(&mut self, _stage: &str) {}
     /// Called once, before the first part, with the number of parts to come.
     fn begin(&mut self, _parts: usize) {}
     fn accept(&mut self, part: &Part, report: &PartReport) -> Result<()>;
@@ -354,6 +375,11 @@ impl<S: crate::io::sink::PartSink> PartSink for IoSink<S> {
 pub struct MultiSink(pub Vec<Box<dyn PartSink>>);
 
 impl PartSink for MultiSink {
+    fn stage(&mut self, stage: &str) {
+        for s in &mut self.0 {
+            s.stage(stage);
+        }
+    }
     fn begin(&mut self, parts: usize) {
         for s in &mut self.0 {
             s.begin(parts);
@@ -493,14 +519,97 @@ enum Pending {
 }
 
 /// The calibration tile's spec for a job: the plate's cell, base and surface
-/// angle, lit like the plate centre.
-pub fn calibration_spec(job: &SquamaJob, l: &Layout) -> Result<CalibrationSpec> {
+/// angle, lit like the plate centre. A point lamp more than 45° above the plate
+/// centre is clamped to 45° for the tile (the tile's directional range), with a
+/// warning.
+pub fn calibration_spec(job: &SquamaJob, l: &Layout) -> Result<(CalibrationSpec, Vec<Warning>)> {
     let mut spec = CalibrationSpec::from_params(&job.params);
     spec.cell_mm = l.cell_mm;
     let c = job.light.reference(l.w_mm, l.h_mm, job.limits.base_mm)?;
     spec.light_azimuth = c.a.y.atan2(c.a.x);
-    spec.light_elevation = c.el;
-    Ok(spec)
+    let max_el = crate::squama::light::MAX_DIRECTIONAL_ELEVATION_DEG.to_radians();
+    let mut warnings = Vec::new();
+    spec.light_elevation = if c.el > max_el {
+        warnings.push(Warning {
+            code: "calibration_elevation_clamped",
+            message: format!(
+                "the lamp is {:.0}° above the plate centre; the calibration tile is designed for 45° (photograph it under the plate's lamp anyway)",
+                c.el.to_degrees()
+            ),
+        });
+        max_el
+    } else {
+        c.el
+    };
+    Ok((spec, warnings))
+}
+
+/// Light azimuth (radians) for planning the print orientation: the directional
+/// light's, or a point lamp's direction as seen from the plate centre (a point
+/// light overrides the v1 `lightAzimuthDeg`).
+pub fn planning_azimuth(job: &SquamaJob, l: &Layout) -> Result<f64> {
+    match job.light {
+        crate::squama::light::Light::Directional { az, .. } => Ok(az),
+        crate::squama::light::Light::Point { .. } => {
+            let c = job.light.reference(l.w_mm, l.h_mm, job.limits.base_mm)?;
+            Ok(c.a.y.atan2(c.a.x))
+        }
+    }
+}
+
+fn tile_opts(e: &SquamaExport, thickness_mm: f64) -> TileOpts {
+    // Forced pegs keep tiles wide enough for keys; `Auto` only adds them when they fit.
+    let want_keys = e.keys == KeyKind::Pegs;
+    TileOpts {
+        thickness_mm,
+        min_tile_mm: if want_keys { e.key_spec.min_tile_mm() } else { 0.0 },
+        grid: match e.tiles {
+            TileRequest::Auto => None,
+            TileRequest::None => Some((1, 1)),
+            TileRequest::Grid(c, r) => Some((c, r)),
+        },
+        max_standing_ratio: Some(MAX_STANDING_RATIO),
+    }
+}
+
+/// The planning stage of an export: facets for the whole plate (final quality,
+/// optimiser when on), their quantised heights, and the tile plan with refined
+/// seams. Shared by the export and [`preview_tile_plan`], so the overlay shows the
+/// seams the export cuts.
+struct Planned {
+    sj: crate::squama::pipeline::SolvedJob,
+    plain: crate::relief::Partition,
+    heights0: crate::relief::Heights,
+    thickness0: f64,
+    plan: crate::squama::tiles::TilePlan,
+}
+
+fn heights_thickness(h: &crate::relief::Heights, tol: &crate::relief::Tol) -> f64 {
+    let max_corner = h.corner.iter().copied().max().unwrap_or(0) as f64 * tol.q;
+    let max_apex = h.apex_w.iter().copied().fold(0.0f64, f64::max);
+    max_corner.max(max_apex)
+}
+
+fn plan_export(job: &SquamaJob, l: &Layout, g: &[f32], e: &SquamaExport, cancel: &CancelToken) -> Result<Planned> {
+    let tol = e.gen_opts.tol;
+    let job = job.with_quality(Quality::Final);
+    let pc = check_params(&job.params, &e.gen_opts)?.0;
+    let plain = build_partition(l, &[])?;
+    let sj = solve_job(&job, l, &plain, g, &e.gen_opts, cancel)?;
+    let heights0 = quantise(&plain, &sj.facets, pc.base_mm, &tol)?;
+    cancel.check()?;
+    let thickness0 = heights_thickness(&heights0, &tol);
+    if e.keys != KeyKind::None {
+        e.key_spec.check()?;
+    }
+    let mut plan = plan_tiles(l, &e.bed, e.orientation, planning_azimuth(&job, l)?, &tile_opts(e, thickness0))?;
+    // Square seams follow cell edges and can hide in flat areas; a hex seam runs
+    // through cells that keep one plane, so it never steps.
+    if e.seam_policy == SeamPolicy::SmallestStep && plan.tile_count() > 1 && l.hex_lattice().is_none() {
+        let cost = seam_step_cost(&plain, &heights0, plan.pitch);
+        plan.refine_seams(cost);
+    }
+    Ok(Planned { sj, plain, heights0, thickness0, plan })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -517,41 +626,16 @@ fn export_inner(
     let job = job.with_quality(Quality::Final);
     let pc = check_params(&job.params, &e.gen_opts)?.0;
 
-    // Facets once for the whole plate (§14.1), at final quality (optimiser when on).
-    let plain = build_partition(l, &[])?;
-    let sj = solve_job(&job, l, &plain, g, &e.gen_opts, cancel)?;
+    // Facets once for the whole plate (§14.1), at final quality (optimiser when on),
+    // then the tile plan with refined seams.
+    sink.stage(if job.optimiser.is_some_and(|o| o.max_sweeps > 0) { "solving and optimising facets" } else { "solving facets" });
+    let Planned { sj, plain, heights0, thickness0, mut plan } = plan_export(&job, l, g, e, cancel)?;
+    sink.stage("planning tiles and keys");
     warnings.extend(sj.solved.warnings.iter().cloned());
     let facets = sj.facets;
-    let heights0 = quantise(&plain, &facets, pc.base_mm, &tol)?;
-    cancel.check()?;
-    let thick = |h: &crate::relief::Heights| {
-        let max_corner = h.corner.iter().copied().max().unwrap_or(0) as f64 * tol.q;
-        let max_apex = h.apex_w.iter().copied().fold(0.0f64, f64::max);
-        max_corner.max(max_apex)
-    };
-    let thickness0 = thick(&heights0);
-
-    let want_keys = e.keys == KeyKind::Pegs;
-    if want_keys {
-        e.key_spec.check()?;
-    }
-    let topts = TileOpts {
-        thickness_mm: thickness0,
-        min_tile_mm: if want_keys { e.key_spec.min_tile_mm() } else { 0.0 },
-        grid: match e.tiles {
-            TileRequest::Auto => None,
-            TileRequest::None => Some((1, 1)),
-            TileRequest::Grid(c, r) => Some((c, r)),
-        },
-    };
-    let mut plan = plan_tiles(l, &e.bed, e.orientation, pc.light_azimuth, &topts)?;
+    let thick = |h: &crate::relief::Heights| heights_thickness(h, &tol);
+    let mut want_keys = e.keys == KeyKind::Pegs;
     let is_hex = l.hex_lattice().is_some();
-    // Square seams follow cell edges and can hide in flat areas; a hex seam runs
-    // through cells that keep one plane, so it never steps.
-    if e.seam_policy == SeamPolicy::SmallestStep && plan.tile_count() > 1 && !is_hex {
-        let cost = seam_step_cost(&plain, &heights0, plan.pitch);
-        plan.refine_seams(cost);
-    }
     // The partition with the cut lines built in (§14.1); square cuts lie on cell
     // lines, so the plain grid already contains them.
     let (part, heights) = if is_hex && plan.tile_count() > 1 {
@@ -575,15 +659,39 @@ fn export_inner(
     cancel.check()?;
 
     // Keys (§14.2).
+    if e.keys == KeyKind::Auto && plan.tile_count() > 1 {
+        let min_tile = e.key_spec.min_tile_mm();
+        let narrow = plan.tiles.iter().any(|t| {
+            let sz = t.rect_mm.size();
+            (plan.cols > 1 && sz.x < min_tile - 1e-9) || (plan.rows > 1 && sz.y < min_tile - 1e-9)
+        });
+        if min_top < e.key_spec.min_base_mm() - 1e-9 {
+            warnings.push(Warning {
+                code: "no_keys",
+                message: format!("no alignment keys: they need a base of at least {:.1} mm", e.key_spec.min_base_mm()),
+            });
+        } else if narrow {
+            warnings.push(Warning { code: "no_keys", message: format!("no alignment keys: tiles narrower than {min_tile:.1} mm") });
+        } else {
+            want_keys = true;
+        }
+    }
+    let stand_spec = e.stand.then(|| StandSpec::for_plate(l.w_mm, l.h_mm, thickness, e.key_spec.splint_t_mm, &e.bed));
     let keys = if want_keys && plan.tile_count() > 1 {
         if min_top < e.key_spec.min_base_mm() - 1e-9 {
             return Err(Error::InvalidParams(format!(
-                "keys need a base of at least {:.1} mm (pocket floor {} mm below the facets); raise the base or turn keys off",
+                "keys need a base of at least {:.1} mm ({:.1} mm of plate in front of each {:.1} mm pocket); raise the base or turn keys off",
                 e.key_spec.min_base_mm(),
-                crate::relief::POCKET_CLEARANCE_MM
+                crate::squama::parts::KEY_FRONT_WALL_MM,
+                e.key_spec.hole_depth_mm
             )));
         }
-        Some(key_layout(&plan, &e.key_spec))
+        let mut ks = e.key_spec;
+        if let Some(s) = &stand_spec {
+            // Splints stay above the stand's slot.
+            ks.bottom_clear_mm = s.slot_depth_mm + 0.5 * ks.splint_w_mm + STAND_KEY_CLEARANCE_MM;
+        }
+        Some(key_layout(&plan, &ks))
     } else {
         None
     };
@@ -639,9 +747,7 @@ fn export_inner(
         let item = LayoutItem { base: crate::orient::Xform::IDENTITY, min, max, may_rotate: true };
         pending.push(("key_splints".into(), PartKind::KeySplints { count: n_keys }, Pending::Ready(m), item, None, None, n_keys as usize));
     }
-    if e.stand {
-        let extra = if n_keys > 0 { e.key_spec.splint_t_mm } else { 0.0 };
-        let s = StandSpec::for_plate(l.w_mm, l.h_mm, thickness, extra, &e.bed);
+    if let Some(s) = stand_spec {
         let m = stand_mesh(&s)?;
         let (min, max) = mesh_box(&m);
         for k in 0..s.count {
@@ -651,10 +757,16 @@ fn export_inner(
         }
     }
     let mut calibration_key = None;
+    let mut calibration_ledge = None;
     if e.calibration_tile {
-        let spec = calibration_spec(&job, l)?;
+        let (spec, w) = calibration_spec(&job, l)?;
+        warnings.extend(w);
         let ct = calibration_tile(&spec, &e.gen_opts, cancel)?;
         warnings.extend(ct.warnings.iter().cloned());
+        if let Some(k) = plan.quarter_turns {
+            let all: Vec<u32> = (0..ct.partition.pieces.len() as u32).collect();
+            calibration_ledge = Some(max_downward_ledge(&ct.partition, &ct.heights, &all, down_in_plate(k), &tol));
+        }
         let (min, max) = mesh_box(&ct.mesh);
         let rect = DRect { min: DVec2::new(min[0], min[1]), max: DVec2::new(max[0], max[1]) };
         let base = tile_xform(plan.orientation, plan.motion, &rect);
@@ -679,10 +791,14 @@ fn export_inner(
     sink.begin(pending.len());
     let mut reports = Vec::with_capacity(pending.len());
     let mut max_ledge = 0.0f64;
+    let mut tall_parts = 0usize;
     for ((name, kind, pend, _item, min_w, back_area, comps), pl) in pending.into_iter().zip(&placements) {
         cancel.check()?;
         let (mesh, ledge) = match pend {
-            Pending::Ready(m) => (m, None),
+            Pending::Ready(m) => {
+                let ledge = if kind == PartKind::Calibration { calibration_ledge } else { None };
+                (m, ledge)
+            }
             Pending::Tile { index, regions } => {
                 let t = &plan.tiles[index];
                 let m = mesh_relief(&part, PieceSet::Subset(&t.pieces), &heights, &regions, &tol, cancel)?;
@@ -700,6 +816,11 @@ fn export_inner(
         }
         let (lo, hi) = mesh_box(&part_out.mesh);
         let (min_mm, max_mm) = part_out.transform.apply_box(lo, hi);
+        let size = [0, 1, 2].map(|k| max_mm[k] - min_mm[k]);
+        let height_ratio = size[2] / size[0].min(size[1]).max(1e-9);
+        if height_ratio > BRIM_RATIO {
+            tall_parts += 1;
+        }
         let rep = PartReport {
             name: part_out.name.clone(),
             kind: part_out.kind.clone(),
@@ -711,9 +832,32 @@ fn export_inner(
             min_distinct_distance_mm: r.min_distinct_distance,
             self_intersections: r.self_intersecting_pairs,
             max_downward_ledge_mm: ledge,
+            fits_bed: pl.fits,
+            footprint_mm: [size[0], size[1]],
+            height_mm: size[2],
+            height_ratio,
         };
         sink.accept(&part_out, &rep)?;
         reports.push(rep);
+    }
+    if e.tiles != TileRequest::Auto && plan.quarter_turns.is_some() {
+        let tallest = reports.iter().filter(|p| matches!(p.kind, PartKind::Tile { .. })).map(|p| p.height_mm / thickness.max(1e-9)).fold(0.0, f64::max);
+        if tallest > MAX_STANDING_RATIO {
+            warnings.push(Warning {
+                code: "tall_standing_tile",
+                message: format!(
+                    "standing tiles are {:.0}× as tall as the plate is thick (automatic tiling keeps this under {MAX_STANDING_RATIO:.0}×); they may wobble or detach",
+                    tallest
+                ),
+            });
+        }
+    }
+    let brim = (tall_parts > 0).then(|| BRIM_ADVICE.to_string());
+    if let Some(b) = &brim {
+        warnings.push(Warning {
+            code: "brim_recommended",
+            message: format!("{tall_parts} part(s) stand more than {BRIM_RATIO:.0}× taller than their footprint: {b}"),
+        });
     }
     if max_ledge > 0.6 {
         warnings.push(Warning {
@@ -743,6 +887,7 @@ fn export_inner(
         u_edges_mm: plan.u_edges(),
         v_edges_mm: plan.v_edges(),
         optimise: sj.optimise.map(|o| ExportOptimise { sweeps: o.sweeps, before: o.before, after: o.after, timed_out: o.timed_out }),
+        brim,
     };
     sink.finish(&report)?;
     Ok(report)
@@ -761,18 +906,26 @@ fn e_tol_q() -> f64 {
     crate::relief::Tol::default().q
 }
 
-/// The tile plan an export would use (balanced seams, estimated thickness), for
-/// the UI's tile overlay. The export itself plans again from the solved plate.
-pub fn preview_tile_plan(job: &SquamaJob, l: &Layout, e: &SquamaExport) -> Result<crate::squama::tiles::TilePlan> {
-    let want_keys = e.keys == KeyKind::Pegs;
-    let topts = TileOpts {
-        thickness_mm: estimate_thickness(job, l),
-        min_tile_mm: if want_keys { e.key_spec.min_tile_mm() } else { 0.0 },
-        grid: match e.tiles {
-            TileRequest::Auto => None,
-            TileRequest::None => Some((1, 1)),
-            TileRequest::Grid(c, r) => Some((c, r)),
-        },
-    };
-    plan_tiles(l, &e.bed, e.orientation, job.params.light_azimuth, &topts)
+/// The tile plan an export would use, for the UI's tile overlay, and the plate
+/// thickness it was planned with. With the per-facet target `g` it runs the
+/// export's own planning stage (final solve, optimiser when on, refined seams), so
+/// the seams and tile sizes are exactly the export's; without it, balanced seams
+/// on an estimated thickness.
+pub fn preview_tile_plan(
+    job: &SquamaJob,
+    l: &Layout,
+    g: Option<&[f32]>,
+    e: &SquamaExport,
+    cancel: &CancelToken,
+) -> Result<(crate::squama::tiles::TilePlan, f64)> {
+    match g {
+        Some(g) => {
+            let p = plan_export(job, l, g, e, cancel)?;
+            Ok((p.plan, p.thickness0))
+        }
+        None => {
+            let t = estimate_thickness(job, l);
+            Ok((plan_tiles(l, &e.bed, e.orientation, planning_azimuth(job, l)?, &tile_opts(e, t))?, t))
+        }
+    }
 }

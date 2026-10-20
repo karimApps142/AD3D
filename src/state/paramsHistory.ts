@@ -16,27 +16,34 @@ export interface HistoryStatus {
 
 export const useHistoryStatus = create<HistoryStatus>()(() => ({ canUndo: false, canRedo: false, version: 0 }));
 
-/** Shallow equality for flat param objects (nested values compared by JSON). */
+/**
+ * Keys that are not document state: `quality` only tells the preview loop whether a slider is
+ * being dragged (§13). It is never an undo step and never makes the document "Edited".
+ */
+const TRANSIENT_KEYS = new Set<string>(['quality', 'jobId']);
+
+/** Shallow equality for flat param objects (nested values compared by JSON). Ignores
+ *  transient keys, and treats a missing key and an `undefined` value alike. */
 export function paramsEqual(a: SquamaParams, b: SquamaParams): boolean {
   if (a === b) return true;
-  const ka = Object.keys(a) as (keyof SquamaParams)[];
-  const kb = Object.keys(b);
-  if (ka.length !== kb.length) return false;
-  for (const k of ka) {
-    const va = a[k];
-    const vb = b[k];
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const k of keys) {
+    if (TRANSIENT_KEYS.has(k)) continue;
+    const va = (a as unknown as Record<string, unknown>)[k];
+    const vb = (b as unknown as Record<string, unknown>)[k];
     if (va === vb) continue;
-    if (typeof va === 'object' && typeof vb === 'object' && JSON.stringify(va) === JSON.stringify(vb)) continue;
+    if (typeof va === 'object' && typeof vb === 'object' && va !== null && vb !== null && JSON.stringify(va) === JSON.stringify(vb)) continue;
     return false;
   }
   return true;
 }
 
-/** The coalescing key of a change: the sorted names of the fields that differ. */
+/** The coalescing key of a change: the sorted names of the document fields that differ. */
 export function changeKey(prev: SquamaParams, next: SquamaParams): string {
   const keys = new Set([...Object.keys(prev), ...Object.keys(next)] as (keyof SquamaParams)[]);
   const changed: string[] = [];
   for (const k of keys) {
+    if (TRANSIENT_KEYS.has(k)) continue;
     if (!paramsEqual({ [k]: prev[k] } as SquamaParams, { [k]: next[k] } as SquamaParams)) changed.push(k);
   }
   return changed.sort().join(',');
@@ -71,7 +78,8 @@ function apply(params: SquamaParams | null): boolean {
   if (!params) return false;
   applying = true;
   try {
-    useAppStore.setState({ params });
+    // Undo, redo and loading a project are not drags: always ask for the final plate.
+    useAppStore.setState({ params: { ...params, quality: 'final' } });
   } finally {
     applying = false;
   }

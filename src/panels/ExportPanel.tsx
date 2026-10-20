@@ -13,7 +13,7 @@ import { useAppStore } from '../state/store';
 import { plateLayout } from './plateLayout';
 import { buildExportDto, defaultExportName } from './squamaDto';
 import { type ExportStatus, IDLE_EXPORT, reduceExportEvent, useSquamaUi } from './squamaUi';
-import { fitsBed, maxTileExtent, ORIENTATIONS, planTiles, PRINTERS, printSize, quarterTurns } from './tilePlan';
+import { fitsBed, KEY_MIN_BASE_MM, maxTileExtent, ORIENTATIONS, planTiles, PRINTERS, printSize, quarterTurns } from './tilePlan';
 import { useCoreTilePlan } from './useCoreTilePlan';
 import { Warnings } from './Warnings';
 import './panels.css';
@@ -56,11 +56,15 @@ export function ExportPanel() {
   const setStatus = useSquamaUi((s) => s.setExportStatus);
 
   const layout = plateLayout(params, image, info);
-  const k = quarterTurns(settings.orientation, params.lightAzimuthDeg);
-  const depth = meshDepth ?? params.baseMm + 1;
-  const wholeSize = printSize(layout.wMm, layout.hMm, depth, k);
-  const wholeFits = fitsBed(wholeSize, settings.bedMm, settings.marginMm);
   const corePlan = useCoreTilePlan(params, settings);
+  // The core's orientation choice when it has planned; the §9 estimate otherwise.
+  const k = corePlan ? corePlan.quarterTurns : quarterTurns(settings.orientation, params.lightAzimuthDeg);
+  const depth = corePlan?.thicknessMm ?? meshDepth ?? params.baseMm + 1;
+  const wholeSize = printSize(layout.wMm, layout.hMm, depth, settings.orientation === 'flat' ? null : k, settings.bedMotion);
+  const wholeFits = fitsBed(wholeSize, settings.bedMm, settings.marginMm);
+  const largestTile = corePlan?.printMm?.length
+    ? corePlan.printMm.reduce((m, s) => (s[0] * s[1] * s[2] > m[0] * m[1] * m[2] ? s : m))
+    : null;
   const fallbackPlan = useMemo(
     () => planTiles(layout.nx, layout.ny, layout.cellMm, maxTileExtent(settings.orientation, settings.bedMm, settings.marginMm, params.lightAzimuthDeg)),
     [layout.nx, layout.ny, layout.cellMm, settings.orientation, settings.bedMm, settings.marginMm, params.lightAzimuthDeg],
@@ -73,8 +77,8 @@ export function ExportPanel() {
 
   const warnings = useMemo(() => {
     const w: CoreWarning[] = [];
-    if (settings.keys === 'pegs' && params.baseMm < 2.8) {
-      w.push({ code: 'keys_need_thickness', message: `Alignment keys need thickness ≥ 2.8 mm (now ${params.baseMm.toFixed(1)} mm).` });
+    if (settings.keys === 'pegs' && params.baseMm < KEY_MIN_BASE_MM) {
+      w.push({ code: 'keys_need_thickness', message: `Alignment keys need a base ≥ ${KEY_MIN_BASE_MM.toFixed(1)} mm (now ${params.baseMm.toFixed(1)} mm).` });
     }
     if (!settings.tile && !wholeFits) w.push({ code: 'plate_exceeds_bed', message: 'The plate does not fit the bed in one piece; turn on tiling.' });
     if (plan.error) w.push({ code: 'tile_plan', message: plan.error });
@@ -89,7 +93,8 @@ export function ExportPanel() {
   const setBed = (i: number, v: number) => {
     const bed = [...settings.bedMm] as Vec3;
     bed[i] = v;
-    setExport({ bedMm: bed, printerId: 'custom' });
+    // Editing the size keeps the bed's motion axis (a CR-6 SE stays a Y bed-slinger).
+    setExport({ bedMm: bed, printerId: 'custom', bedMotion: settings.bedMotion });
   };
 
   const startExport = async () => {
@@ -141,7 +146,7 @@ export function ExportPanel() {
           value={printer.id}
           onChange={(e) => {
             const p = PRINTERS.find((x) => x.id === e.currentTarget.value)!;
-            setExport({ printerId: p.id, bedMm: [...p.bedMm] as Vec3 });
+            setExport({ printerId: p.id, bedMm: [...p.bedMm] as Vec3, ...(p.bedMotion ? { bedMotion: p.bedMotion } : {}) });
           }}
         >
           {PRINTERS.map((p) => (
@@ -183,7 +188,21 @@ export function ExportPanel() {
             />
           </label>
         </div>
-        {printer.bedMotion && <p className="note">Bed moves in {printer.bedMotion.toUpperCase()}: keep tall tiles short and use a brim.</p>}
+        <label className="inline">
+          Bed moves in
+          <select
+            aria-label="Bed motion axis"
+            value={settings.bedMotion}
+            onChange={(e) => setExport({ bedMotion: e.currentTarget.value as typeof settings.bedMotion })}
+          >
+            <option value="y">Y (bed-slinger)</option>
+            <option value="x">X</option>
+            <option value="none">neither (fixed bed)</option>
+          </select>
+        </label>
+        {settings.bedMotion !== 'none' && (
+          <p className="note">Standing tiles face along {settings.bedMotion.toUpperCase()}; tall tiles get a brim (see the export summary).</p>
+        )}
         <select
           aria-label="Print orientation"
           value={settings.orientation}
@@ -211,12 +230,21 @@ export function ExportPanel() {
             <TilePreview cols={tiles.cols} rows={tiles.rows} wMm={layout.wMm} hMm={layout.hMm} />
             <p className="derived">
               {tiles.cols.length} × {tiles.rows.length} tiles · columns {tiles.cols.join(' + ')} · rows {tiles.rows.join(' + ')} cells
+              {largestTile && ` · largest prints ${largestTile.map((v) => v.toFixed(0)).join(' × ')} mm`}
             </p>
           </>
         )}
         <div className="segmented" role="group" aria-label="Alignment keys">
           <button type="button" className={settings.keys === 'none' ? 'active' : ''} onClick={() => setExport({ keys: 'none' })}>
             No keys
+          </button>
+          <button
+            type="button"
+            className={settings.keys === 'auto' ? 'active' : ''}
+            title="Peg keys when the plate is tiled and the base leaves room"
+            onClick={() => setExport({ keys: 'auto' })}
+          >
+            Auto
           </button>
           <button type="button" className={settings.keys === 'pegs' ? 'active' : ''} onClick={() => setExport({ keys: 'pegs' })}>
             Peg keys
@@ -274,19 +302,25 @@ export function ExportPanel() {
             <p>
               Wrote {status.result.files.length} file{status.result.files.length === 1 ? '' : 's'} in {(status.result.elapsedMs / 1000).toFixed(1)} s.
             </p>
+            {(status.result.beds ?? 1) > 1 && <p className="note">{status.result.beds} beds: one 3MF per bed (…_bed2.3mf, …).</p>}
             <ul className="file-list">
               {status.result.parts.map((p) => (
                 <li key={p.name}>
-                  {p.name} · {p.sizeMm.map((v) => v.toFixed(0)).join(' × ')} mm{p.fitsBed === false ? ' · too big' : ''}
+                  {p.name}
+                  {(status.result!.beds ?? 1) > 1 && ` · bed ${(p.bed ?? 0) + 1}`} · {p.sizeMm.map((v) => v.toFixed(1)).join(' × ')} mm
+                  {p.heightRatio !== undefined && p.heightRatio > 1 && ` · height/footprint ${p.heightRatio.toFixed(0)}`}
+                  {p.maxDownwardLedgeMm != null && ` · ledge ${p.maxDownwardLedgeMm.toFixed(2)} mm`}
+                  {p.fitsBed === false ? ' · too big' : ''}
                 </li>
               ))}
             </ul>
+            {status.result.brim && <p className="note">Print advice: {status.result.brim}</p>}
             <button type="button" onClick={() => reveal(status.result!.files[0] ?? status.result!.outDir)}>
               Reveal in Finder
             </button>
           </div>
         )}
-        {status.phase === 'cancelled' && <p className="note">Export cancelled; nothing more was written.</p>}
+        {status.phase === 'cancelled' && <p className="note">Export cancelled; partial files were removed.</p>}
         {status.error && <p className="error" role="alert">{status.error}</p>}
         <Warnings items={warnings} label="Export warnings" />
       </div>

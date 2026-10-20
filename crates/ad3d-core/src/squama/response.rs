@@ -96,11 +96,47 @@ impl Response {
 }
 
 impl ResponseCurve {
-    /// Brightness of a facet tilted by `θ` toward its light.
+    /// Brightness of a facet tilted by `θ` toward its light: `shadowed()` plus the
+    /// lamp term scaled by the facet's irradiance (room light does not fall off
+    /// with the lamp distance). This is the same evaluator the forward model
+    /// (`sim`) and the optimiser use, through [`direct`](Self::direct).
     pub fn forward(&self, theta: f64, cl: &CellLight) -> f64 {
         match &self.kind {
             CurveKind::Lambert { ambient } => ambient + cl.irradiance * (cl.el + theta).sin().max(0.0),
-            CurveKind::Table { t, b, m } => cl.irradiance * hermite(t, b, m, theta + cl.el - self.ref_el),
+            CurveKind::Table { t, b, m } => {
+                let b0 = b[0];
+                b0 + cl.irradiance * (hermite(t, b, m, theta + cl.el - self.ref_el) - b0)
+            }
+        }
+    }
+
+    /// Brightness of a part in cast shadow: the Lambert ambient term, or the
+    /// darkest value of the fitted table.
+    pub fn shadowed(&self) -> f64 {
+        match &self.kind {
+            CurveKind::Lambert { ambient } => *ambient,
+            CurveKind::Table { b, .. } => b[0],
+        }
+    }
+
+    /// Elevation (radians) the table was measured at.
+    pub fn ref_el(&self) -> f64 {
+        self.ref_el
+    }
+
+    /// Unshadowed lamp term above [`shadowed`](Self::shadowed) for a facet whose
+    /// normal makes `n·L = cos_inc` with its light, at irradiance `irr`. A table
+    /// is read at the incidence elevation minus the reference elevation, so a
+    /// facet whose light sits higher than the plate centre's reads it further on
+    /// (the same read-out as [`forward`](Self::forward)).
+    #[inline]
+    pub fn direct(&self, cos_inc: f64, irr: f64) -> f64 {
+        match &self.kind {
+            CurveKind::Lambert { .. } => irr * cos_inc.max(0.0),
+            CurveKind::Table { t, b, m } => {
+                let x = cos_inc.clamp(-1.0, 1.0).asin() - self.ref_el;
+                irr * (hermite(t, b, m, x) - b[0]).max(0.0)
+            }
         }
     }
 
@@ -129,7 +165,8 @@ impl ResponseCurve {
                 (e.clamp(0.0, 1.0).asin() - cl.el).clamp(r.tilt_lo, r.tilt_hi)
             }
             CurveKind::Table { t, b: tb, m } => {
-                let target = b / cl.irradiance;
+                let b0 = tb[0];
+                let target = if cl.irradiance > 0.0 { b0 + (b - b0) / cl.irradiance } else { b0 };
                 let d = cl.el - self.ref_el;
                 let (x_lo, x_hi) = (r.tilt_lo + d, r.tilt_hi + d);
                 if target <= hermite(t, tb, m, x_lo) {
@@ -152,6 +189,11 @@ impl ResponseCurve {
                 (0.5 * (a + c) - d).clamp(r.tilt_lo, r.tilt_hi)
             }
         }
+    }
+
+    /// True for the Lambert model.
+    pub fn is_lambert(&self) -> bool {
+        matches!(self.kind, CurveKind::Lambert { .. })
     }
 
     /// Ambient term (Lambert), or 0.

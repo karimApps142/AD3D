@@ -38,7 +38,8 @@ export function startPreview(engine: Engine): PreviewController {
   if (controller) return controller;
 
   const loop = new LatestWinsLoop<SquamaParams, MeshPayload>({
-    run: (params, jobId) => engine.generateSquama({ ...params, jobId }),
+    // A request no slider tagged as a drag is a final plate (launch, open, undo, typed values).
+    run: (params, jobId) => engine.generateSquama({ ...params, quality: params.quality ?? 'final', jobId }),
     getJobId: (payload) => payload.jobId,
     onResult: (payload, info) => {
       notePayload(payload);
@@ -51,6 +52,10 @@ export function startPreview(engine: Engine): PreviewController {
       useAppStore.setState({ previewError: error instanceof Error ? error.message : String(error) });
     },
     onBusyChange: (busy) => useAppStore.setState({ previewBusy: busy }),
+    // A final plate (optimiser: up to its time budget) must not hold back the next drag tick:
+    // abort it in the core and send the drag at once.
+    shouldCancel: (inFlight, next) => (inFlight.quality ?? 'final') === 'final' && next.quality === 'preview',
+    cancel: engine.cancelGenerate ? () => void engine.cancelGenerate?.() : undefined,
   });
 
   const unsubscribe = useAppStore.subscribe((state, prev) => {

@@ -19,7 +19,11 @@ export const PRINTERS: readonly PrinterProfile[] = [
 ];
 
 export const DEFAULT_PRINTER_ID = 'cr6se';
-export const DEFAULT_MARGIN_MM = 5;
+/** Smallest base for alignment keys (core KeySpec::min_base_mm: 2 mm pocket + 1 mm front wall). */
+export const KEY_MIN_BASE_MM = 3.0;
+
+/** Room for a 6–8 mm brim around standing tiles (core Bed::CR6_SE.margin_mm). */
+export const DEFAULT_MARGIN_MM = 8;
 
 export const ORIENTATIONS: ReadonlyArray<{ id: ExportOrientation; label: string }> = [
   { id: 'standing-auto', label: 'Standing, auto (light from below)' },
@@ -98,10 +102,13 @@ export function planTiles(nx: number, ny: number, cellMm: number, maxUv: [number
   return { cols, rows, fitsWhole: cols.length === 1 && rows.length === 1, maxUv, error: null };
 }
 
-/** Print-space size X × Y × Z of a w × h plate of depth d (§9 transforms). */
-export function printSize(wMm: number, hMm: number, depthMm: number, k: number | null): Vec3 {
+/** Print-space size X × Y × Z of a w × h plate of depth d (§9 transforms). Standing on a
+ *  bed-slinger, the face runs along the bed's motion axis (core `standing_xform`): along Y for a
+ *  bed that moves in Y, so the thin depth is along X. */
+export function printSize(wMm: number, hMm: number, depthMm: number, k: number | null, bedMotion: 'x' | 'y' | 'none' | null = null): Vec3 {
   if (k === null) return [wMm, hMm, depthMm];
-  return k % 2 === 0 ? [wMm, depthMm, hMm] : [hMm, depthMm, wMm];
+  const [along, up] = k % 2 === 0 ? [wMm, hMm] : [hMm, wMm];
+  return bedMotion === 'y' ? [depthMm, along, up] : [along, depthMm, up];
 }
 
 /** Footprint may turn on the bed; the height must fit Z. Mirrors `fits_bed` in Rust. */

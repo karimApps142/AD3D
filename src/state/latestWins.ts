@@ -18,6 +18,8 @@ export interface LatestWinsStats {
   /** Responses dropped as stale (old job id, invalidated, or wrong echo). */
   dropped: number;
   errors: number;
+  /** In-flight jobs aborted for a newer request. */
+  cancelled: number;
 }
 
 export interface LatestWinsOptions<P, R> {
@@ -28,6 +30,13 @@ export interface LatestWinsOptions<P, R> {
   getJobId?: (result: R) => number;
   /** Called whenever the busy state flips. */
   onBusyChange?: (busy: boolean) => void;
+  /**
+   * When a new request arrives while `inFlight` runs, return true to abort the in-flight job
+   * (e.g. a slow final plate when the user grabs a slider again). `cancel` is then called once
+   * for that job; its result or error is dropped as stale and the new params go out at once.
+   */
+  shouldCancel?: (inFlight: P, next: P) => boolean;
+  cancel?: () => void;
 }
 
 interface Slot<P> {
@@ -44,6 +53,7 @@ export class LatestWinsLoop<P, R> {
     applied: 0,
     dropped: 0,
     errors: 0,
+    cancelled: 0,
   };
 
   private readonly opts: LatestWinsOptions<P, R>;
@@ -52,6 +62,7 @@ export class LatestWinsLoop<P, R> {
   private pending: Slot<P> | null = null;
   private minValidJobId = 0;
   private lastAppliedJobId = 0;
+  private cancelledJobId = 0;
   private paused = false;
   private busyReported = false;
   private idleWaiters: Array<() => void> = [];
@@ -78,6 +89,16 @@ export class LatestWinsLoop<P, R> {
     if (this.inFlight !== null || this.paused) {
       if (this.pending !== null) this.stats.coalesced++;
       this.pending = { params, requestedAt: now };
+      const f = this.inFlight;
+      if (f && !this.paused && f.jobId !== this.cancelledJobId && this.opts.cancel && this.opts.shouldCancel?.(f.params, params)) {
+        this.cancelledJobId = f.jobId;
+        this.stats.cancelled++;
+        try {
+          this.opts.cancel();
+        } catch {
+          // Cancelling is best effort; the result is dropped either way.
+        }
+      }
       return;
     }
     this.send({ params, requestedAt: now });
@@ -147,7 +168,10 @@ export class LatestWinsLoop<P, R> {
     failed: boolean,
   ): void {
     this.inFlight = null;
-    if (failed) {
+    if (jobId === this.cancelledJobId) {
+      // Aborted for a newer request: neither its plate nor its "cancelled" error matter.
+      this.stats.dropped++;
+    } else if (failed) {
       this.stats.errors++;
       this.opts.onError?.(error, { jobId, params: slot.params });
     } else {

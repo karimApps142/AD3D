@@ -70,6 +70,20 @@ function Hints() {
   );
 }
 
+/** Generation status over the view: a busy spinner while the core works, and the last
+ *  error, so a failure is visible even when the parameter panel is scrolled away. */
+function PreviewStatus() {
+  const busy = useAppStore((s) => s.previewBusy);
+  const error = useAppStore((s) => s.previewError);
+  if (!busy && !error) return null;
+  return (
+    <div className="preview-status" role={error ? 'alert' : 'status'}>
+      {busy && <span className="spinner" aria-label="Generating" title="Generating the plate…" />}
+      {error && <span className="preview-error">Preview failed: {error} (the view shows the last good plate)</span>}
+    </div>
+  );
+}
+
 export function Viewport() {
   const wrapRef = useRef<HTMLDivElement>(null);
   useLightDrag(wrapRef);
@@ -89,6 +103,7 @@ export function Viewport() {
       </CanvasErrorBoundary>
       <ViewportToolbar />
       <StatsOverlay />
+      <PreviewStatus />
       <Hints />
     </div>
   );

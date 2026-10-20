@@ -84,6 +84,9 @@ pub struct KeySpec {
     pub max_spacing_mm: f64,
     /// No key centre closer than this to a tile corner along the seam.
     pub end_margin_mm: f64,
+    /// No key centre on a vertical seam closer than this to the plate's bottom
+    /// edge (`v = 0`), so splints stay out of the stand's slot. 0 = no limit.
+    pub bottom_clear_mm: f64,
     /// Peg diameter (inscribed polygon) and height above the bar.
     pub peg_d_mm: f64,
     pub peg_h_mm: f64,
@@ -97,13 +100,16 @@ pub struct KeySpec {
 impl Default for KeySpec {
     fn default() -> Self {
         KeySpec {
-            hole_d_mm: 3.2,
+            // 0.5 mm diametral clearance: the holes print with their axis
+            // horizontal (standing tiles), so their tops droop; the pegs print flat.
+            hole_d_mm: 3.5,
             hole_depth_mm: 2.0,
             offset_mm: 6.0,
             max_spacing_mm: 40.0,
             end_margin_mm: 10.0,
+            bottom_clear_mm: 0.0,
             peg_d_mm: 3.0,
-            peg_h_mm: 1.8,
+            peg_h_mm: 1.7,
             splint_t_mm: 1.6,
             splint_w_mm: 6.0,
             segments: 24,
@@ -112,10 +118,11 @@ impl Default for KeySpec {
 }
 
 impl KeySpec {
-    /// Smallest base thickness that keeps the pocket floor 0.8 mm below the
-    /// facets (§14.2: 2.8 mm with the defaults).
+    /// Smallest base thickness for keys: the pocket plus a [`KEY_FRONT_WALL_MM`]
+    /// wall in front of it, so the pocket never shows through the shadow face
+    /// (3.0 mm with the defaults).
     pub fn min_base_mm(&self) -> f64 {
-        self.hole_depth_mm + POCKET_CLEARANCE_MM
+        self.hole_depth_mm + KEY_FRONT_WALL_MM.max(POCKET_CLEARANCE_MM)
     }
 
     /// Smallest tile side across a seam: holes from the seams on both sides plus
@@ -138,6 +145,9 @@ impl KeySpec {
         if ok { Ok(()) } else { Err(Error::InvalidParams(format!("inconsistent key spec {self:?}"))) }
     }
 }
+
+/// Material kept in front of a key pocket (two to three 0.4 mm perimeters).
+pub const KEY_FRONT_WALL_MM: f64 = 1.0;
 
 /// Key positions for a tile plan.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -169,7 +179,14 @@ pub fn key_layout(plan: &TilePlan, ks: &KeySpec) -> KeyLayout {
             // Seam to the right (vertical line u = max.x).
             if c + 1 < cols {
                 let x = t.rect_mm.max.x;
-                let mut ps = positions(t.rect_mm.min.y, t.rect_mm.max.y);
+                // Keep splints out of the stand's slot along the plate's bottom edge.
+                let lo = if ks.bottom_clear_mm > 0.0 && t.rect_mm.min.y <= 1e-9 {
+                    (ks.bottom_clear_mm - ks.end_margin_mm).max(t.rect_mm.min.y)
+                } else {
+                    t.rect_mm.min.y
+                };
+                let lo = if lo + 2.0 * ks.end_margin_mm < t.rect_mm.max.y { lo } else { t.rect_mm.min.y };
+                let mut ps = positions(lo, t.rect_mm.max.y);
                 ps.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
                 for y in ps {
                     let (l, rr) = (DVec2::new(x - ks.offset_mm, y), DVec2::new(x + ks.offset_mm, y));
@@ -416,7 +433,7 @@ fn poly_gap(a: &[DVec2], b: &[DVec2]) -> f64 {
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StandSpec {
-    /// Slot width: plate thickness + clearance (+ splint thickness with keys).
+    /// Slot width: plate thickness + clearance (splints are kept out of the slot).
     pub slot_mm: f64,
     /// Front-to-back depth of the base slab.
     pub base_depth_mm: f64,
@@ -431,19 +448,27 @@ pub struct StandSpec {
     pub count: u32,
 }
 
-/// Clearance added to the plate thickness for the slot (§14.2).
-pub const STAND_CLEARANCE_MM: f64 = 0.3;
+/// Clearance added to the plate thickness for the slot (§14.2): both the slot
+/// walls and the plate's thickness are printed as XY perimeters, and elephant's
+/// foot can flare the plate's bottom edge.
+pub const STAND_CLEARANCE_MM: f64 = 0.5;
+
+/// Keys on a vertical seam keep this much above the slot (mm).
+pub const STAND_KEY_CLEARANCE_MM: f64 = 3.0;
 
 impl StandSpec {
     /// A stand for a plate `plate_w × plate_h` mm whose thickest point is
-    /// `thickness` mm, plus `extra` mm on the back (splints), fitted to `bed`.
-    pub fn for_plate(plate_w: f64, plate_h: f64, thickness: f64, extra: f64, bed: &Bed) -> StandSpec {
+    /// `thickness` mm, fitted to `bed`. `_splint_t` is the splint thickness with
+    /// keys; splints are kept out of the slot (see [`KeySpec::bottom_clear_mm`]),
+    /// so it does not widen the slot.
+    pub fn for_plate(plate_w: f64, plate_h: f64, thickness: f64, _splint_t: f64, bed: &Bed) -> StandSpec {
         let [ux, uy, uz] = bed.usable();
         let long = ux.max(uy);
-        let height_mm = (0.08 * plate_h).clamp(15.0, 30.0).min(uz);
         let base_mm = 4.0;
-        let slot_depth_mm = (0.6 * height_mm).max(8.0).min(height_mm - base_mm - 1.0);
-        let slot_mm = thickness + STAND_CLEARANCE_MM + extra;
+        // A deeper slot for taller plates keeps the lean from the clearance small.
+        let slot_depth_mm = (0.06 * plate_h).clamp(15.0, 40.0).min(uz - base_mm - 1.0);
+        let height_mm = (0.08 * plate_h).clamp(15.0, 30.0).max(slot_depth_mm + base_mm + 1.0).min(uz);
+        let slot_mm = thickness + STAND_CLEARANCE_MM;
         let wall_mm = 4.0;
         let base_depth_mm = (0.25 * plate_h).clamp(40.0, 120.0).max(slot_mm + 2.0 * wall_mm + 10.0).min(ux.min(uy));
         let (length_mm, count) =
@@ -513,13 +538,14 @@ pub struct Placement {
     pub fits: bool,
 }
 
-/// Gap between parts on one bed (mm).
-pub const PART_GAP_MM: f64 = 5.0;
+/// Gap between parts on one bed (mm): room for two brims between standing tiles.
+pub const PART_GAP_MM: f64 = 10.0;
 
 /// Shelf-packs the items on as many beds as needed (in order, no sorting, so the
-/// layout is deterministic and tiles stay in reading order). Bed `b` occupies
-/// `X ∈ [b·(x + 20), b·(x + 20) + x]`; every part lies inside its bed's usable area
-/// with `Z ≥ 0` and no two parts' bounding boxes overlap.
+/// layout is deterministic and tiles stay in reading order). Every transform is
+/// in its own bed's coordinates (`Placement::bed` says which print job): each part
+/// lies inside the usable area `[m, x − m] × [m, y − m]` with `Z ≥ 0`, and no two
+/// parts on one bed overlap. Write one file per bed.
 pub fn layout_on_beds(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Placement>> {
     layout_inner(items, bed, false)
 }
@@ -550,7 +576,7 @@ fn layout_inner(items: &[LayoutItem], bed: &Bed, lenient: bool) -> Result<Vec<Pl
                 b += 1;
             }
             let (lo2, _) = it.base.apply_box(it.min, it.max);
-            let origin = [b as f64 * (bed.x_mm + 20.0) + m, m, 0.0];
+            let origin = [m, m, 0.0];
             let t = it.base.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
             out.push(Placement { transform: t, bed: b, fits: false });
             b += 1;
@@ -579,7 +605,7 @@ fn layout_inner(items: &[LayoutItem], bed: &Bed, lenient: bool) -> Result<Vec<Pl
             t = t.then(&Xform::rot_z(1));
         }
         let (lo2, _) = t.apply_box(it.min, it.max);
-        let origin = [b as f64 * (bed.x_mm + 20.0) + m + x, m + y, 0.0];
+        let origin = [m + x, m + y, 0.0];
         t = t.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
         out.push(Placement { transform: t, bed: b, fits: true });
         x += fx + PART_GAP_MM;
@@ -642,7 +668,7 @@ mod tests {
         let boxes: Vec<_> = items.iter().zip(&pl).map(|(it, p)| (p.bed, p.transform.apply_box(it.min, it.max))).collect();
         let u = bed.usable();
         for (i, (bi, (lo, hi))) in boxes.iter().enumerate() {
-            let x0 = *bi as f64 * (bed.x_mm + 20.0) + bed.margin_mm;
+            let x0 = bed.margin_mm;
             assert!(lo[0] >= x0 - 1e-9 && hi[0] <= x0 + u[0] + 1e-9);
             assert!(lo[1] >= bed.margin_mm - 1e-9 && hi[1] <= bed.margin_mm + u[1] + 1e-9);
             assert!(lo[2].abs() < 1e-12);

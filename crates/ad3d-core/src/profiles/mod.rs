@@ -172,7 +172,8 @@ fn printer(id: &str, name: &str, build: [f64; 3], moving: Option<Axis>) -> Print
         moving_bed_axis: moving,
         nozzle_mm: 0.4,
         layer_mm: 0.2,
-        margin_mm: 5.0,
+        // Room for a 6–8 mm brim around tall standing parts.
+        margin_mm: 8.0,
     }
 }
 
@@ -246,10 +247,10 @@ mod tests {
         assert_eq!(p.standing_face_axis(), Axis::Y);
         assert_eq!(p.standing_envelope(5.0), [225.0, 250.0]);
         let b = p.bed();
-        assert!(b.fits([225.0, 10.0, 250.0], false));
-        assert!(!b.fits([226.0, 10.0, 250.0], false));
+        assert!(b.fits([219.0, 10.0, 250.0], false));
+        assert!(!b.fits([220.0, 10.0, 250.0], false));
         assert!(!b.fits([100.0, 100.0, 251.0], true));
-        assert!(b.fits([10.0, 225.0, 1.0], true));
+        assert!(b.fits([10.0, 219.0, 1.0], true));
     }
 
     #[test]

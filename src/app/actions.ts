@@ -6,6 +6,8 @@ import { paramsHistory } from '../state/paramsHistory';
 import { normaliseSettings, type Settings, type Theme, useSettingsStore } from '../state/settings';
 import { DEFAULT_PARAMS, DEFAULT_VIEW, useAppStore } from '../state/store';
 import { askUnsaved, toast } from '../state/ui';
+import { getEngine } from '../engine';
+import { useSquamaUi } from '../panels/squamaUi';
 import { getHost } from './host';
 
 function message(err: unknown): string {
@@ -34,6 +36,7 @@ export async function newProject(): Promise<void> {
   if (!(await guardUnsaved())) return;
   useAppStore.getState().setView({ ...DEFAULT_VIEW, lightDragging: false });
   paramsHistory.load(DEFAULT_PARAMS);
+  void loadImageInfo(DEFAULT_PARAMS.image);
   useDocumentStore.setState({ path: null, savedParams: DEFAULT_PARAMS });
   useAppStore.getState().requestFit();
 }
@@ -57,6 +60,7 @@ export async function openPath(path: string): Promise<void> {
     useDocumentStore.setState({ path: opened.path, savedParams: params });
     useAppStore.getState().requestFit();
     for (const w of opened.warnings) toast(w);
+    void loadImageInfo(params.image);
     await rememberRecent(opened.path);
   } catch (err) {
     toast(`Could not open ${documentName(path)}: ${message(err)}`, 'error', 8000);
@@ -68,10 +72,40 @@ export async function openDialog(): Promise<void> {
   if (path) await openPath(path);
 }
 
-/** Puts a photo into the current project (one undo step). */
+/**
+ * Puts a photo into the current project: the one entry point for File → Open, Import, drop and
+ * the Image panel's "Open photo…". A new photo starts uncropped, unrotated and with the height
+ * from its aspect (one undo step), then its size is loaded so the panels and the point lamp use
+ * the real plate size.
+ */
 export async function useImage(path: string): Promise<void> {
-  useAppStore.getState().setParam('image', path);
+  const { imageOpts: _o, heightMm: _h, ...rest } = useAppStore.getState().params;
+  useAppStore.setState({ params: { ...rest, image: path, quality: 'final' } });
   useAppStore.getState().requestFit();
+  await loadImageInfo(path);
+}
+
+/** Loads (and caches in the core) the size of the project's photo for the panels. */
+export async function loadImageInfo(path: string): Promise<void> {
+  const ui = useSquamaUi.getState();
+  if (path === 'synthetic') {
+    ui.set({ image: null, imageError: null, imageLoading: false });
+    return;
+  }
+  ui.set({ imageLoading: true, imageError: null });
+  try {
+    const engine = await getEngine();
+    const info = await engine.imageInfo(path);
+    // A later photo may have replaced this one meanwhile.
+    if (useAppStore.getState().params.image === path) useSquamaUi.getState().set({ image: info, imageError: null });
+  } catch (err) {
+    if (useAppStore.getState().params.image === path) {
+      useSquamaUi.getState().set({ imageError: message(err) });
+      toast(`Could not open ${documentName(path)}: ${message(err)}`, 'error', 8000);
+    }
+  } finally {
+    if (useAppStore.getState().params.image === path) useSquamaUi.getState().set({ imageLoading: false });
+  }
 }
 
 export async function importImageDialog(): Promise<void> {

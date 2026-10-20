@@ -62,10 +62,11 @@ fn golden_3mf() -> Vec<u8> {
     out.into_inner()
 }
 
-/// Update these only when the written bytes change on purpose.
+/// Update these only when the written bytes change on purpose (M1 round 1: the default
+/// printer margin went from 5 to 8 mm for brims, which moves the packed build items).
 const GOLDEN_STL: &str = "aa37f5ab05446866";
-const GOLDEN_3MF_MODEL: &str = "519ab56ffde6e06c";
-const GOLDEN_3MF_PACKAGE: &str = "80aad644111a1ba3";
+const GOLDEN_3MF_MODEL: &str = "43a606961b94735d";
+const GOLDEN_3MF_PACKAGE: &str = "a4c7201c5dced24b";
 
 #[test]
 fn golden_checksums() {

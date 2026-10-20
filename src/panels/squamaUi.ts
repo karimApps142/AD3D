@@ -33,6 +33,8 @@ export const IDLE_EXPORT: ExportStatus = {
 
 export interface SquamaUiState {
   image: ImageInfo | null;
+  /** True while a photo is being decoded (large or HEIC photos take a moment). */
+  imageLoading: boolean;
   thumbnail: GrayImage | null;
   imageError: string | null;
   target: TargetGrid | null;
@@ -54,7 +56,9 @@ export const DEFAULT_EXPORT: ExportSettings = {
   marginMm: DEFAULT_MARGIN_MM,
   orientation: 'standing-auto',
   formats: ['3mf', 'stl'],
-  keys: 'none',
+  // Keys whenever the plate is tiled and the base leaves room (core KeyKind::Auto).
+  keys: 'auto',
+  bedMotion: cr6.bedMotion ?? 'none',
   stand: false,
   calibrationTile: false,
   tile: true,
@@ -62,6 +66,7 @@ export const DEFAULT_EXPORT: ExportSettings = {
 
 export const useSquamaUi = create<SquamaUiState>()((set) => ({
   image: null,
+  imageLoading: false,
   thumbnail: null,
   imageError: null,
   target: null,

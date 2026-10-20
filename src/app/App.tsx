@@ -30,8 +30,8 @@ export function App() {
           <EngineBadge />
         </header>
         <DocumentTitle />
-        <ImagePanel />
         <ParamsPanel />
+        <ImagePanel />
         <ViewPanel />
         <ExportPanel />
       </aside>

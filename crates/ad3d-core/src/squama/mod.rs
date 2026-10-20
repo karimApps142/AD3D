@@ -138,7 +138,20 @@ impl Default for GenOptions {
     }
 }
 
+/// Thinnest relief (mm) a 0.4 mm nozzle reproduces at all: 0.6 × the ~0.42 mm line
+/// width. Steps smaller than this are in-layer jogs that the slicer rounds away.
+pub const MIN_RELIEF_MM: f64 = 0.25;
+/// Relief (mm) below one line width: prints, but the steps are soft.
+pub const WARN_RELIEF_MM: f64 = 0.42;
+
 pub(crate) fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(SquamaParams, Vec<Warning>)> {
+    check_params_for(p, opts, Some(p.light_azimuth))
+}
+
+/// [`check_params`] with the relief guard computed for the light direction
+/// `guard_az` (radians), or skipped (`None`, e.g. under a point light, where the
+/// solver checks every facet's own direction).
+pub(crate) fn check_params_for(p: &SquamaParams, opts: &GenOptions, guard_az: Option<f64>) -> Result<(SquamaParams, Vec<Warning>)> {
     let mut w = Vec::new();
     let mut p = *p;
     let finite = [p.width_mm, p.cell_mm, p.light_azimuth, p.light_elevation, p.max_tilt, p.base_mm]
@@ -174,26 +187,42 @@ pub(crate) fn check_params(p: &SquamaParams, opts: &GenOptions) -> Result<(Squam
     if p.base_mm < 0.4 - 1e-12 {
         return Err(Error::InvalidParams(format!("base {} mm below 0.4 mm", p.base_mm)));
     }
-    let relief = 2.0 * e_max(p.cell_mm, p.light_azimuth) * p.max_tilt.tan();
-    if relief < 3.0 * opts.tol.delta && opts.relief_guard {
-        return Err(Error::InvalidParams(format!(
-            "relief {relief:.3} mm below {:.2} mm; raise max tilt or cell size",
-            3.0 * opts.tol.delta
-        )));
-    }
-    if relief < 8.0 * opts.tol.delta {
-        w.push(Warning {
-            code: "low_relief",
-            message: format!("relief {relief:.3} mm below printable detail; raise max tilt or cell size"),
-        });
+    if let Some(az) = guard_az {
+        let relief = 2.0 * e_max(p.cell_mm, az) * p.max_tilt.tan();
+        relief_checks(relief, opts, &mut w)?;
     }
     if p.cell_mm < 3.0 {
-        w.push(Warning { code: "small_cell", message: "cells under 3 mm may not show (unconfirmed)".into() });
+        w.push(Warning {
+            code: "small_cell",
+            message: "cells under 3 mm make steps close to a 0.4 mm nozzle's line width; they may not show".into(),
+        });
     }
     if deg(p.light_elevation) < 3.0 {
         w.push(Warning { code: "low_elevation", message: "light elevation below 3°".into() });
     }
     Ok((p, w))
+}
+
+/// The relief guard (§2) tied to a 0.4 mm nozzle: refuse below
+/// [`MIN_RELIEF_MM`], warn below [`WARN_RELIEF_MM`] (and below 3δ / 8δ of the
+/// quantiser when those are larger).
+pub(crate) fn relief_checks(relief: f64, opts: &GenOptions, w: &mut Vec<Warning>) -> Result<()> {
+    let min = MIN_RELIEF_MM.max(3.0 * opts.tol.delta);
+    if relief < min && opts.relief_guard {
+        return Err(Error::InvalidParams(format!(
+            "relief {relief:.3} mm below {min:.2} mm, finer than a 0.4 mm nozzle can print; raise max tilt, max relief or cell size"
+        )));
+    }
+    let warn = WARN_RELIEF_MM.max(8.0 * opts.tol.delta);
+    if relief < warn {
+        w.push(Warning {
+            code: "low_relief",
+            message: format!(
+                "relief {relief:.3} mm is below a 0.4 mm nozzle's line width ({warn:.2} mm): the steps will print soft; raise max tilt or cell size"
+            ),
+        });
+    }
+    Ok(())
 }
 
 /// Timings (ms) and counts from one run.

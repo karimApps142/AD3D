@@ -14,6 +14,7 @@
 //   squama_image_open { path }                         → ImageInfo
 //   squama_image_thumbnail { path, maxPx, rotate, mirror } → Response(thumbnail bytes)
 //   export_squama    { export, onEvent: Channel }      → ExportResult
+//   cancel_generate                                    → bool (aborts the plate in flight)
 //   cancel_export                                      → bool
 //   reveal_in_finder { path }                          → ()
 //   squama_tile_plan { export }                        → TilePlan
@@ -122,6 +123,9 @@ export function createTauriEngine(): Engine {
       const channel = new Channel<ExportEvent>();
       channel.onmessage = onEvent;
       return invoke<ExportResult>('export_squama', { export: dto, onEvent: channel });
+    },
+    cancelGenerate() {
+      return invoke<boolean>('cancel_generate');
     },
     cancelExport() {
       return invoke<boolean>('cancel_export');

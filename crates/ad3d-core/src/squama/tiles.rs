@@ -35,7 +35,8 @@ pub struct Bed {
 
 impl Bed {
     /// The owner's Creality CR-6 SE: 235 × 235 × 250 mm, bed moves in Y (START_HERE).
-    pub const CR6_SE: Bed = Bed { x_mm: 235.0, y_mm: 235.0, z_mm: 250.0, margin_mm: 5.0, motion: BedMotion::Y };
+    /// The 8 mm margin leaves room for a 6–8 mm brim around standing tiles.
+    pub const CR6_SE: Bed = Bed { x_mm: 235.0, y_mm: 235.0, z_mm: 250.0, margin_mm: 8.0, motion: BedMotion::Y };
 
     /// Usable size `[x − 2m, y − 2m, z − m]`.
     pub fn usable(&self) -> [f64; 3] {
@@ -134,7 +135,14 @@ pub struct TileOpts {
     /// A user-forced grid `(cols, rows)` (clamped to the lattice). The tiles may
     /// then not fit the bed; the export warns.
     pub grid: Option<(u32, u32)>,
+    /// Stability cap for standing tiles: a tile stands at most this many plate
+    /// thicknesses tall (its footprint is only the plate's thickness wide). `None`
+    /// = only the bed's Z limit. Ignored for a forced grid (the export warns).
+    pub max_standing_ratio: Option<f64>,
 }
+
+/// Default [`TileOpts::max_standing_ratio`]: ≈ 160 mm for a 4 mm plate.
+pub const MAX_STANDING_RATIO: f64 = 40.0;
 
 /// The result of [`plan_tiles`].
 #[derive(Debug, Clone, PartialEq)]
@@ -288,8 +296,9 @@ pub fn tile_xform(o: Orientation, motion: BedMotion, rect: &DRect) -> Xform {
 }
 
 /// Largest in-plane extents (u, v) a tile may have in orientation `k` (None = flat),
-/// or `None` when the plate's thickness does not fit.
-fn max_extent(bed: &Bed, k: Option<u32>, thickness: f64) -> Option<(f64, f64)> {
+/// or `None` when the plate's thickness does not fit. `z_cap` limits a standing
+/// tile's height (stability).
+fn max_extent(bed: &Bed, k: Option<u32>, thickness: f64, z_cap: Option<f64>) -> Option<(f64, f64)> {
     let [ux, uy, uz] = bed.usable();
     match k {
         None => (thickness <= uz).then_some((ux, uy)),
@@ -302,6 +311,7 @@ fn max_extent(bed: &Bed, k: Option<u32>, thickness: f64) -> Option<(f64, f64)> {
             if thickness > across {
                 return None;
             }
+            let uz = z_cap.map_or(uz, |c| uz.min(c));
             Some(if k % 2 == 0 { (along, uz) } else { (uz, along) })
         }
     }
@@ -323,10 +333,13 @@ fn balanced(n: u32, parts: u32) -> Vec<u32> {
 /// §14.1: chooses the orientation (for `Auto`) and the tile grid.
 ///
 /// Each tile spans whole lattice units along u and v, at most what fits the usable
-/// bed in the print orientation. `Standing(Auto)` considers only the quarter turns
-/// with `sin(φ + k·90°) ≤ 0` (there are always two), picks the one with the fewest
-/// tiles and breaks ties by the lower score. Errors: the thickness does not fit, a
-/// single lattice unit does not fit, or tiles would be narrower than `min_tile_mm`.
+/// bed in the print orientation (standing tiles also at most
+/// `max_standing_ratio × thickness` tall). `Standing(Auto)` considers only the
+/// quarter turns with `sin(φ + k·90°) ≤ 0` (there are always two) and prefers the
+/// best light score (light from below, §9); it falls back to another turn only when
+/// that needs fewer than 2/3 of the tiles. Errors: the thickness does not fit, a
+/// single lattice unit does not fit, or tiles would be narrower than `min_tile_mm`
+/// (also for a forced grid, where keys would not fit).
 pub fn plan_tiles(l: &Layout, bed: &Bed, o: Orientation, light_azimuth: f64, opts: &TileOpts) -> Result<TilePlan> {
     bed.check()?;
     if !(opts.thickness_mm.is_finite() && opts.thickness_mm > 0.0) {
@@ -344,11 +357,24 @@ pub fn plan_tiles(l: &Layout, bed: &Bed, o: Orientation, light_azimuth: f64, opt
     };
     let min_u = if opts.min_tile_mm > 0.0 { (opts.min_tile_mm / pitch.x - 1e-9).ceil() as u32 } else { 1 }.max(1);
     let min_v = if opts.min_tile_mm > 0.0 { (opts.min_tile_mm / pitch.y - 1e-9).ceil() as u32 } else { 1 }.max(1);
-    let mut best: Option<(u32, u32, u32, u32, Option<u32>)> = None; // (tiles, cols, rows, mu·mv packed later)
-    let mut best_max = (0, 0);
+    if let Some((c, r)) = opts.grid {
+        let (c, r) = (c.clamp(1, nu), r.clamp(1, nv));
+        if (c > 1 && nu / c < min_u) || (r > 1 && nv / r < min_v) {
+            return Err(Error::InvalidParams(format!(
+                "a {c} × {r} grid makes tiles narrower than {:.1} mm, too narrow for alignment keys; use fewer tiles or turn keys off",
+                opts.min_tile_mm
+            )));
+        }
+    }
+    let z_cap = match opts.grid {
+        None => opts.max_standing_ratio.filter(|r| r.is_finite() && *r > 0.0).map(|r| r * opts.thickness_mm),
+        Some(_) => None,
+    };
+    // (rank, tiles, score, cols, rows, k, max units)
+    let mut options: Vec<(u32, f64, u32, u32, Option<u32>, (u32, u32))> = Vec::new();
     let mut why = String::new();
     for k in candidates {
-        let Some((eu, ev)) = max_extent(bed, k, opts.thickness_mm) else {
+        let Some((eu, ev)) = max_extent(bed, k, opts.thickness_mm, z_cap) else {
             why = format!("plate thickness {:.2} mm does not fit the bed", opts.thickness_mm);
             continue;
         };
@@ -371,14 +397,27 @@ pub fn plan_tiles(l: &Layout, bed: &Bed, o: Orientation, light_azimuth: f64, opt
             None => cols * rows,
             Some(_) => u32::from(nu.div_ceil(cols) > mu) + u32::from(nv.div_ceil(rows) > mv),
         };
-        if best.is_none_or(|b| n < b.0) {
-            best = Some((n, cols, rows, 0, k));
-            best_max = (mu.max(nu.div_ceil(cols)), mv.max(nv.div_ceil(rows)));
-        }
+        let score = k.map_or(0.0, |k| light_score(light_azimuth, k));
+        options.push((n, score, cols, rows, k, (mu.max(nu.div_ceil(cols)), mv.max(nv.div_ceil(rows)))));
     }
-    let Some((_, cols, rows, _, k)) = best else {
+    if options.is_empty() {
         return Err(Error::InvalidParams(format!("cannot tile the plate for this bed: {why}")));
+    }
+    let by_score = |a: &&(u32, f64, u32, u32, Option<u32>, (u32, u32)), b: &&(u32, f64, u32, u32, Option<u32>, (u32, u32))| {
+        (a.1 * 1e9).round().total_cmp(&(b.1 * 1e9).round()).then(a.0.cmp(&b.0))
     };
+    let by_count = |a: &&(u32, f64, u32, u32, Option<u32>, (u32, u32)), b: &&(u32, f64, u32, u32, Option<u32>, (u32, u32))| {
+        a.0.cmp(&b.0).then((a.1 * 1e9).round().total_cmp(&(b.1 * 1e9).round()))
+    };
+    let chosen = match opts.grid {
+        Some(_) => *options.iter().min_by(by_count).unwrap(),
+        None => {
+            let best_light = *options.iter().min_by(by_score).unwrap();
+            let fewest = *options.iter().min_by(by_count).unwrap();
+            if 3 * fewest.0 < 2 * best_light.0 { fewest } else { best_light }
+        }
+    };
+    let (_, _, cols, rows, k, best_max) = chosen;
     let orientation = match k {
         None => Orientation::Flat,
         Some(k) => Orientation::Standing([QuarterTurns::Q0, QuarterTurns::Q1, QuarterTurns::Q2, QuarterTurns::Q3][k as usize]),
@@ -457,7 +496,7 @@ mod tests {
         }
     }
 
-    const OPTS: TileOpts = TileOpts { thickness_mm: 5.0, min_tile_mm: 0.0, grid: None };
+    const OPTS: TileOpts = TileOpts { thickness_mm: 5.0, min_tile_mm: 0.0, grid: None, max_standing_ratio: Some(MAX_STANDING_RATIO) };
 
     #[test]
     fn balanced_63_rows() {
@@ -471,8 +510,9 @@ mod tests {
         // so v' = u: the 300 mm width stands up (≤ 245 Z? no) → tiles needed.
         let l = square(50, 63, 6.0);
         let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Auto), PI, &OPTS).unwrap();
-        // Usable: along Y 225, Z 245. k = 1: u (300) along Z (245 → 40 cells), v (378) along Y (225 → 37 cells).
-        // k = 3 has sin = +1 and is not considered.
+        // Usable: along Y 219, Z 242 capped at 40 × 5 = 200 mm for stability. k = 1: u (300)
+        // along Z (200 → 33 cells), v (378) along Y (219 → 36 cells). k = 3 has sin = +1 and
+        // is not considered.
         assert_eq!(plan.quarter_turns, Some(1));
         assert_eq!((plan.cols, plan.rows), (2, 2));
         assert_eq!(plan.u_units, vec![0, 25, 50]);
@@ -502,7 +542,8 @@ mod tests {
         // and k = 3 (−1). k = 3 is best by score; with a plate 240 wide × 100 tall,
         // k = 3 puts the 240 mm width along Z (245 ok) and 100 along Y: one tile.
         let l = square(40, 16, 6.0);
-        let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Auto), 0.0, &OPTS).unwrap();
+        let free = TileOpts { max_standing_ratio: None, ..OPTS };
+        let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Auto), 0.0, &free).unwrap();
         assert_eq!(plan.tile_count(), 1);
         assert_eq!(plan.quarter_turns, Some(3));
     }
@@ -512,8 +553,40 @@ mod tests {
         let l = square(50, 63, 6.0);
         let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Flat, PI, &OPTS).unwrap();
         assert_eq!((plan.cols, plan.rows), (2, 2));
-        let thick = TileOpts { thickness_mm: 400.0, min_tile_mm: 0.0, grid: None };
+        let thick = TileOpts { thickness_mm: 400.0, ..OPTS };
         assert!(plan_tiles(&l, &Bed::CR6_SE, Orientation::Flat, PI, &thick).is_err());
+    }
+
+    #[test]
+    fn standing_tiles_are_capped_for_stability() {
+        // 160 × 240 mm, light from the left: one 240 mm tall tile fits Z (242) but stands
+        // 60 thicknesses tall on a 4 mm footprint; the cap (160 mm) splits it.
+        let l = square(40, 60, 4.0);
+        let opts = TileOpts { thickness_mm: 4.0, ..OPTS };
+        let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Q0), PI, &opts).unwrap();
+        assert_eq!((plan.cols, plan.rows), (1, 2));
+        let free = TileOpts { max_standing_ratio: None, ..opts };
+        let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Q0), PI, &free).unwrap();
+        assert_eq!(plan.tile_count(), 1);
+    }
+
+    #[test]
+    fn auto_prefers_light_from_below_unless_it_needs_far_more_tiles() {
+        // 300 × 450 mm, light from the left (φ = 180°): k = 1 (light from below) needs
+        // 2 × 3 = 6 tiles, k = 2 (side light) 2 × 2 = 4: 6 is not more than 1.5 × 4, so
+        // the light-below turn wins (§9).
+        let l = square(50, 75, 6.0);
+        let opts = TileOpts { thickness_mm: 4.0, ..OPTS };
+        let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Standing(QuarterTurns::Auto), PI, &opts).unwrap();
+        assert_eq!(plan.quarter_turns, Some(1));
+    }
+
+    #[test]
+    fn forced_grid_too_narrow_for_keys_is_refused_clearly() {
+        let l = square(10, 10, 6.0);
+        let opts = TileOpts { min_tile_mm: 23.0, grid: Some((4, 1)), ..OPTS };
+        let e = plan_tiles(&l, &Bed::CR6_SE, Orientation::Flat, PI, &opts).unwrap_err();
+        assert!(e.to_string().contains("too narrow for alignment keys"), "{e}");
     }
 
     #[test]
@@ -523,7 +596,7 @@ mod tests {
         let l = square(4, 4, 6.0);
         let o = Orientation::Standing(QuarterTurns::Q0);
         assert!(plan_tiles(&l, &bed, o, PI, &OPTS).is_ok());
-        assert!(plan_tiles(&l, &bed, o, PI, &TileOpts { thickness_mm: 5.0, min_tile_mm: 20.0, grid: None }).is_err());
+        assert!(plan_tiles(&l, &bed, o, PI, &TileOpts { min_tile_mm: 20.0, ..OPTS }).is_err());
     }
 
     #[test]

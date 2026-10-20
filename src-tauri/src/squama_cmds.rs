@@ -17,6 +17,7 @@
 //! - `squama_image_open { path }`            → `ImageInfo` (decodes and caches the photo)
 //! - `squama_image_thumbnail { path, maxPx, rotate, mirror }` → raw grey thumbnail
 //! - `export_squama { export, onEvent }`     → `ExportResult`; progress over a `Channel`
+//! - `cancel_generate`                       → `bool` (aborts the plate in flight)
 //! - `cancel_export`                         → `bool` (true when an export was running)
 //! - `reveal_in_finder { path }`             → `()`
 
@@ -28,6 +29,7 @@ use std::time::Instant;
 
 use ad3d_core::image::working::{DEFAULT_MAX_SIDE, DRAG_MAX_SIDE};
 use ad3d_core::image::{ImageOpts, LinearLuma, TargetPipeline, build_working};
+use ad3d_core::image::target::build_sampler;
 use ad3d_core::io::sink::ThreeMfSink;
 use ad3d_core::io::stl::write_stl_cancellable;
 use ad3d_core::io::threemf::Meta;
@@ -89,9 +91,11 @@ pub enum ExportFormat {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum KeysDto {
-    #[default]
     None,
     Pegs,
+    /// Pegs when the plate is tiled and the base leaves room (the default).
+    #[default]
+    Auto,
 }
 
 /// §12.1 `SquamaExport`. `baseName` (the file stem from the save dialog) and `bedMotion`
@@ -120,7 +124,7 @@ pub struct SquamaExportDto {
 }
 
 impl SquamaExportDto {
-    /// Core export options. Defaults: CR-6 SE bed (bed moves in Y), no keys, no stand.
+    /// Core export options. Defaults: CR-6 SE bed (bed moves in Y), keys when tiled, no stand.
     /// Without `bedMm` the plate is exported in one piece (the UI's "tile to bed" off).
     pub fn options(&self) -> Result<SquamaExport, String> {
         let mut bed = Bed::CR6_SE;
@@ -136,7 +140,11 @@ impl SquamaExportDto {
         Ok(SquamaExport {
             orientation: parse_orientation(&self.orientation).map_err(core_err)?,
             bed,
-            keys: if self.keys == Some(KeysDto::Pegs) { KeyKind::Pegs } else { KeyKind::None },
+            keys: match self.keys.unwrap_or_default() {
+                KeysDto::None => KeyKind::None,
+                KeysDto::Pegs => KeyKind::Pegs,
+                KeysDto::Auto => KeyKind::Auto,
+            },
             stand: self.stand.unwrap_or(false),
             calibration_tile: self.calibration_tile.unwrap_or(false),
             tiles: if self.bed_mm.is_some() { TileRequest::Auto } else { TileRequest::None },
@@ -168,6 +176,12 @@ pub struct PartReport {
     pub size_mm: [f64; 3],
     pub fits_bed: Option<bool>,
     pub validated: bool,
+    /// Which bed (print job / 3MF file) the part is on, from 0.
+    pub bed: u32,
+    /// Largest downward-facing ledge (standing tiles, calibration tile).
+    pub max_downward_ledge_mm: Option<f64>,
+    /// Height / smallest footprint side; above 10 the part wants a brim.
+    pub height_ratio: f64,
 }
 
 /// Cells (square) or lattice units (hex) per tile column and row, from the plate's
@@ -190,6 +204,10 @@ pub struct ExportResult {
     pub elapsed_ms: f64,
     /// Match score before → after the optimiser, when it ran.
     pub optimise: Option<ad3d_core::squama::export::ExportOptimise>,
+    /// Beds (print jobs) the parts need; one 3MF per bed.
+    pub beds: u32,
+    /// Print advice for tall, thin standing parts (brim, perimeters, layers).
+    pub brim: Option<String>,
 }
 
 /// What `squama_tile_plan` returns.
@@ -202,6 +220,10 @@ pub struct TilePlanDto {
     pub u_edges_mm: Vec<f64>,
     pub v_edges_mm: Vec<f64>,
     pub quarter_turns: Option<u32>,
+    /// Print-space size (X, Y, Z) of every tile, row-major from the bottom row.
+    pub print_mm: Vec<[f64; 3]>,
+    /// Plate thickness the plan used.
+    pub thickness_mm: f64,
     pub w_mm: f64,
     pub h_mm: f64,
 }
@@ -295,6 +317,8 @@ pub struct ImageInfo {
 }
 
 const SOURCE_CACHE_MAX: usize = 4;
+/// Pixel memory the decoded-source cache may hold (each source keeps ≤ 4096 px levels).
+const SOURCE_CACHE_BYTES: usize = 256 << 20;
 const PARTITION_CACHE_MAX: usize = 4;
 const JOB_INFO_MAX: usize = 16;
 const SIM_CACHE_MAX: usize = 4;
@@ -315,6 +339,7 @@ type PartKey = (u8, u32, u32, u64);
 #[derive(Default)]
 pub struct SquamaState {
     newest_job: AtomicU64,
+    newest_target: AtomicU64,
     running: Mutex<Option<(u64, CancelToken)>>,
     sources: Mutex<Vec<(String, Arc<Source>)>>,
     partitions: Mutex<Vec<(PartKey, Arc<Partition>)>>,
@@ -342,7 +367,15 @@ pub fn decode_image(path: &str) -> Result<LinearLuma, String> {
     if ad3d_core::image::heic::needs_sips(p) {
         return ad3d_core::image::heic::decode_with_sips(p).map_err(core_err);
     }
-    LinearLuma::load(p).map_err(core_err)
+    LinearLuma::load(p).map_err(|e| {
+        let m = e.to_string();
+        if m.contains("limit") {
+            let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            format!("{name} is too large to open (over the 512 MB decoder limit, roughly 100 megapixels); scale it down and try again")
+        } else {
+            m
+        }
+    })
 }
 
 /// Key of everything that shapes a plate except the job id and quality.
@@ -372,7 +405,19 @@ impl SquamaState {
         let mut c = lock(&self.sources);
         c.retain(|(k, _)| k != image);
         c.insert(0, (image.to_owned(), s.clone()));
-        c.truncate(SOURCE_CACHE_MAX);
+        // Keep at most SOURCE_CACHE_MAX sources and SOURCE_CACHE_BYTES of pixels (the
+        // newest always stays).
+        let mut bytes = 0usize;
+        let mut keep = 0usize;
+        for (_, src) in c.iter() {
+            let b = lock(&src.pipeline).source().px.len() * 4;
+            if keep > 0 && (keep >= SOURCE_CACHE_MAX || bytes + b > SOURCE_CACHE_BYTES) {
+                break;
+            }
+            bytes += b;
+            keep += 1;
+        }
+        c.truncate(keep.max(1));
         Ok(s)
     }
 
@@ -400,9 +445,26 @@ impl SquamaState {
         let (l, warnings) = job_layout(job, src.orig, &gopts).map_err(core_err)?;
         let part = self.partition(&l)?;
         let side = if job.quality == Quality::Final { DEFAULT_MAX_SIDE } else { DRAG_MAX_SIDE };
-        let sampler = lock(&src.pipeline).sampler(&job.image_opts, side).map_err(core_err)?;
+        let sampler = self.sampler(&src, &job.image_opts, side)?;
         let target = job_target(&sampler, &l, &part).map_err(core_err)?;
         Ok((l, part, target, warnings))
+    }
+
+    /// The toned sampler for `opts` at `side`. A miss is built outside the source's
+    /// lock (a crop or rotation of a big photo takes tens of ms), so a drag preview
+    /// that needs the other level never waits behind it.
+    fn sampler(&self, src: &Source, opts: &ImageOpts, side: u32) -> Result<Arc<ad3d_core::image::TargetSampler>, String> {
+        let (cached, img, working) = {
+            let mut p = lock(&src.pipeline);
+            let c = p.cached_sampler(opts, side).map_err(core_err)?;
+            (c, p.source().clone(), p.cached_working(opts, side))
+        };
+        if let Some(s) = cached {
+            return Ok(s);
+        }
+        let (w, s) = build_sampler(&img, opts, side, working).map_err(core_err)?;
+        lock(&src.pipeline).insert(opts, side, w, s.clone());
+        Ok(s)
     }
 
     pub fn image_info(&self, path: &str) -> Result<ImageInfo, String> {
@@ -431,9 +493,12 @@ impl SquamaState {
     }
 
     /// Per-facet target as a raster, plus the simulated appearance of the last final
-    /// plate with the same settings (§15.1).
+    /// plate with the same settings (§15.1). Sampled at the level the plate itself uses
+    /// (the 1024 px drag level while a slider drags, else 2048 px), so it reuses the
+    /// sampler the generation just built.
     pub fn target(&self, dto: &SquamaParamsM1) -> Result<Vec<u8>, String> {
-        let job = dto.job().map_err(core_err)?.with_quality(Quality::Final);
+        let quality = if dto.quality == Some(QualityDto::Preview) { Quality::Preview } else { Quality::Final };
+        let job = dto.job().map_err(core_err)?.with_quality(quality);
         let (l, _, t, _) = self.prepared(&job)?;
         let (nx, ny, g) = facet_raster(&l, &t.g);
         let key = settings_key(dto);
@@ -493,6 +558,17 @@ impl SquamaState {
         Ok((buf, info))
     }
 
+    /// Cancels the generation in flight, if any.
+    pub fn cancel_running(&self) -> bool {
+        match lock(&self.running).as_ref() {
+            Some((_, t)) => {
+                t.cancel();
+                true
+            }
+            None => false,
+        }
+    }
+
     fn remember(&self, info: JobInfo) {
         let mut jobs = lock(&self.jobs);
         if jobs.len() >= JOB_INFO_MAX {
@@ -505,12 +581,21 @@ impl SquamaState {
         lock(&self.jobs).iter().rev().find(|j| j.job_id == job_id).cloned()
     }
 
-    /// The tile plan an export with these settings would use (estimated thickness).
-    pub fn tile_plan(&self, e: &SquamaExportDto) -> Result<TilePlanDto, String> {
-        let job = e.params.job().map_err(core_err)?;
-        let src = self.source(&job.image)?;
-        let (l, _) = job_layout(&job, src.orig, &GenOptions::default()).map_err(core_err)?;
-        let plan = preview_tile_plan(&job, &l, &e.options()?).map_err(core_err)?;
+    /// The tile plan an export with these settings would cut: the export's own
+    /// planning stage (final solve, optimiser when on, refined seams) on the cached
+    /// final-quality target.
+    pub fn tile_plan(&self, e: &SquamaExportDto, cancel: &CancelToken) -> Result<TilePlanDto, String> {
+        let job = e.params.job().map_err(core_err)?.with_quality(Quality::Final);
+        let (l, _, target, _) = self.prepared(&job)?;
+        let (plan, thickness) = preview_tile_plan(&job, &l, Some(&target.g), &e.options()?, cancel).map_err(core_err)?;
+        let print_mm = plan
+            .tiles
+            .iter()
+            .map(|t| {
+                let (lo, hi) = t.transform.apply_box([t.rect_mm.min.x, t.rect_mm.min.y, 0.0], [t.rect_mm.max.x, t.rect_mm.max.y, thickness]);
+                [0, 1, 2].map(|k| hi[k] - lo[k])
+            })
+            .collect();
         let counts = |u: &[u32]| u.windows(2).map(|w| w[1] - w[0]).collect::<Vec<u32>>();
         Ok(TilePlanDto {
             cols: counts(&plan.u_units),
@@ -518,6 +603,8 @@ impl SquamaState {
             u_edges_mm: plan.u_edges(),
             v_edges_mm: plan.v_edges(),
             quarter_turns: plan.quarter_turns,
+            print_mm,
+            thickness_mm: thickness,
             w_mm: l.w_mm,
             h_mm: l.h_mm,
         })
@@ -543,6 +630,7 @@ impl SquamaState {
         let opts = e.options()?;
         let job = e.params.job().map_err(core_err)?.with_quality(Quality::Final);
         cancel.check().map_err(|_| "cancelled".to_string())?;
+        emit(ExportEvent::Progress { part: String::new(), index: 0, total_parts: 0, stage: "preparing the photo".into(), fraction: 0.0 });
         let (l, _, target, warnings) = self.prepared(&job)?;
         let meta = Meta {
             title: Some(base.clone()),
@@ -579,6 +667,8 @@ impl SquamaState {
             warnings,
             elapsed_ms: t0.elapsed().as_secs_f64() * 1e3,
             optimise: report.optimise,
+            beds: report.beds_used,
+            brim: report.brim.clone(),
         })
     }
 }
@@ -596,13 +686,17 @@ fn part_file_stem(base: &str, part: &str) -> String {
 }
 
 /// Streams validated parts: one binary STL per part (atomic, cancellable) and/or one
-/// 3MF with every part. A failed or cancelled export removes what it wrote.
+/// 3MF per bed with that bed's parts (`<base>.3mf`, then `<base>_bed2.3mf`, …). The
+/// core places every part in its own bed's coordinates, so each file opens on the
+/// printer's plate as laid out. A failed or cancelled export removes what it wrote.
 struct AppSink<'a> {
     dir: PathBuf,
     base: String,
     stl: bool,
-    tmf: Option<IoSink<ThreeMfSink>>,
-    tmf_path: PathBuf,
+    tmf: bool,
+    meta: Meta,
+    /// One 3MF sink per bed, opened when the bed's first part arrives.
+    beds: Vec<Option<(PathBuf, IoSink<ThreeMfSink>)>>,
     cancel: CancelToken,
     emit: &'a mut dyn FnMut(ExportEvent),
     total: u32,
@@ -610,6 +704,11 @@ struct AppSink<'a> {
     written: Vec<PathBuf>,
     files: Vec<String>,
     parts: Vec<PartReport>,
+}
+
+/// File of bed `b`'s 3MF: `<base>.3mf` for the first bed, `<base>_bed<b+1>.3mf` after.
+pub fn bed_file_name(base: &str, bed: u32) -> String {
+    if bed == 0 { format!("{base}.3mf") } else { format!("{base}_bed{}.3mf", bed + 1) }
 }
 
 impl<'a> AppSink<'a> {
@@ -621,18 +720,13 @@ impl<'a> AppSink<'a> {
         cancel: &CancelToken,
         emit: &'a mut dyn FnMut(ExportEvent),
     ) -> Result<Self, String> {
-        let tmf_path = dir.join(format!("{base}.3mf"));
-        let tmf = if formats.contains(&ExportFormat::ThreeMf) {
-            Some(IoSink::new(ThreeMfSink::new(&tmf_path, meta, None, None, cancel.clone()).map_err(core_err)?))
-        } else {
-            None
-        };
         Ok(AppSink {
             dir: dir.to_path_buf(),
             base: base.to_owned(),
             stl: formats.contains(&ExportFormat::Stl),
-            tmf,
-            tmf_path,
+            tmf: formats.contains(&ExportFormat::ThreeMf),
+            meta: meta.clone(),
+            beds: Vec::new(),
             cancel: cancel.clone(),
             emit,
             total: 0,
@@ -642,9 +736,30 @@ impl<'a> AppSink<'a> {
             parts: Vec::new(),
         })
     }
+
+    fn bed_sink(&mut self, bed: u32) -> ad3d_core::Result<&mut (PathBuf, IoSink<ThreeMfSink>)> {
+        let b = bed as usize;
+        if self.beds.len() <= b {
+            self.beds.resize_with(b + 1, || None);
+        }
+        if self.beds[b].is_none() {
+            let path = self.dir.join(bed_file_name(&self.base, bed));
+            let mut meta = self.meta.clone();
+            if bed > 0 {
+                meta.title = meta.title.map(|t| format!("{t} (bed {})", bed + 1));
+            }
+            let sink = IoSink::new(ThreeMfSink::new(&path, &meta, None, None, self.cancel.clone())?);
+            self.beds[b] = Some((path, sink));
+        }
+        Ok(self.beds[b].as_mut().expect("opened above"))
+    }
 }
 
 impl PartSink for AppSink<'_> {
+    fn stage(&mut self, stage: &str) {
+        (self.emit)(ExportEvent::Progress { part: String::new(), index: 0, total_parts: 0, stage: stage.into(), fraction: 0.0 });
+    }
+
     fn begin(&mut self, parts: usize) {
         self.total = parts as u32;
         (self.emit)(ExportEvent::Started { total_parts: self.total });
@@ -671,15 +786,14 @@ impl PartSink for AppSink<'_> {
                 triangles: r.triangles as u32,
             });
         }
-        if let Some(t) = &mut self.tmf {
-            t.accept(part, r)?;
-            files.push(self.tmf_path.display().to_string());
-            if !self.stl {
-                (self.emit)(ExportEvent::PartWritten {
-                    part: part.name.clone(),
-                    path: self.tmf_path.display().to_string(),
-                    triangles: r.triangles as u32,
-                });
+        if self.tmf {
+            let stl = self.stl;
+            let (path, sink) = self.bed_sink(part.bed)?;
+            sink.accept(part, r)?;
+            let shown = path.display().to_string();
+            files.push(shown.clone());
+            if !stl {
+                (self.emit)(ExportEvent::PartWritten { part: part.name.clone(), path: shown, triangles: r.triangles as u32 });
             }
         }
         self.files.extend(files.iter().filter(|f| !f.ends_with(".3mf")).cloned());
@@ -688,25 +802,30 @@ impl PartSink for AppSink<'_> {
             files,
             triangles: r.triangles as u32,
             size_mm: [0, 1, 2].map(|k| r.max_mm[k] - r.min_mm[k]),
-            fits_bed: Some(true),
+            fits_bed: Some(r.fits_bed),
+            // The core validates every part before handing it over (it fails the export otherwise).
             validated: true,
+            bed: part.bed,
+            max_downward_ledge_mm: r.max_downward_ledge_mm,
+            height_ratio: r.height_ratio,
         });
         self.index += 1;
         Ok(())
     }
 
     fn finish(&mut self, report: &ExportReport) -> ad3d_core::Result<()> {
-        if let Some(t) = &mut self.tmf {
-            t.finish(report)?;
-            self.files.push(self.tmf_path.display().to_string());
+        for (path, sink) in self.beds.iter_mut().flatten() {
+            sink.finish(report)?;
+            self.files.push(path.display().to_string());
         }
         Ok(())
     }
 
     fn abort(&mut self) {
-        if let Some(t) = &mut self.tmf {
-            t.abort();
+        for (_, sink) in self.beds.iter_mut().flatten() {
+            sink.abort();
         }
+        self.beds.clear();
         for p in self.written.drain(..) {
             let _ = std::fs::remove_file(p);
         }
@@ -780,6 +899,13 @@ pub async fn generate_squama(params: SquamaParamsM1, state: State<'_, Arc<Squama
     .await
 }
 
+/// Aborts the plate generation in flight (the UI calls it when a drag starts during a slow
+/// final plate); that `generate_squama` call then fails with "cancelled".
+#[tauri::command]
+pub fn cancel_generate(state: State<'_, Arc<SquamaState>>) -> bool {
+    state.cancel_running()
+}
+
 #[tauri::command]
 pub fn squama_job_info(job_id: u32, state: State<'_, Arc<SquamaState>>) -> Option<JobInfo> {
     state.job_info(job_id)
@@ -788,13 +914,22 @@ pub fn squama_job_info(job_id: u32, state: State<'_, Arc<SquamaState>>) -> Optio
 #[tauri::command]
 pub async fn squama_target(params: SquamaParamsM1, state: State<'_, Arc<SquamaState>>) -> Result<Response, String> {
     let state: Arc<SquamaState> = state.inner().clone();
-    blocking(move || state.target(&params).map(Response::new)).await
+    // Latest wins: a request that is already superseded when the worker picks it up is
+    // skipped instead of queueing behind the others on the blocking pool.
+    let seq = state.newest_target.fetch_add(1, Ordering::SeqCst) + 1;
+    blocking(move || {
+        if state.newest_target.load(Ordering::SeqCst) != seq {
+            return Err("cancelled".to_owned());
+        }
+        state.target(&params).map(Response::new)
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn squama_tile_plan(export: SquamaExportDto, state: State<'_, Arc<SquamaState>>) -> Result<TilePlanDto, String> {
     let state: Arc<SquamaState> = state.inner().clone();
-    blocking(move || state.tile_plan(&export)).await
+    blocking(move || state.tile_plan(&export, &CancelToken::new())).await
 }
 
 #[tauri::command]
@@ -1018,13 +1153,17 @@ mod tests {
         let dir = tmp_dir("export");
         let st = SquamaState::default();
         let e = export_dto(&dir);
-        let plan = st.tile_plan(&e).unwrap();
+        let plan = st.tile_plan(&e, &CancelToken::new()).unwrap();
         assert_eq!((plan.cols.len(), plan.rows.len()), (2, 2));
         let mut events = Vec::new();
         let r = st.export(&e, &CancelToken::new(), &mut |ev| events.push(ev)).unwrap();
         // 2 × 2 tiles, key splints, stand(s), calibration tile.
         assert!(r.parts.len() >= 7, "{:?}", r.parts.iter().map(|p| &p.name).collect::<Vec<_>>());
         assert_eq!(r.tiles.as_ref().map(|t| (t.cols.len(), t.rows.len())), Some((2, 2)));
+        // The overlay's plan is the plan the export cut (refined seams included).
+        let t = r.tiles.as_ref().unwrap();
+        assert_eq!((&plan.cols, &plan.rows), (&t.cols, &t.rows));
+        assert!(r.parts.iter().all(|p| p.fits_bed == Some(true)));
         assert!(r.files.iter().any(|f| f.ends_with("plate_tile_c1_r1.stl")));
         assert!(r.files.iter().any(|f| f.ends_with("plate_calibration.stl")));
         assert!(r.files.iter().any(|f| f.ends_with("plate.3mf")));

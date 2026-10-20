@@ -44,7 +44,7 @@ fn check_layout(name: &str, sink: &CollectSink, rep: &ExportReport, bed: &Bed) {
     let u = bed.usable();
     assert_eq!(sink.parts.len(), rep.parts.len());
     for (i, (part, pr)) in sink.parts.iter().enumerate() {
-        let x0 = pr.bed as f64 * (bed.x_mm + 20.0) + bed.margin_mm;
+        let x0 = bed.margin_mm;
         let (lo, hi) = (pr.min_mm, pr.max_mm);
         let e = 1e-3;
         assert!(lo[0] >= x0 - e && hi[0] <= x0 + u[0] + e, "{name}: {} X {lo:?}..{hi:?}", part.name);
@@ -164,7 +164,8 @@ fn keys_need_a_thick_base() {
     let e2 = SquamaExport { keys: KeyKind::None, ..Default::default() };
     let rep = squama_export_cb(&p, &cb, &e2, &CancelToken::new(), &mut CollectSink::default()).unwrap();
     assert_eq!(rep.keys, 0);
-    assert_eq!(rep.cols * rep.rows, 4);
+    // 2 mm base → ~3 mm plate: the stability cap (40 × thickness) keeps tiles ≤ ~122 mm tall.
+    assert!(rep.cols * rep.rows >= 4, "{} × {}", rep.cols, rep.rows);
 }
 
 #[test]

@@ -74,7 +74,9 @@ export interface ExportSettings {
   marginMm: number;
   orientation: ExportOrientation;
   formats: ExportFormat[];
-  keys: 'none' | 'pegs';
+  keys: 'none' | 'pegs' | 'auto';
+  /** The axis the bed moves in; kept when the bed size is edited (custom printer). */
+  bedMotion: 'x' | 'y' | 'none';
   stand: boolean;
   calibrationTile: boolean;
   /** Split to the bed (false = one part whatever its size). */
@@ -120,7 +122,7 @@ export function buildExportDto(params: SquamaParams, settings: ExportSettings, s
     calibrationTile: settings.calibrationTile,
   };
   const printer = PRINTERS.find((p) => p.id === settings.printerId);
-  if (printer) dto.bedMotion = printer.bedMotion ?? 'none';
+  dto.bedMotion = settings.bedMotion ?? printer?.bedMotion ?? 'none';
   if (settings.tile) dto.bedMm = [...settings.bedMm] as Vec3;
   return dto;
 }

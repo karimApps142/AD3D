@@ -93,6 +93,8 @@ export function paramsFromDoc(doc: ProjectDoc): SquamaParams {
   }
   if (typeof merged.image !== 'string' || merged.image === '') merged.image = DEFAULT_PARAMS.image;
   delete (merged as Record<string, unknown>).jobId;
+  // Saved projects carry no quality (project.rs strips it): an opened plate is a final plate.
+  merged.quality = 'final';
   return merged;
 }
 
@@ -107,7 +109,10 @@ export function viewFromDoc(doc: ProjectDoc): Partial<ViewSettings> {
 }
 
 export const PROJECT_EXT = 'ad3d';
-export const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'bmp', 'tif', 'tiff', 'webp'];
+/** Photo extensions every entry point accepts (File → Open, Import, drop). The same list as
+ *  the host (src-tauri project.rs IMAGE_EXTS) and the engine (tauriEngine IMAGE_EXTENSIONS);
+ *  HEIC/HEIF (iPhone photos) decode through sips. */
+export const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'bmp', 'tif', 'tiff', 'webp', 'heic', 'heif'];
 
 export type PathKind = 'project' | 'image' | 'unknown';
 

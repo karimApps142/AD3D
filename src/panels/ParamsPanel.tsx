@@ -1,6 +1,6 @@
 // Squama parameters: every LuBan control (width/height with snapping, cell size, light side,
 // light angle, surface angle, thickness) plus ours (free azimuth, square/hex layout, point lamp,
-// optimiser, response model, max relief, preview ambient). Dragging regenerates at preview quality;
+// optimiser, response model, max relief; the preview ambient is in the viewport toolbar). Dragging regenerates at preview quality;
 // releasing regenerates at final quality (§13). Range inputs keep their spike data-param names.
 
 import { useEffect, useMemo, useState } from 'react';
@@ -37,8 +37,8 @@ export function sideName(azimuth: number): string | null {
 
 const LAYOUTS: ReadonlyArray<{ label: string; spec: LayoutSpec }> = [
   { label: 'Square', spec: { kind: 'square' } },
-  { label: 'Hex ⬡', spec: { kind: 'hex', orientation: 'pointy' } },
-  { label: 'Hex ⬢', spec: { kind: 'hex', orientation: 'flat' } },
+  { label: 'Hex (pointy)', spec: { kind: 'hex', orientation: 'pointy' } },
+  { label: 'Hex (flat)', spec: { kind: 'hex', orientation: 'flat' } },
 ];
 
 function sameLayout(a: LayoutSpec | undefined, b: LayoutSpec): boolean {
@@ -50,8 +50,6 @@ const DEFAULT_TABLE = '# tilt°, brightness 0–1 (from the calibration tile)\n-
 
 export function ParamsPanel() {
   const params = useAppStore((s) => s.params);
-  const ambient = useAppStore((s) => s.view.ambient);
-  const setView = useAppStore((s) => s.setView);
   const busy = useAppStore((s) => s.previewBusy);
   const error = useAppStore((s) => s.previewError);
   const info = useSquamaInfo((s) => s.info);
@@ -226,7 +224,7 @@ export function ParamsPanel() {
           <input
             type="checkbox"
             checked={params.optimiser?.kind === 'shadow'}
-            onChange={(e) => patch({ optimiser: e.currentTarget.checked ? { kind: 'shadow', maxSweeps: 8 } : undefined })}
+            onChange={(e) => patch({ optimiser: e.currentTarget.checked ? { kind: 'shadow', maxSweeps: 8 } : { kind: 'none' } })}
           />
           Shadow-aware optimiser (final quality only)
         </label>
@@ -278,12 +276,6 @@ export function ParamsPanel() {
             {parsed && 'error' in parsed && <p className="error">{parsed.error}</p>}
           </>
         )}
-        <Slider
-          param="ambient" label="Ambient (preview)" unit="%" min={0} max={50} step={1}
-          value={Math.round(ambient * 100)}
-          hint="Room light as a share of the lamp; changes only the preview and the appearance map"
-          onChange={(v) => setView({ ambient: v / 100 })}
-        />
       </div>
 
       <Warnings items={warnings} />

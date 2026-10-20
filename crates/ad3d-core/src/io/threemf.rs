@@ -315,8 +315,8 @@ pub fn pack_on_bed(bounds: &[Bounds], bed: &Bed) -> Vec<Placement> {
     for &i in &order {
         let b = &bounds[i];
         let s = size(b);
-        // XY keeps the margin (brim, skirt); Z only has to stay under the gantry.
-        let fits = s[0] <= ux1 - ux0 + 1e-9 && s[1] <= uy1 - uy0 + 1e-9 && s[2] <= bed.z_mm + 1e-9;
+        // XY keeps the margin (brim, skirt); Z keeps it at the top, like the squama layout.
+        let fits = s[0] <= ux1 - ux0 + 1e-9 && s[1] <= uy1 - uy0 + 1e-9 && s[2] <= bed.z_mm - bed.margin_mm + 1e-9;
         if used_on_bed && x + s[0] > ux1 + 1e-9 {
             x = ux0;
             y += row_h + gap;

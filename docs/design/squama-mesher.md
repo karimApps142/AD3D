@@ -144,7 +144,7 @@ The same fixed `(−ε,−ε)/(+ε,+ε)` split is used whichever diagonal pair i
 
 - **Orientation:** pointy-top by default; flat-top is the same construction with `u` and `v` swapped. `cell` is the width across flats; circumradius `R = cell/√3`; row pitch `p = 1.5R = (√3/2)·cell`.
 - **Phase:** a hex centre sits at plate `(0, 0)`. Row `j` has centres at `v = j·p`, `u = (i + ½(j mod 2))·cell`.
-- **Size snap** (integer µm, half-up as §2.1): `W = m·cell/2` with `m = max(2, round_half_up(2W/cell))`; `H = n·p` with `n = max(1, round_half_up(H/p))`; from an image aspect, `n = round_half_up(W_snapped·crop_h/crop_w / p)`.
+- **Size snap** (integer µm, half-up as §2.1): `W = m·cell/2` with `m = max(2, round_half_up(2W/cell))`; `H = n·p` with `n = max(1, floor(H/p))` for an explicit height (it snaps down, so a requested height is a limit; M1 verify round 1); from an image aspect, `n = round_half_up(W_snapped·crop_h/crop_w / p)`.
 - With this phase and snap, the outline runs only along hex centre lines (vertical lines `u = k·cell/2`, horizontal row lines `v = j·p`) or along hex edges, never near a hex vertex. Every outline vertex then has at most 2 pieces and the shortest partition edge is `R/2` (re-checked: `final/recheck.out` (C), 300 random sizes, 0 failures, classes `boundary:1/2 cells`, `interior:3 cells` only, shortest edge 1.5 mm at R = 3).
 - Vertex coordinates are computed from integer lattice indices in units of `cell/2` (u) and `R/2` (v), so clip tests are exact.
 - A facet's brightness is the area-weighted mean, in linear light, over its whole region inside the plate (the union of its pieces).

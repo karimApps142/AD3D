@@ -140,3 +140,44 @@ describe('latest-wins loop', () => {
     expect(loop.busy).toBe(false);
   });
 });
+
+describe('LatestWinsLoop cancel', () => {
+  it('aborts a slow final job when a drag request arrives, and drops its outcome', async () => {
+    const calls: Array<{ params: { q: string; v: number }; jobId: number; d: Deferred<{ jobId: number }> }> = [];
+    const errors: unknown[] = [];
+    const applied: number[] = [];
+    let cancels = 0;
+    const loop = new LatestWinsLoop<{ q: string; v: number }, { jobId: number }>({
+      run: (params, jobId) => {
+        const d = deferred<{ jobId: number }>();
+        calls.push({ params, jobId, d });
+        return d.promise;
+      },
+      getJobId: (r) => r.jobId,
+      onResult: (_r, info) => applied.push(info.params.v),
+      onError: (e) => errors.push(e),
+      shouldCancel: (cur, next) => cur.q === 'final' && next.q === 'preview',
+      cancel: () => {
+        cancels++;
+      },
+    });
+    loop.request({ q: 'final', v: 1 });
+    expect(calls).toHaveLength(1);
+    loop.request({ q: 'preview', v: 2 });
+    loop.request({ q: 'preview', v: 3 });
+    expect(cancels).toBe(1); // once per in-flight job
+    // The core answers the cancelled job with an error: not shown, and the drag goes out at once.
+    calls[0].d.reject(new Error('cancelled'));
+    await flush();
+    expect(errors).toEqual([]);
+    expect(calls).toHaveLength(2);
+    expect(calls[1].params.v).toBe(3);
+    calls[1].d.resolve({ jobId: calls[1].jobId });
+    await flush();
+    expect(applied).toEqual([3]);
+    // A preview in flight is never cancelled.
+    loop.request({ q: 'preview', v: 4 });
+    loop.request({ q: 'preview', v: 5 });
+    expect(cancels).toBe(1);
+  });
+});

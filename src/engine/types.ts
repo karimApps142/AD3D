@@ -77,7 +77,7 @@ export interface SquamaExportDto {
   orientation: ExportOrientation;
   bedMm?: Vec3;
   marginMm?: number;
-  keys?: 'none' | 'pegs';
+  keys?: 'none' | 'pegs' | 'auto';
   stand?: boolean;
   calibrationTile?: boolean;
   /** AD3D addition: the axis the printer's bed moves in (default 'y', the CR-6 SE). */
@@ -137,6 +137,10 @@ export interface TilePlan {
   uEdgesMm: number[];
   vEdgesMm: number[];
   quarterTurns: number | null;
+  /** Print-space size (X, Y, Z) of every tile, row-major from the bottom row. */
+  printMm?: Vec3[];
+  /** Plate thickness the plan used. */
+  thicknessMm?: number;
   wMm: number;
   hMm: number;
 }
@@ -178,6 +182,12 @@ export interface ExportPartReport {
   sizeMm: Vec3;
   fitsBed: boolean | null;
   validated: boolean;
+  /** Bed (print job, one 3MF each) the part is on, from 0. */
+  bed?: number;
+  /** Largest downward-facing ledge (standing tiles, calibration tile). */
+  maxDownwardLedgeMm?: number | null;
+  /** Height / smallest footprint side; above 10 the part wants a brim. */
+  heightRatio?: number;
 }
 
 export interface ExportResult {
@@ -189,6 +199,10 @@ export interface ExportResult {
   elapsedMs: number;
   /** Optimiser before → after, when it ran. */
   optimise?: { sweeps: number; before: MatchScore; after: MatchScore; timedOut: boolean } | null;
+  /** Beds (print jobs) the parts need; one 3MF per bed. */
+  beds?: number;
+  /** Print advice for tall, thin standing parts (brim, perimeters, layers). */
+  brim?: string | null;
 }
 
 /** The user-editable part of the request (everything but the job id). */
@@ -267,6 +281,8 @@ export interface Engine {
   savePreviewImage?(png: Uint8Array, suggestedName: string): Promise<string>;
   /** True when an export was running and has been asked to stop. */
   cancelExport(): Promise<boolean>;
+  /** Aborts the plate generation in flight (it then rejects with "cancelled"). */
+  cancelGenerate?(): Promise<boolean>;
   revealInFinder(path: string): Promise<void>;
 }
 

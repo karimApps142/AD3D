@@ -34,7 +34,7 @@ export const SQUAMA_PARAMS: ParamDoc[] = [
     key: 'image',
     label: 'Image',
     default: 'built-in test pattern',
-    range: 'PNG, JPEG, BMP, TIFF, WebP',
+    range: 'PNG, JPEG, BMP, TIFF, WebP, HEIC/HEIF',
     meaning: 'The photo to reproduce. Any subject works; strong, simple shapes read best at small sizes.',
     tips: ['Drop an image on the window or use File → Import Image… (⌘I).', 'The plate height follows the image aspect.'],
   },

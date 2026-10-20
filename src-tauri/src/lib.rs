@@ -5,7 +5,7 @@
 //! async runtime's worker threads are ever blocked by geometry.
 //!
 //! Command contract (mirrors `src/engine/tauriEngine.ts`):
-//! - Squama commands (`generate_squama`, `squama_*`, `export_squama`, `cancel_export`,
+//! - Squama commands (`generate_squama`, `squama_*`, `export_squama`, `cancel_export`, `cancel_generate`,
 //!   `reveal_in_finder`) live in `squama_cmds.rs`.
 //! - `synthetic_mesh { nTriangles }` → raw `AD3M` payload bytes (mesh cached, so C4 measures transfer)
 //! - `get_launch_flags`            → `{ spike }` from `AD3D_SPIKE=1`
@@ -32,6 +32,10 @@ use tauri::ipc::{InvokeBody, Request, Response};
 use tauri::{AppHandle, Manager, State};
 
 mod squama_cmds;
+#[cfg(test)]
+mod e2e_m1;
+#[cfg(test)]
+mod m1_review_tests;
 
 #[derive(Default)]
 struct AppState {
@@ -258,6 +262,7 @@ pub fn run() {
             squama_cmds::squama_image_thumbnail,
             squama_cmds::export_squama,
             squama_cmds::cancel_export,
+            squama_cmds::cancel_generate,
             squama_cmds::reveal_in_finder,
             synthetic_mesh,
             get_launch_flags,

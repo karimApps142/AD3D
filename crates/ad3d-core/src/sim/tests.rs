@@ -35,7 +35,7 @@ fn lit_fractions(p: &Partition, f: &[Facet], light: &Light, lpc: u32) -> Vec<f64
     let ls = line_set(p, f, light, lpc).unwrap();
     let centres: Vec<(DVec2, f64)> = f.iter().map(|x| (x.pivot, x.h)).collect();
     let lights = facet_lights(p, &centres, light).unwrap();
-    shade_lines(&ls, f, &lights, &Response::default()).lit_fraction
+    shade_lines(&ls, f, &lights, &Response::default().prepare(0.0).unwrap()).lit_fraction
 }
 
 #[test]
@@ -195,12 +195,12 @@ fn point_light_irradiance_and_targets() {
     let l = facet_lights(&p, &centres, &Light::Point { pos_mm: lamp }).unwrap();
     // Nearer facets get more light and a higher elevation.
     assert!(l[0].irr > l[3].irr && l[0].el > l[3].el);
-    let (lo, hi) = target_range(&l, 10f64.to_radians(), &Response::default()).unwrap();
+    let curve = Response::default().prepare(0.0).unwrap();
+    let (lo, hi) = target_range(&l, 10f64.to_radians(), &curve).unwrap();
     assert!(hi > lo && lo >= 0.0);
     for fl in &l {
-        let th = invert_direct(fl, 10f64.to_radians(), &Response::default(), hi);
+        let th = invert_direct(fl, 10f64.to_radians(), &curve, hi);
         assert!((fl.irr * fl.cos_tilt(th) - hi).abs() < 1e-12);
-        assert_eq!(Response::default().inverse(fl, 10f64.to_radians(), hi), th);
     }
 }
 
@@ -211,11 +211,13 @@ fn measured_response_inverts_monotone_part() {
         brightness: vec![0.05, 0.05, 0.2, 0.35, 0.4],
     };
     resp.check().unwrap();
+    // Reference elevation = the facet's: the table is read at the facet's tilt.
     let fl = FacetLight { a: DVec2::X, el: 0.1, irr: 1.0 };
-    assert_eq!(resp.shadowed(), 0.05);
-    let th = invert_direct(&fl, 0.2, &resp, 0.25);
-    assert!((resp.direct(fl.cos_tilt(th), fl.el, 1.0) - 0.25).abs() < 0.01);
-    assert!(Response::Measured { tilt_rad: vec![0.1, 0.0], brightness: vec![0.0, 1.0] }.check().is_err());
+    let curve = resp.prepare(fl.el).unwrap();
+    assert_eq!(curve.shadowed(), 0.05);
+    let th = invert_direct(&fl, 0.2, &curve, 0.25);
+    assert!((curve.direct(fl.cos_tilt(th), 1.0) - 0.25).abs() < 0.01);
+    assert!(Response::Measured { tilt_rad: vec![0.1, 0.1], brightness: vec![0.0, 1.0] }.check().is_err());
 }
 
 #[test]

@@ -28,6 +28,10 @@ pub struct GenPart {
     pub validate: ValidateOpts,
     /// Resolved quarter turns (None = flat).
     pub quarter_turns: Option<u32>,
+    /// Bed (print job) the core placed it on; its transform is in that bed's coordinates.
+    pub bed: u32,
+    /// Largest downward-facing ledge (standing tiles, calibration tile).
+    pub max_ledge_mm: Option<f64>,
 }
 
 pub struct GenResult {
@@ -71,11 +75,13 @@ pub fn generate(
     let parts = sink
         .parts
         .into_iter()
-        .map(|(p, _)| {
+        .map(|(p, pr)| {
             let oriented = matches!(p.kind, PartKind::Tile { .. } | PartKind::Calibration);
             GenPart {
                 validate: p.validate_opts(false),
                 quarter_turns: if oriented { report.quarter_turns } else { None },
+                bed: p.bed,
+                max_ledge_mm: pr.max_downward_ledge_mm,
                 part: ExportPart { name: p.name, kind: io_part_kind(&p.kind), mesh: p.mesh, transform: p.transform },
             }
         })

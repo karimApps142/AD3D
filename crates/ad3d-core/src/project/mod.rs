@@ -88,9 +88,11 @@ impl OrientationDto {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum KeysDto {
-    #[default]
     None,
     Pegs,
+    /// Pegs when the plate is tiled and the base leaves room (the default).
+    #[default]
+    Auto,
 }
 
 /// Tiling choice: `"auto"` (fit the bed), `"none"` (one part), or `[nx, ny]`.
@@ -161,7 +163,7 @@ impl Default for ExportSettings {
             bed_mm: None,
             margin_mm: None,
             tiles: TilesDto::default(),
-            keys: KeysDto::None,
+            keys: KeysDto::Auto,
             stand: false,
             calibration_tile: false,
         }
@@ -179,6 +181,7 @@ impl ExportSettings {
             keys: match self.keys {
                 KeysDto::None => KeyKind::None,
                 KeysDto::Pegs => KeyKind::Pegs,
+                KeysDto::Auto => KeyKind::Auto,
             },
             stand: self.stand,
             calibration_tile: self.calibration_tile,
@@ -526,7 +529,7 @@ mod tests {
         assert_eq!(j["printer"]["id"], "cr6se");
         let q = Project::from_bytes(&p.to_bytes().unwrap()).unwrap();
         assert_eq!(q.doc.export.tiles, TilesDto::Grid([2, 1]));
-        assert_eq!(q.doc.export.bed(&q.doc.printer), Bed { x_mm: 235.0, y_mm: 235.0, z_mm: 250.0, margin_mm: 5.0 });
+        assert_eq!(q.doc.export.bed(&q.doc.printer), Bed { x_mm: 235.0, y_mm: 235.0, z_mm: 250.0, margin_mm: 8.0 });
     }
 
     fn with_json(doc: &Value) -> Vec<u8> {

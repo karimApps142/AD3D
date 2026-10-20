@@ -193,7 +193,7 @@ pub fn layout(p: &SquamaParams, img_px: (u32, u32)) -> Result<Layout> {
 /// §2.1 / §6.2: snapped layout of any kind. Square snapping reproduces LuBan
 /// (200 @ 6 → 198, 202 @ 6 → 204). Hex snapping keeps a hex centre at the origin
 /// and puts the outline on centre lines (`W = m·cell/2`, `H = n·p`, axes swapped
-/// for flat-top). With `height_mm` the image is centre-cropped to fill; otherwise
+/// for flat-top; an explicit hex height snaps down). With `height_mm` the image is centre-cropped to fill; otherwise
 /// the height follows the image aspect from the **snapped** width.
 pub fn layout_for(p: &SquamaParams, kind: LayoutKind, img_px: (u32, u32)) -> Result<Layout> {
     let cell_um = to_um(p.cell_mm);
@@ -223,11 +223,15 @@ pub fn layout_for(p: &SquamaParams, kind: LayoutKind, img_px: (u32, u32)) -> Res
             // Across-flats extent in half-cells: integer µm, half-up (§2.1).
             let half_cells = |len_um: i64| ((2 * len_um + cell_um / 2) / cell_um).max(2) as u32;
             let rows = |len_mm: f64| round_half_up(len_mm / pitch, 1);
+            // An explicit height is a limit (e.g. a bed or a frame): snap it down, so a
+            // plate asked for at 378 mm is never 379.3 mm.
+            let half_cells_down = |len_um: i64| ((2 * len_um) / cell_um).max(2) as u32;
+            let rows_down = |len_mm: f64| ((len_mm / pitch + 1e-9).floor() as u32).max(1);
             let (m, n) = if !flat {
                 let m = half_cells(to_um(p.width_mm));
                 let w = m as f64 * cell / 2.0;
                 let n = match p.height_mm {
-                    Some(h) => rows(h),
+                    Some(h) => rows_down(h),
                     None => rows(w * ch as f64 / cw as f64),
                 };
                 (m, n)
@@ -235,7 +239,7 @@ pub fn layout_for(p: &SquamaParams, kind: LayoutKind, img_px: (u32, u32)) -> Res
                 let n = rows(p.width_mm);
                 let w = n as f64 * pitch;
                 let m = match p.height_mm {
-                    Some(h) => half_cells(to_um(h)),
+                    Some(h) => half_cells_down(to_um(h)),
                     None => half_cells(to_um(w * ch as f64 / cw as f64)),
                 };
                 (m, n)
@@ -412,8 +416,9 @@ mod tests {
         assert_eq!(l.nx, 33);
         assert!((l.w_mm - 99.0).abs() < 1e-12);
         let pitch = 3f64.sqrt() / 2.0 * 6.0; // 5.196
-        assert_eq!(l.ny, (50.0 / pitch + 0.5).floor() as u32); // 10
-        assert!((l.h_mm - l.ny as f64 * pitch).abs() < 1e-9);
+        // An explicit height snaps down (never past the request): 50 / 5.196 = 9.6 → 9.
+        assert_eq!(l.ny, (50.0 / pitch).floor() as u32); // 9
+        assert!((l.h_mm - l.ny as f64 * pitch).abs() < 1e-9 && l.h_mm <= 50.0);
         // Decimal tie in µm, half-up: 2·100.8/3.2 = 63 exactly; 2·100.8/6.4 = 31.5 → 32.
         let p = SquamaParams { width_mm: 100.8, cell_mm: 6.4, ..Default::default() };
         assert_eq!(layout_for(&p, hex(HexOrientation::Pointy), (1, 1)).unwrap().nx, 32);

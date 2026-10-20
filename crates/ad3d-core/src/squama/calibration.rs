@@ -1,7 +1,7 @@
 //! Calibration tile (design §15.3, FEATURES PROJ-SQUAMA-CAL).
 //!
 //! A small Shadow Plate made of uniform patches, one tilt each, ramping from a
-//! self-shadowed tilt (`−max(S, α + 2°)`) to `+S`: printed with the plate's own
+//! just self-shadowed tilt (see [`CalibrationSpec::tilt_range`]) to `+S`: printed with the plate's own
 //! settings and photographed under the owner's lamp, it gives a measured
 //! tilt → brightness table ([`fit_response`]) that replaces Lambert.
 //!
@@ -39,6 +39,9 @@ use crate::mesh::validate::ValidateOpts;
 use crate::orient::Xform;
 use crate::relief::{Facet, Partition, PieceSet, Tol, mesh_relief, quantise, square_grid};
 
+/// Largest downward ledge (mm) a standing print takes without sagging (§9).
+pub const MAX_LEDGE_MM: f64 = 0.6;
+
 /// What to print. Millimetres and radians.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CalibrationSpec {
@@ -55,7 +58,7 @@ pub struct CalibrationSpec {
     pub light_elevation: f64,
     /// The plate's surface angle S (sets the default ramp end).
     pub max_tilt: f64,
-    /// Ramp ends; default `−max(S, α + 2°)` (clamped to −30°) and `+S`.
+    /// Ramp ends; default see [`CalibrationSpec::tilt_range`], and `+S`.
     pub tilt_min: Option<f64>,
     pub tilt_max: Option<f64>,
     /// Light-side marker strip.
@@ -90,11 +93,15 @@ impl CalibrationSpec {
         }
     }
 
-    /// The tilt ramp ends actually used.
+    /// The tilt ramp ends actually used. The default low end is
+    /// `−min(S, max(α, atan(0.6 mm / cell)))`: just past self-shadowing (one black
+    /// fiducial step instead of a tail of identical black patches), and never a
+    /// downward ledge above 0.6 mm when the tile stands like the plate (§9).
     pub fn tilt_range(&self) -> (f64, f64) {
-        let lo = self
-            .tilt_min
-            .unwrap_or_else(|| -(self.max_tilt.max(self.light_elevation + 2f64.to_radians())).min(30f64.to_radians()));
+        let lo = self.tilt_min.unwrap_or_else(|| {
+            let shadow = self.light_elevation.max((MAX_LEDGE_MM / self.cell_mm.max(1e-9)).atan());
+            -(self.max_tilt.min(shadow)).min(30f64.to_radians())
+        });
         let hi = self.tilt_max.unwrap_or(self.max_tilt);
         (lo, hi)
     }
@@ -163,6 +170,9 @@ pub struct CalibrationTile {
     pub min_facet_w: f64,
     pub back_area: f64,
     pub warnings: Vec<Warning>,
+    /// The tile's partition and quantised heights (for the ledge report).
+    pub partition: Partition,
+    pub heights: crate::relief::Heights,
 }
 
 impl CalibrationTile {
@@ -380,6 +390,8 @@ pub fn calibration_tile(spec: &CalibrationSpec, opts: &GenOptions, cancel: &Canc
     cancel.check()?;
     let mesh = mesh_relief(&part, PieceSet::All, &heights, &[], &tol, cancel)?;
     Ok(CalibrationTile {
+        partition: part,
+        heights,
         mesh,
         back_area: key.w_mm * key.h_mm,
         key,
@@ -542,9 +554,10 @@ mod tests {
         assert_eq!(t.key.light_side, Side::Left);
         let rep = validate(&t.mesh, &t.validate_opts(Xform::IDENTITY));
         assert!(rep.ok, "{}", rep.summary());
-        // Steps ramp monotonically from −max(S, α+2°) to +S.
+        // Steps ramp monotonically from −min(S, max(α, atan(0.6 / cell))) to +S: at α 5°,
+        // cell 6 mm that is −5.71° (one black step, ledges ≤ 0.6 mm).
         let tilts: Vec<f64> = t.key.patches.iter().filter_map(|p| p.step.map(|_| p.tilt_deg)).collect();
-        assert!((tilts[0] + 10.0).abs() < 1e-9 && (tilts[11] - 10.0).abs() < 1e-9);
+        assert!((tilts[0] + 0.1f64.atan().to_degrees()).abs() < 1e-9 && (tilts[11] - 10.0).abs() < 1e-9, "{tilts:?}");
         assert!(tilts.windows(2).all(|w| w[1] > w[0]));
     }
 

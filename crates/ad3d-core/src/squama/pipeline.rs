@@ -20,7 +20,7 @@ use super::job::SquamaJob;
 use super::layout::{Layout, build_partition, layout_for};
 use super::optimise::{OptimiseReport, OptimiserOpts, optimise_from};
 use super::solve::{Limits, PivotRule, Quality, SolveOpts, SolveReport, Solved, solve_facets_ex};
-use super::{GenOptions, SYNTHETIC_PX, check_params};
+use super::{GenOptions, SYNTHETIC_PX, check_params_for};
 use crate::cancel::CancelToken;
 use crate::error::{Error, Result, Warning};
 use crate::image::{LinearLuma, Target, TargetSampler, synthetic_target};
@@ -43,7 +43,12 @@ pub fn dedup_warnings(ws: &mut Vec<Warning>) {
 /// §2.1 / §6.2: the snapped layout for `job` on a source image of `src_px`
 /// pixels (before the job's rotation and crop), plus the parameter warnings.
 pub fn job_layout(job: &SquamaJob, src_px: (u32, u32), gopts: &GenOptions) -> Result<(Layout, Vec<Warning>)> {
-    let (pc, warnings) = check_params(&job.params, gopts)?;
+    // Under a point light every facet has its own direction; the solver guards the relief.
+    let guard_az = match job.light {
+        super::light::Light::Directional { .. } => Some(job.params.light_azimuth),
+        super::light::Light::Point { .. } => None,
+    };
+    let (pc, warnings) = check_params_for(&job.params, gopts, guard_az)?;
     let (cw, ch) = job.image_opts.cropped_size_px(src_px.0.max(1), src_px.1.max(1));
     if !(cw > 0.0 && ch > 0.0) {
         return Err(Error::InvalidParams("empty crop".into()));
@@ -94,16 +99,29 @@ pub fn solve_job(
 ) -> Result<SolvedJob> {
     let opts = SolveOpts { pivot: PivotRule::Common, relief_guard: gopts.relief_guard };
     let solved = solve_facets_ex(g, l, &job.light, &job.limits, &job.response, &opts, job.quality, &gopts.tol, cancel)?;
+    let mut solved = solved;
     let mut facets = solved.facets.clone();
     let mut optimise = None;
     if job.quality == Quality::Final
         && let Some(o) = job.optimiser.filter(|o| o.max_sweeps > 0)
     {
         cancel.check()?;
-        let lim = optimiser_limits(job, &solved.report);
-        let r = optimise_from(g, p, &facets, &job.light, &lim, &job.response, &o, cancel)?;
-        facets = r.facets.clone();
-        optimise = Some(r);
+        // With no common brightness range the solver falls back to per-facet ranges;
+        // the optimiser needs one shared range, so keep the inverse and say so.
+        let skip = |why: String| Warning { code: "optimiser_skipped", message: format!("shadow optimiser skipped: {why}") };
+        if solved.report.per_facet_range {
+            solved.warnings.push(skip("no brightness range is reachable by every facet (move the lamp farther away)".into()));
+        } else {
+            let lim = optimiser_limits(job, &solved.report);
+            match optimise_from(g, p, &facets, &job.light, &lim, &job.response, &o, cancel) {
+                Ok(r) => {
+                    facets = r.facets.clone();
+                    optimise = Some(r);
+                }
+                Err(Error::InvalidParams(m)) => solved.warnings.push(skip(m)),
+                Err(e) => return Err(e),
+            }
+        }
     }
     Ok(SolvedJob { facets, solved, optimise })
 }
@@ -122,8 +140,10 @@ pub struct Appearance {
     pub score: MatchScore,
     /// Score of the plain inverse, when the optimiser ran.
     pub score_before: Option<MatchScore>,
-    /// Simulated brightness per facet, normalised to the target range (0 = the
-    /// darkest reachable value, 1 = the brightest), so it compares with `g`.
+    /// Simulated brightness per facet, unnormalised: linear radiance in the
+    /// response's units (Lambert: `ambient + I·(n·L)·lit_fraction`, the lamp alone
+    /// with the default ambient 0). The viewer adds its preview ambient and
+    /// normalises to the brightest facet, exactly like the 3D preview's shader.
     #[serde(skip)]
     pub sim: Vec<f32>,
 }
@@ -146,9 +166,9 @@ pub fn appearance(
             optimise_from(g, p, facets, &job.light, &lim, &job.response, &o, &CancelToken::new())?
         }
     };
-    let b = crate::sim::shade(p, facets, &job.light, &job.response, 0)?;
-    let (lo, hi) = rep.target_range;
-    let sim = b.iter().map(|&v| if hi > lo { ((v - lo) / (hi - lo)).clamp(0.0, 1.0) as f32 } else { 0.0 }).collect();
+    let curve = crate::sim::prepare_response(p, &job.light, &job.response, job.limits.base_mm)?;
+    let b = crate::sim::shade_curve(p, facets, &job.light, &curve, 0)?;
+    let sim = b.iter().map(|&v| v.max(0.0) as f32).collect();
     Ok(Appearance { score: rep.after, score_before: optimised.map(|r| r.before), sim })
 }
 
