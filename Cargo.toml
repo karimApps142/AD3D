@@ -22,6 +22,10 @@ clap = { version = "4", features = ["derive"] }
 proptest = "1"
 criterion = "0.7"
 rayon = "1"
+# .ad3d project and 3MF containers (own zip code over these).
+flate2 = "1"
+crc32fast = "1"
+quick-xml = "0.38"
 
 [profile.release]
 lto = "thin"

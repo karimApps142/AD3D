@@ -19,6 +19,7 @@ version = "0.1.0"
 dependencies = [
  "ad3d-core",
  "clap",
+ "serde_json",
 ]
 
 [[package]]
@@ -27,10 +28,13 @@ version = "0.1.0"
 dependencies = [
  "ad3d-manifold",
  "bytemuck",
+ "crc32fast",
  "criterion",
+ "flate2",
  "glam",
  "image",
  "proptest",
+ "quick-xml",
  "rayon",
  "serde",
  "serde_json",

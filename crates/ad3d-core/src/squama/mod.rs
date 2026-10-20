@@ -9,6 +9,7 @@ pub mod parts;
 pub mod response;
 pub mod solve;
 pub mod tiles;
+pub mod calibration;
 
 use std::f64::consts::PI;
 use std::time::Instant;
