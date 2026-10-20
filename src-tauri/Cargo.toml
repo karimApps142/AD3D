@@ -19,3 +19,4 @@ ad3d-core.workspace = true
 tauri = { version = "2.12", features = [] }
 serde.workspace = true
 serde_json.workspace = true
+tauri-plugin-dialog = "2"
