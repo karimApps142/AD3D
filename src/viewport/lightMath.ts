@@ -100,3 +100,32 @@ export function autoExposure(
   const direct = (EXPOSURE_TARGET * Math.PI) / (Math.max(albedo, 0.05) * (nlMax + a));
   return { direct, ambient: a * direct };
 }
+
+export interface SpotFit {
+  /** Half-angle of the cone (radians) that covers the whole model. */
+  angle: number;
+  near: number;
+  far: number;
+}
+
+/**
+ * Cone and shadow-camera depth range for a lamp at `pos` aimed at `target` that just contains
+ * `box`. Used for the point light (a spot light whose cone covers the plate behaves like a point
+ * light there, with a far better shadow map than a cube map).
+ */
+export function fitSpotLight(box: THREE.Box3, pos: THREE.Vector3, target: THREE.Vector3): SpotFit {
+  const axis = target.clone().sub(pos).normalize();
+  const p = new THREE.Vector3();
+  let maxAngle = 0;
+  let dMin = Infinity;
+  let dMax = 0;
+  for (let i = 0; i < 8; i++) {
+    p.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).sub(pos);
+    const d = p.length();
+    dMin = Math.min(dMin, d);
+    dMax = Math.max(dMax, d);
+    if (d > 1e-9) maxAngle = Math.max(maxAngle, Math.acos(Math.min(1, Math.max(-1, p.dot(axis) / d))));
+  }
+  const angle = Math.min(Math.PI / 2 - 0.01, maxAngle * 1.05 + 0.02);
+  return { angle, near: Math.max(0.5, dMin * 0.5), far: dMax * 1.5 + 10 };
+}

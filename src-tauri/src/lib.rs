@@ -11,6 +11,8 @@
 //! - `get_launch_flags`            → `{ spike }` from `AD3D_SPIKE=1`
 //! - `save_artifact`               → raw body = file bytes, header `x-artifact-name` (spike mode only)
 //! - `finish_spike { report }`     → writes `report.json`, then exits with code 0 (spike mode only)
+//! - `save_preview_image`          → raw body = PNG bytes, header `x-file-name`; writes to
+//!   `~/Pictures/AD3D/` (falls back to Downloads, then the app data dir) and returns the path
 //!
 //! Spike mode (`AD3D_SPIKE=1`) writes into `AD3D_SPIKE_OUT`, or `<app data dir>/spike`
 //! when that is unset. No build-machine path is compiled into the binary.
@@ -150,6 +152,49 @@ async fn save_artifact(request: Request<'_>, app: AppHandle) -> Result<(), Strin
     .await
 }
 
+/// Folder for "Save preview image": `~/Pictures/AD3D`, else Downloads, else app data.
+fn preview_image_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let p = app.path();
+    p.picture_dir()
+        .or_else(|_| p.download_dir())
+        .or_else(|_| p.app_data_dir())
+        .map(|d| d.join("AD3D"))
+        .map_err(|e| e.to_string())
+}
+
+fn png_body(request: &Request<'_>) -> Result<Vec<u8>, String> {
+    let bytes = match request.body() {
+        InvokeBody::Raw(b) => b.clone(),
+        _ => return Err("preview image body must be raw bytes".into()),
+    };
+    if !bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+        return Err("preview image is not a PNG".into());
+    }
+    Ok(bytes)
+}
+
+#[tauri::command]
+async fn save_preview_image(request: Request<'_>, app: AppHandle) -> Result<String, String> {
+    let name = request
+        .headers()
+        .get("x-file-name")
+        .and_then(|v| v.to_str().ok())
+        .ok_or("missing x-file-name header")?
+        .to_owned();
+    if !valid_artifact_name(&name) || !name.ends_with(".png") {
+        return Err(format!("invalid preview image name {name:?}"));
+    }
+    let bytes = png_body(&request)?;
+    let dir = preview_image_dir(&app)?;
+    blocking(move || {
+        std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+        let path = dir.join(&name);
+        std::fs::write(&path, &bytes).map_err(|e| format!("{}: {e}", path.display()))?;
+        Ok(path.display().to_string())
+    })
+    .await
+}
+
 #[tauri::command]
 async fn finish_spike(report: serde_json::Value, app: AppHandle) -> Result<(), String> {
     require_spike("finish_spike")?;
@@ -228,7 +273,8 @@ pub fn run() {
             settings::settings_save,
             settings::recent_add,
             settings::recent_clear,
-            settings::printer_profiles_list
+            settings::printer_profiles_list,
+            save_preview_image
         ])
         .build(tauri::generate_context!())
         .expect("error while building the AD3D app")

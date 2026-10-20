@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import type { FrameRecord } from '../state/perf';
 import type { GeometryMode } from './geometry';
+import type { CellPlanes } from './heightfield';
 
 export interface FrameResult extends FrameRecord {
   /** performance.now() after the forced GPU sync (gpuSync only). */
@@ -39,8 +40,16 @@ interface Handles {
 class ViewportBus {
   private handles: Handles | null = null;
   private hooks: AfterRenderHook[] = [];
-  /** The scene's key light (set by LightRig). */
+  /** The scene's directional key light (set by LightRig). */
   light: THREE.DirectionalLight | null = null;
+  /** The light currently rendering: the key light, or the point lamp (a SpotLight). */
+  activeLight: THREE.DirectionalLight | THREE.SpotLight | null = null;
+  /** Per-cell planes of the displayed plate (analytic and relief modes; set by PlateMesh). */
+  planes: CellPlanes | null = null;
+  /** Time the last buildCellPlanes took (ms). */
+  planesMs = 0;
+  /** Render mode the plate is drawn with. */
+  renderMode: 'analytic' | 'shadowMap' | 'relief' = 'analytic';
   /** World-space bounds of the displayed model (set by PlateMesh). */
   readonly modelBox = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(300, 378, 4));
   /** Bumped whenever modelBox changes. */

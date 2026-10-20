@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "e2e:spike": "node e2e/browser-spike.mjs",
+    "e2e:viewport": "node e2e/viewport-preview.mjs",
     "build:mac": "tauri build --target universal-apple-darwin --bundles app"
   },
   "dependencies": {
