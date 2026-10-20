@@ -1,6 +1,8 @@
 //! Squama-style shadow plate (design §2–§5, M0 subset): square grid, one
 //! directional light, centre pivot, Lambert inverse, `Quality::Preview` (no optimiser).
 
+pub mod calibration;
+
 use std::f64::consts::PI;
 use std::time::Instant;
 
