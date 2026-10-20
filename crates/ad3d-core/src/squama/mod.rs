@@ -4,6 +4,7 @@
 pub mod export;
 pub mod layout;
 pub mod light;
+pub mod optimise;
 pub mod parts;
 pub mod response;
 pub mod solve;
