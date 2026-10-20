@@ -1,13 +1,20 @@
-//! Squama-style shadow plate (design §2–§5, M0 subset): square grid, one
-//! directional light, centre pivot, Lambert inverse, `Quality::Preview` (no optimiser).
+//! Squama-style shadow plate (design §2–§16).
+//!
+//! - M0 entry points (square grid, one directional light, Lambert): [`run`],
+//!   [`generate`], [`generate_ex`].
+//! - M1: the §12.1 DTO resolves to a [`job::SquamaJob`]; [`pipeline`] runs it
+//!   (layout → partition → target → solve/optimise → quantise → mesh) for the
+//!   preview, and [`export::squama_export_job`] tiles and writes it.
 
 pub mod export;
+pub mod job;
 pub mod layout;
 pub mod light;
 pub mod optimise;
 pub mod parts;
 pub mod response;
 pub mod solve;
+pub mod pipeline;
 pub mod tiles;
 pub mod calibration;
 
@@ -72,6 +79,7 @@ impl Default for SquamaParams {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SquamaParamsDto {
+    #[serde(default)]
     pub job_id: u32,
     pub width_mm: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -82,6 +90,21 @@ pub struct SquamaParamsDto {
     pub max_tilt_deg: f64,
     pub base_mm: f64,
     pub image: String,
+    // ---- M1 (§12.1): all optional, so v1 payloads stay valid. See [`job`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quality: Option<job::QualityDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<job::LayoutDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub light: Option<job::LightDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_relief_mm: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_opts: Option<crate::image::ImageOpts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub response: Option<job::ResponseDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub optimiser: Option<job::OptimiserDto>,
 }
 
 impl SquamaParamsDto {

@@ -5,9 +5,8 @@
 //! - [`ThreeMfSink`]: one 3MF with an object per part, laid out on the bed.
 //! - [`FanOut`]: several sinks at once (STL and 3MF from one run).
 //!
-//! MERGE: `squama::squama_export(.., sink: &mut dyn PartSink)` should take
-//! `io::sink::PartSink` and emit `io::sink::ExportPart`s (design §12 `Part`; our
-//! transform is `orient::Xform` rather than `DAffine3`).
+//! `squama::export` has its own richer `PartSink` (parts with validation
+//! reports, abort); `squama::export::IoSink` adapts any sink here to it.
 
 use std::fs::File;
 use std::io::BufWriter;

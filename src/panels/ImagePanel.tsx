@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { getEngine } from '../engine';
 import type { ImageOpts, SquamaParams } from '../engine/types';
+import { useSquamaInfo } from '../engine/squamaInfo';
 import { useAppStore } from '../state/store';
 import { type Crop, isFullCrop, rotateCrop, snapCrop } from './cropMath';
 import { CropBox } from './CropBox';
@@ -25,7 +26,7 @@ function fileName(path: string): string {
 
 /** Fields that change the target grid (and nothing else). */
 function targetKey(p: SquamaParams): string {
-  return JSON.stringify([p.image, p.imageOpts ?? null, p.widthMm, p.heightMm ?? null, p.cellMm]);
+  return JSON.stringify([p.image, p.imageOpts ?? null, p.widthMm, p.heightMm ?? null, p.cellMm, p.layout ?? null]);
 }
 
 /** Loads the thumbnail and the target grid when the inputs change (latest request wins). */
@@ -49,7 +50,9 @@ function useImageData(): void {
       });
   }, [params.image, rotate, mirror, set]);
 
-  const key = targetKey(params);
+  // A finished final plate brings the core's simulated appearance (§15.1): fetch again then.
+  const finalJob = useSquamaInfo((s) => (s.info?.quality === 'final' ? s.info.jobId : null));
+  const key = `${targetKey(params)}|${finalJob}`;
   useEffect(() => {
     const seq = ++targetSeq.current;
     // A short delay coalesces slider drags; the target is a side view, not the drag-critical path.

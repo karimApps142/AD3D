@@ -82,6 +82,46 @@ impl Layout {
         }
     }
 
+    /// The facet whose cell contains plate point `p` (mm), or `None` outside the
+    /// plate. Hex cells are the Voronoi cells of their centres.
+    pub fn facet_at(&self, p: DVec2) -> Option<u32> {
+        if !(p.x >= 0.0 && p.y >= 0.0 && p.x <= self.w_mm && p.y <= self.h_mm) {
+            return None;
+        }
+        match self.hex_lattice() {
+            None => {
+                let i = ((p.x / self.cell_mm) as u32).min(self.nx - 1);
+                let j = ((p.y / self.cell_mm) as u32).min(self.ny - 1);
+                Some(j * self.nx + i)
+            }
+            Some(h) => {
+                // Lattice coordinates: s across the flats, t along the rows.
+                let (s, t) = if h.flat { (p.y, p.x) } else { (p.x, p.y) };
+                let (su, pitch) = (h.s_unit(), h.pitch());
+                let j0 = (t / pitch).floor() as i64;
+                let mut best: Option<(f64, u32)> = None;
+                for j in j0..=j0 + 1 {
+                    if j < 0 || j > h.n as i64 {
+                        continue;
+                    }
+                    let par = j.rem_euclid(2);
+                    let k = (((s / su) - par as f64) / 2.0).round() as i64;
+                    for uc in [2 * k - 2 + par, 2 * k + par, 2 * k + 2 + par] {
+                        if uc < 0 || uc > h.m as i64 {
+                            continue;
+                        }
+                        let (cs, ct) = (uc as f64 * su, j as f64 * pitch);
+                        let d = (cs - s).powi(2) + (ct - t).powi(2);
+                        if best.is_none_or(|b| d < b.0) {
+                            best = Some((d, h.facet_of(j as u32, uc as u32)));
+                        }
+                    }
+                }
+                best.map(|b| b.1)
+            }
+        }
+    }
+
     /// Full-cell corner offsets from the centre (CCW), the same for every facet.
     pub fn corner_offsets(&self) -> Vec<DVec2> {
         match self.hex_lattice() {
@@ -280,8 +320,8 @@ pub fn build_partition(l: &Layout, cuts: &[TileCut]) -> Result<Partition> {
 /// square-cell average; hex layouts average the pixels whose centres fall inside
 /// the full hex ∩ plate (the nearest pixel when none do).
 ///
-/// MERGE: wire to image::prepare_target (§16) — this is a stand-in until the image
-/// builder's summed-area table with exact polygon coverage lands.
+/// The app and exports use `pipeline::prepare_target` (§16: tone, SAT, exact
+/// polygon coverage); this simpler sampler stays for tests and benches.
 pub fn facet_brightness(img: &LinearLuma, l: &Layout) -> Result<Vec<f32>> {
     let Some(lat) = l.hex_lattice() else {
         return cell_brightness(img, l.nx, l.ny, l.crop).map(|cb| cb.g);

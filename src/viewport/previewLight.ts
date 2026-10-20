@@ -12,16 +12,11 @@ export type ResolvedLight =
   | { kind: 'directional'; dir: Vec3; azimuthDeg: number; elevationDeg: number }
   | { kind: 'point'; pos: Vec3; dir: Vec3; distanceMm: number; azimuthDeg: number; elevationDeg: number };
 
-/**
- * The design's point light, if any (§12.1 `light: { kind: 'point'; posMm }`, plate space).
- *
- * MERGE: wire to engine/types.ts SquamaParams.light — read loosely here until the DTO type gains
- * the optional field.
- */
+/** The design's point light, if any (§12.1 `light: { kind: 'point'; posMm }`, plate space). */
 export function designPointLight(params: SquamaParams): Vec3 | null {
-  const light = (params as SquamaParams & { light?: { kind?: string; posMm?: unknown } }).light;
+  const light = params.light;
   if (!light || light.kind !== 'point' || !Array.isArray(light.posMm) || light.posMm.length !== 3) return null;
-  const p = light.posMm as number[];
+  const p = light.posMm;
   return p.every(Number.isFinite) ? [p[0], p[1], p[2]] : null;
 }
 

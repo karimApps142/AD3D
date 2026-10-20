@@ -16,6 +16,8 @@
 //   export_squama    { export, onEvent: Channel }      → ExportResult
 //   cancel_export                                      → bool
 //   reveal_in_finder { path }                          → ()
+//   squama_tile_plan { export }                        → TilePlan
+//   save_preview_image raw body = PNG, header "x-file-name" → string (path written)
 // Dialogs come from tauri-plugin-dialog (permissions dialog:allow-open, dialog:allow-save).
 
 import { Channel, invoke } from '@tauri-apps/api/core';
@@ -31,10 +33,11 @@ import {
   type LaunchFlags,
   type MeshPayload,
   type SquamaJobInfo,
+  type TilePlan,
 } from './types';
 
 /** Image formats the core decodes (workspace `image` features). */
-export const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'webp', 'bmp'];
+export const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'webp', 'bmp', 'heic', 'heif'];
 
 /** Tauri resolves raw responses to an ArrayBuffer; older IPC fallbacks deliver number[]. */
 export function toBinary(response: unknown): ArrayBuffer | ArrayBufferView {
@@ -125,6 +128,12 @@ export function createTauriEngine(): Engine {
     },
     async revealInFinder(path) {
       await invoke('reveal_in_finder', { path });
+    },
+    squamaTilePlan(dto) {
+      return invoke<TilePlan>('squama_tile_plan', { export: dto });
+    },
+    savePreviewImage(png, suggestedName) {
+      return invoke<string>('save_preview_image', png, { headers: { 'x-file-name': suggestedName } });
     },
   };
 }

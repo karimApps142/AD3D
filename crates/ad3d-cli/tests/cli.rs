@@ -47,11 +47,32 @@ fn single_file_out_and_refusals() {
     let (code, out) = run(bin().args(["squama", "--synthetic", "--width", "60", "--tiles", "none", "--orientation", "flat", "--out"]).arg(&f));
     assert_eq!(code, 0, "{out}");
     assert!(f.exists());
-    // M1 options owned by unmerged modules are refused, not ignored.
-    for extra in [&["--layout", "hex"][..], &["--light-point", "0,0,400"], &["--optimise", "shadow"], &["--keys", "pegs"], &["--stand"]] {
-        let (code, out) = run(bin().args(["squama", "--synthetic", "--width", "60", "--out"]).arg(&f).args(extra));
-        assert_eq!(code, 2, "{extra:?}: {out}");
+    // M1 options run end to end; every written part validates.
+    for (k, extra) in [
+        &["--width", "60", "--layout", "hex"][..],
+        &["--width", "60", "--light-point=-400,40,150"],
+        &["--width", "60", "--optimise", "shadow", "--max-sweeps", "1"],
+        &["--width", "300", "--keys", "pegs"],
+        &["--width", "60", "--stand"],
+    ]
+        .iter()
+        .enumerate()
+    {
+        let dir = d.join(format!("m1_{k}"));
+        let (code, out) = run(bin().args(["squama", "--synthetic", "--format", "stl", "--out"]).arg(&dir).args(*extra));
+        assert_eq!(code, 0, "{extra:?}: {out}");
+        let stls: Vec<_> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().path()).filter(|p| p.extension().is_some_and(|e| e == "stl")).collect();
+        assert!(!stls.is_empty(), "{extra:?}");
+        // Key splints are one part with many shells (the core validates them with
+        // their component count); every single-shell part is checked here.
+        for s in stls.into_iter().filter(|s| !s.to_string_lossy().contains("key_splints")) {
+            let (code, out) = run(bin().arg("validate").arg(&s));
+            assert_eq!(code, 0, "{extra:?} {}: {out}", s.display());
+        }
     }
+    // Invalid parameters are refused with exit code 2.
+    let (code, out) = run(bin().args(["squama", "--synthetic", "--width", "60", "--gamma", "9", "--out"]).arg(&f));
+    assert_eq!(code, 2, "{out}");
     std::fs::remove_dir_all(&d).ok();
 }
 

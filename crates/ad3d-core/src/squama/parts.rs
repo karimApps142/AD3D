@@ -508,6 +508,9 @@ pub struct LayoutItem {
 pub struct Placement {
     pub transform: Xform,
     pub bed: u32,
+    /// `false` when the part is larger than the usable bed (placed alone on its
+    /// own bed; only with [`layout_on_beds_lenient`]).
+    pub fits: bool,
 }
 
 /// Gap between parts on one bed (mm).
@@ -518,6 +521,16 @@ pub const PART_GAP_MM: f64 = 5.0;
 /// `X ∈ [b·(x + 20), b·(x + 20) + x]`; every part lies inside its bed's usable area
 /// with `Z ≥ 0` and no two parts' bounding boxes overlap.
 pub fn layout_on_beds(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Placement>> {
+    layout_inner(items, bed, false)
+}
+
+/// [`layout_on_beds`] that places a part too large for the bed alone on a bed of
+/// its own (with `fits: false`) instead of failing, for a user-forced tile grid.
+pub fn layout_on_beds_lenient(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Placement>> {
+    layout_inner(items, bed, true)
+}
+
+fn layout_inner(items: &[LayoutItem], bed: &Bed, lenient: bool) -> Result<Vec<Placement>> {
     let [ux, uy, uz] = bed.usable();
     let m = bed.margin_mm;
     let mut out = Vec::with_capacity(items.len());
@@ -531,7 +544,20 @@ pub fn layout_on_beds(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Placement>>
             rot = true;
             std::mem::swap(&mut fx, &mut fy);
         }
-        if fx > ux + 1e-9 || fy > uy + 1e-9 || fz > uz + 1e-9 {
+        let fits = !(fx > ux + 1e-9 || fy > uy + 1e-9 || fz > uz + 1e-9);
+        if !fits && lenient {
+            if used {
+                b += 1;
+            }
+            let (lo2, _) = it.base.apply_box(it.min, it.max);
+            let origin = [b as f64 * (bed.x_mm + 20.0) + m, m, 0.0];
+            let t = it.base.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
+            out.push(Placement { transform: t, bed: b, fits: false });
+            b += 1;
+            (x, y, shelf, used) = (0.0, 0.0, 0.0, false);
+            continue;
+        }
+        if !fits {
             return Err(Error::InvalidParams(format!(
                 "part {i} ({fx:.1} × {fy:.1} × {fz:.1} mm) does not fit the usable bed ({ux:.1} × {uy:.1} × {uz:.1} mm)"
             )));
@@ -555,7 +581,7 @@ pub fn layout_on_beds(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Placement>>
         let (lo2, _) = t.apply_box(it.min, it.max);
         let origin = [b as f64 * (bed.x_mm + 20.0) + m + x, m + y, 0.0];
         t = t.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
-        out.push(Placement { transform: t, bed: b });
+        out.push(Placement { transform: t, bed: b, fits: true });
         x += fx + PART_GAP_MM;
         shelf = shelf.max(fy);
         used = true;

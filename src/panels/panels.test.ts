@@ -106,9 +106,9 @@ describe('DTO building', () => {
     expect(untiled.bedMm).toBeUndefined();
     expect(untiled.formats).toEqual(['stl']);
     expect(untiled.outDir).toBe('C:\\out');
-    // The JSON has exactly the §12.1 keys (plus baseName).
+    // The JSON has exactly the §12.1 keys (plus baseName and the printer's bedMotion).
     expect(Object.keys(JSON.parse(JSON.stringify(dto))).sort()).toEqual(
-      ['baseName', 'bedMm', 'calibrationTile', 'formats', 'keys', 'marginMm', 'orientation', 'outDir', 'params', 'stand'].sort(),
+      ['baseName', 'bedMm', 'bedMotion', 'calibrationTile', 'formats', 'keys', 'marginMm', 'orientation', 'outDir', 'params', 'stand'].sort(),
     );
   });
 

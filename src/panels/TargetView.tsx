@@ -5,6 +5,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { simulateLambert } from '../engine/squamaChecks';
+import { useSquamaInfo } from '../engine/squamaInfo';
 import type { TargetGrid } from '../engine/types';
 import { gridToRgba, paint } from './gridImage';
 
@@ -29,6 +30,8 @@ export function TargetView({ target, elevationDeg, maxTiltDeg, ambient }: Target
     paint(aCanvas.current, gridToRgba(values, target.nx, target.ny), target.nx, target.ny);
   }, [target, sim]);
 
+  const score = useSquamaInfo((s) => s.info?.score ?? null);
+  const before = useSquamaInfo((s) => s.info?.scoreBefore ?? null);
   const aspect = `${target.nx} / ${target.ny}`;
   const contrast = Number.isFinite(sim.contrast) ? `${sim.contrast.toFixed(1)} : 1` : '∞ : 1';
   return (
@@ -43,6 +46,12 @@ export function TargetView({ target, elevationDeg, maxTiltDeg, ambient }: Target
           Appearance · {contrast}
           {!target.sim && ' · est.'}
         </figcaption>
+        {target.sim && score && (
+          <figcaption className="match-score" title="Pearson correlation of the simulated plate (cast shadows) with the target">
+            match r {score.pearson.toFixed(3)}
+            {before && ` (inverse ${before.pearson.toFixed(3)})`}
+          </figcaption>
+        )}
       </figure>
     </div>
   );

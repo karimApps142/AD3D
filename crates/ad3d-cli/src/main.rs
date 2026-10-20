@@ -374,11 +374,17 @@ fn squama_job(a: &SquamaArgs) -> R<(Value, ExportSettings, Option<PathBuf>, Prin
     if let Some(s) = &a.crop {
         io.crop = Some(parse_list::<4>(s, "--crop")?);
     }
-    io.gamma = a.gamma.or(io.gamma);
-    io.contrast = a.contrast.or(io.contrast);
-    io.brightness = a.brightness.or(io.brightness);
+    if let Some(g) = a.gamma {
+        io.gamma = g;
+    }
+    if let Some(c) = a.contrast {
+        io.contrast = c;
+    }
+    if let Some(b) = a.brightness {
+        io.brightness = b;
+    }
     if a.invert {
-        io.invert = Some(true);
+        io.invert = true;
     }
     if let Some(s) = &a.auto_levels {
         io.auto_levels = Some(parse_list::<2>(s, "--auto-levels")?);
@@ -520,24 +526,35 @@ fn run_squama(
     let bed = export.bed(printer);
     let cancel = CancelToken::new();
     let t0 = Instant::now();
-    let r = adapter::generate(params, luma, export, &bed, &cancel)?;
+    let r = adapter::generate(params, luma, export, printer, &cancel)?;
     let gen_ms = ms(t0);
     let l = &r.plate.layout;
-    let s = &r.plate.stats;
+    let s = &r.plate.timings;
     println!("source: {source}");
     println!("printer: {} | bed {} x {} x {} mm, margin {} mm", printer.name, bed.x_mm, bed.y_mm, bed.z_mm, bed.margin_mm);
     println!("grid: {} x {} cells of {} mm -> plate {} x {} mm", l.nx, l.ny, l.cell_mm, l.w_mm, l.h_mm);
     println!(
-        "plate mesh: {} vertices, {} triangles | timings (ms): sample {:.3} solve {:.3} quantise {:.3} mesh {:.3} | all parts {:.1}",
+        "plate mesh: {} vertices, {} triangles | preview timings (ms): target {:.3} solve {:.3} quantise {:.3} mesh {:.3} | all parts {:.1}",
         r.plate.mesh.vertex_count(),
         r.plate.mesh.triangle_count(),
-        s.sample_ms,
+        s.target_ms,
         s.solve_ms,
         s.quantise_ms,
         s.mesh_ms,
         gen_ms
     );
     println!("tiles: {} x {} -> {} part(s)", r.tiles[0], r.tiles[1], r.parts.len());
+    if let Some(o) = &r.report.optimise {
+        println!(
+            "optimiser: {} sweep(s), match r {:.3} -> {:.3}, rel. RMSE {:.3} -> {:.3}{}",
+            o.sweeps,
+            o.before.pearson,
+            o.after.pearson,
+            o.before.rmse_rel,
+            o.after.rmse_rel,
+            if o.timed_out { " (time budget)" } else { "" }
+        );
+    }
     for w in &r.warnings {
         println!("warning [{}]: {}", w.code, w.message);
     }
@@ -579,13 +596,19 @@ fn run_squama(
             ("printer".into(), printer.id.clone()),
         ],
     };
-    let thumb = render_relief_png(&r.plate.mesh, r.params.light_azimuth, r.params.light_elevation, 256).ok();
+    let thumb = render_relief_png(&r.plate.mesh, r.job.params.light_azimuth, r.job.params.light_elevation, 256).ok();
     let parts: Vec<ExportPart> = r.parts.iter().map(|g| g.part.clone()).collect();
     let t = Instant::now();
     let written = write_parts(outs, &parts, &meta, &bed, thumb.as_deref(), &cancel)?;
     let w_ms = ms(t);
     for w in &written {
         println!("wrote {} ({} bytes)", w.path.display(), w.bytes);
+    }
+    if let Some(key) = &r.report.calibration_key {
+        std::fs::create_dir_all(&outs.dir)?;
+        let key_path = outs.dir.join(format!("{}.key.json", safe_file_name(&outs.stem)));
+        std::fs::write(&key_path, serde_json::to_string_pretty(key)?)?;
+        println!("wrote {} (calibration key)", key_path.display());
     }
     println!("write total {w_ms:.1} ms");
     Ok((if ok { ExitCode::SUCCESS } else { ExitCode::from(1) }, r))
@@ -761,7 +784,7 @@ fn real_main() -> R<ExitCode> {
                 Some(p) => Some(LinearLuma::load(p)?),
                 None => None,
             };
-            let r = adapter::generate(&params, luma.as_ref(), &ExportSettings { tiles: TilesDto::Mode(ad3d_core::project::TileMode::None), ..export.clone() }, &export.bed(&printer), &CancelToken::new())?;
+            let r = adapter::generate(&params, luma.as_ref(), &ExportSettings { tiles: TilesDto::Mode(ad3d_core::project::TileMode::None), ..export.clone() }, &printer, &CancelToken::new())?;
             save_project_file(&out, params, bytes, export, printer, Some(&r))?;
             Ok(ExitCode::SUCCESS)
         }
@@ -808,7 +831,7 @@ fn save_project_file(
     };
     let mut p = Project::new_squama(params, io, image.as_ref().map(|(n, b)| (n.as_str(), b.clone())), export, printer)?;
     if let Some(r) = generated {
-        p.thumbnail_png = render_relief_png(&r.plate.mesh, r.params.light_azimuth, r.params.light_elevation, 256).ok();
+        p.thumbnail_png = render_relief_png(&r.plate.mesh, r.job.params.light_azimuth, r.job.params.light_elevation, 256).ok();
     }
     p.save(path)?;
     println!("saved project {} ({} bytes)", path.display(), std::fs::metadata(path)?.len());

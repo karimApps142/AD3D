@@ -10,8 +10,8 @@
 //! - `project_read { path }`                                 → `OpenedProject`
 //! - `project_write { path, doc }`                           → `string` (path written)
 //!
-//! The document format belongs to the core crate. Until the core `project` module lands, the
-//! [`adapter`] below reads and writes a plain JSON document with the same fields.
+//! The document format belongs to the core crate (`ad3d_core::project`, a zip with the photo
+//! embedded); [`adapter`] maps the UI's document onto it.
 
 use std::path::{Path, PathBuf};
 
@@ -21,7 +21,7 @@ use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 
 pub const PROJECT_EXT: &str = "ad3d";
-pub const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "bmp", "tif", "tiff", "webp"];
+pub const IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "bmp", "tif", "tiff", "webp", "heic", "heif"];
 
 /// One saved design: which generator, its parameters and the view it was saved with.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -64,17 +64,20 @@ pub struct OpenedProject {
     pub warnings: Vec<String>,
 }
 
-/// Stand-in for the core project module (docs/spec/FEATURES.md APP-FILES: `.ad3d` = zip of
-/// JSON parameters + input assets). This adapter writes the JSON part only and references the
-/// input image by path.
+/// Reading and writing `.ad3d` files through the core project module
+/// (`ad3d_core::project`, FEATURES APP-FILES): a zip with `project.json`, the
+/// input photo embedded, and a thumbnail. The UI's [`ProjectDoc`] maps onto the
+/// core document; its field names are the UI contract and do not change.
 ///
-// MERGE: wire to ad3d_core::project::{read, write} (zip container with embedded assets);
-// keep `ProjectDoc` field names so the UI contract does not change.
+/// Plain-JSON documents written by earlier builds are still read.
 pub mod adapter {
     use super::*;
+    use ad3d_core::project::{EMBEDDED_IMAGE, ExportSettings, ImageRef, Project, ProjectDoc as CoreDoc, SCHEMA_VERSION};
 
     pub const FORMAT: &str = "ad3d.project";
     pub const FORMAT_VERSION: u32 = 1;
+    /// The UI's id of the Squama generator; the core calls it `squama`.
+    pub const UI_SQUAMA: &str = "shadow_plate";
 
     pub fn format_tag() -> String {
         FORMAT.into()
@@ -83,21 +86,103 @@ pub mod adapter {
         FORMAT_VERSION
     }
 
-    pub fn encode(doc: &ProjectDoc) -> Result<Vec<u8>, String> {
-        let mut doc = doc.clone();
-        doc.format = FORMAT.into();
-        doc.version = FORMAT_VERSION;
-        if doc.app_version.is_empty() {
-            doc.app_version = env!("CARGO_PKG_VERSION").into();
+    fn validate(doc: &ProjectDoc) -> Result<(), String> {
+        if doc.generator.trim().is_empty() {
+            return Err("project has no generator".into());
         }
-        validate(&doc)?;
-        serde_json::to_vec_pretty(&doc).map_err(|e| e.to_string())
+        if !doc.params.is_object() {
+            return Err("project params must be an object".into());
+        }
+        Ok(())
     }
 
-    pub fn decode(bytes: &[u8]) -> Result<ProjectDoc, String> {
-        if bytes.starts_with(b"PK\x03\x04") {
-            return Err("this project uses the zip container, which this build cannot read yet".into());
+    fn printer_for(id: Option<&str>) -> ad3d_core::profiles::PrinterProfile {
+        let mut p = id.and_then(ad3d_core::profiles::printer_by_id).unwrap_or_else(ad3d_core::profiles::default_printer);
+        if let Some(id) = id {
+            p.id = id.to_owned();
         }
+        p
+    }
+
+    /// UI document → core project. A photo the params point to is embedded, so the
+    /// project opens on the other machine; a missing photo stays a path reference.
+    pub fn to_core(doc: &ProjectDoc) -> Result<Project, String> {
+        validate(doc)?;
+        let mut params = doc.params.clone();
+        let obj = params.as_object_mut().ok_or("project params must be an object")?;
+        obj.remove("jobId");
+        obj.remove("quality");
+        let mut image = None;
+        let mut bytes = None;
+        if let Some(path) = obj.get("image").and_then(Value::as_str).map(str::to_owned)
+            && path != "synthetic"
+            && Path::new(&path).is_file()
+        {
+            let b = std::fs::read(&path).map_err(|e| format!("{path}: {e}"))?;
+            let name = Path::new(&path).file_name().and_then(|s| s.to_str()).unwrap_or("image").to_owned();
+            image = Some(ImageRef {
+                entry: format!("image/{}", ad3d_core::io::sink::safe_file_name(&name)),
+                original_name: name,
+                size: b.len() as u64,
+                fnv64: ad3d_core::io::hash::fnv64_hex(&b),
+            });
+            obj.insert("image".into(), Value::from(EMBEDDED_IMAGE));
+            bytes = Some(b);
+        }
+        let generator = if doc.generator == UI_SQUAMA { "squama".to_owned() } else { doc.generator.clone() };
+        let core = CoreDoc {
+            schema_version: SCHEMA_VERSION,
+            generator,
+            app_version: env!("CARGO_PKG_VERSION").into(),
+            params,
+            image_opts: None,
+            export: ExportSettings::default(),
+            printer: printer_for(doc.printer.as_deref()),
+            image,
+            view: doc.view.clone(),
+        };
+        Ok(Project { doc: core, image_bytes: bytes, thumbnail_png: None })
+    }
+
+    /// Where an embedded photo is unpacked so the generator can read it by path.
+    pub fn embedded_dir() -> PathBuf {
+        std::env::temp_dir().join("ad3d-embedded-images")
+    }
+
+    /// Core project → UI document. An embedded photo is unpacked once (by content
+    /// hash) and `params.image` points to the copy.
+    pub fn from_core(p: &Project) -> Result<ProjectDoc, String> {
+        let d = &p.doc;
+        let mut params = d.params.clone();
+        if let Some(io) = &d.image_opts
+            && let Some(o) = params.as_object_mut()
+        {
+            o.entry("imageOpts").or_insert(serde_json::to_value(io).map_err(|e| e.to_string())?);
+        }
+        if let (Some(r), Some(b)) = (&d.image, &p.image_bytes) {
+            let dir = embedded_dir().join(&r.fnv64);
+            let path = dir.join(ad3d_core::io::sink::safe_file_name(&r.original_name));
+            if !path.is_file() {
+                std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+                crate::settings::write_atomic(&path, b)?;
+            }
+            params["image"] = Value::String(path.to_string_lossy().into_owned());
+        }
+        let generator = if d.generator == "squama" { UI_SQUAMA.to_owned() } else { d.generator.clone() };
+        Ok(ProjectDoc {
+            format: FORMAT.into(),
+            version: FORMAT_VERSION,
+            generator,
+            generator_version: 1,
+            params,
+            view: d.view.clone(),
+            printer: Some(d.printer.id.clone()),
+            app_version: d.app_version.clone(),
+        })
+    }
+
+    /// Plain-JSON document of earlier builds.
+    pub fn decode_json(bytes: &[u8]) -> Result<ProjectDoc, String> {
         let doc: ProjectDoc = serde_json::from_slice(bytes).map_err(|e| format!("not an AD3D project: {e}"))?;
         if doc.format != FORMAT {
             return Err(format!("not an AD3D project (format {:?})", doc.format));
@@ -112,14 +197,17 @@ pub mod adapter {
         Ok(doc)
     }
 
-    fn validate(doc: &ProjectDoc) -> Result<(), String> {
-        if doc.generator.trim().is_empty() {
-            return Err("project has no generator".into());
+    pub fn encode(doc: &ProjectDoc) -> Result<Vec<u8>, String> {
+        to_core(doc)?.to_bytes().map_err(|e| e.to_string())
+    }
+
+    pub fn decode(bytes: &[u8]) -> Result<ProjectDoc, String> {
+        if bytes.starts_with(b"PK\x03\x04") {
+            let p = Project::from_bytes(bytes).map_err(|e| e.to_string())?;
+            from_core(&p)
+        } else {
+            decode_json(bytes)
         }
-        if !doc.params.is_object() {
-            return Err("project params must be an object".into());
-        }
-        Ok(())
     }
 
     pub fn write(path: &Path, doc: &ProjectDoc) -> Result<(), String> {
@@ -284,7 +372,26 @@ mod tests {
         assert_eq!(opened.doc.version, adapter::FORMAT_VERSION);
         assert_eq!(opened.doc.params, doc().params, "unknown params fields survive");
         assert_eq!(opened.doc.view, doc().view);
+        assert_eq!(opened.doc.printer.as_deref(), Some("creality-cr6-se"));
         assert_eq!(opened.doc.app_version, env!("CARGO_PKG_VERSION"));
+        // The file is the core's zip container.
+        assert!(std::fs::read(&written).unwrap().starts_with(b"PK\x03\x04"));
+    }
+
+    #[test]
+    fn photo_is_embedded_and_unpacked() {
+        let d = tmpdir("embed");
+        let src = d.join("photo.png");
+        std::fs::write(&src, b"\x89PNG not decoded here").unwrap();
+        let mut dd = doc();
+        dd.params["image"] = json!(src.to_string_lossy());
+        let p = write_project(&d.join("e.ad3d"), &dd).unwrap();
+        std::fs::remove_file(&src).unwrap();
+        let opened = read_project(&p).unwrap();
+        let path = opened.doc.params["image"].as_str().unwrap().to_owned();
+        assert!(Path::new(&path).is_file(), "{path}");
+        assert!(path.ends_with("photo.png"));
+        assert!(opened.warnings.is_empty());
     }
 
     #[test]
@@ -296,7 +403,7 @@ mod tests {
         assert!(err.contains("newer"), "{err}");
         let no_params = json!({ "format": adapter::FORMAT, "version": 1, "generator": "shadow_plate", "params": 3 });
         assert!(adapter::decode(no_params.to_string().as_bytes()).is_err());
-        assert!(adapter::decode(b"PK\x03\x04rest").unwrap_err().contains("zip"));
+        assert!(adapter::decode(b"PK\x03\x04rest").is_err());
         assert!(adapter::encode(&ProjectDoc { generator: " ".into(), ..doc() }).is_err());
     }
 

@@ -12,8 +12,8 @@ use crate::error::{Error, Result};
 
 /// Build plate for tiling and bed layout (design §14.1 `Bed`).
 ///
-/// MERGE: design §14.1 also names a `Bed` for `plan_tiles`; if the tiling module
-/// defines its own, make one a re-export of the other (fields are identical).
+/// The tiling module's `squama::tiles::Bed` adds the moving-bed axis; convert
+/// with [`PrinterProfile::tile_bed`] and `Bed::from(tiles_bed)`.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Bed {
@@ -94,13 +94,29 @@ impl PrinterProfile {
     /// to: the bed's motion axis on a bed-slinger (so the plate is shaken edge-on,
     /// not face-on), otherwise X.
     ///
-    /// MERGE: wire to the export orientation (design §9, `orient::export_xform`):
-    /// the spike puts the plate face parallel to X (thickness along Y), which is
-    /// the weak direction on a Y bed-slinger such as the CR-6 SE.
+    /// The export (§9, `orient::standing_xform`) follows this through
+    /// [`tile_bed`](Self::tile_bed)'s motion axis.
     pub fn standing_face_axis(&self) -> Axis {
         match self.moving_bed_axis {
             Some(Axis::Y) => Axis::Y,
             _ => Axis::X,
+        }
+    }
+
+    /// The §14.1 tiling bed for `bed` on this printer: the face of a standing
+    /// plate goes along the moving-bed axis.
+    pub fn tile_bed(&self, bed: &Bed) -> crate::squama::tiles::Bed {
+        use crate::orient::BedMotion;
+        crate::squama::tiles::Bed {
+            x_mm: bed.x_mm,
+            y_mm: bed.y_mm,
+            z_mm: bed.z_mm,
+            margin_mm: bed.margin_mm,
+            motion: match self.moving_bed_axis {
+                Some(Axis::Y) => BedMotion::Y,
+                Some(Axis::X) => BedMotion::X,
+                _ => BedMotion::None,
+            },
         }
     }
 
@@ -111,6 +127,12 @@ impl PrinterProfile {
         let [ux, uy] = b.usable_xy();
         let w = if self.standing_face_axis() == Axis::Y { uy } else { ux };
         [w, b.z_mm]
+    }
+}
+
+impl From<crate::squama::tiles::Bed> for Bed {
+    fn from(b: crate::squama::tiles::Bed) -> Bed {
+        Bed { x_mm: b.x_mm, y_mm: b.y_mm, z_mm: b.z_mm, margin_mm: b.margin_mm }
     }
 }
 

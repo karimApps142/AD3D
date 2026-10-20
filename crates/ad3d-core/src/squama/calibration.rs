@@ -21,10 +21,9 @@
 //! (partition, facets, key); [`calibration_tile`] meshes it with the same relief
 //! mesher and quantiser as the plate.
 //!
-//! MERGE: when back regions land (§14.3), engrave step numbers and an UP arrow as
-//! 0.4 mm pockets on the back (`mesh_relief(.., back, ..)`).
-//! MERGE: take `&Light` / `&Limits` / `&Layout` (design §12) instead of the
-//! directional fields in [`CalibrationSpec`] once those types exist.
+//! `squama::export::calibration_spec` builds the spec for an M1 job (point lights
+//! use the light as seen from the plate centre). Not done yet: step numbers and
+//! an UP arrow engraved on the back (§14.3 back regions exist now).
 
 use std::f64::consts::PI;
 
@@ -406,10 +405,8 @@ pub fn grey_ramp_target(w: u32, h: u32, steps: u32) -> LinearLuma {
     LinearLuma { w, h, px }
 }
 
-/// A measured tilt → brightness table (design §15.2 `Response::Measured`).
-///
-/// MERGE: convert into `squama::Response::Measured { tilt_rad, brightness }`
-/// once the response module exists (`to_dto` gives the §12.1 JSON already).
+/// A measured tilt → brightness table (design §15.2 `Response::Measured`);
+/// `Response::from(&measured)` converts it, and `to_dto` gives the §12.1 JSON.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeasuredResponse {
@@ -421,6 +418,12 @@ pub struct MeasuredResponse {
     pub ambient: f64,
     /// Brightest / darkest.
     pub contrast: f64,
+}
+
+impl From<&MeasuredResponse> for super::Response {
+    fn from(m: &MeasuredResponse) -> Self {
+        super::Response::Measured { tilt_rad: m.tilt_rad.clone(), brightness: m.brightness.clone() }
+    }
 }
 
 impl MeasuredResponse {

@@ -165,8 +165,8 @@ export type ExportHandler = () => void | Promise<void>;
 let exportHandler: ExportHandler | null = null;
 
 /**
- * The export panel registers itself here; File → Export… and ⌘E call it.
- * MERGE: wire to the export builder's dialog (squama_export, docs/design/squama-mesher.md §12, §14.4).
+ * The export panel (panels/ExportPanel.tsx) registers its save-dialog-and-export flow here
+ * (squama_export, docs/design/squama-mesher.md §12, §14.4); File → Export… and ⌘E call it.
  */
 export function setExportHandler(fn: ExportHandler | null): void {
   exportHandler = fn;
@@ -174,5 +174,5 @@ export function setExportHandler(fn: ExportHandler | null): void {
 
 export async function exportModel(): Promise<void> {
   if (exportHandler) return exportHandler();
-  toast('Export is not wired in this build yet (the export panel lands with the export module).');
+  toast('Open the Tiling & export panel to export.');
 }

@@ -30,7 +30,7 @@ pub struct Target {
 /// `Arc` across jobs.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TargetSampler {
-    sat: Sat,
+    sat: Arc<Sat>,
     /// Crop rectangle `x0, y0, x1, y1` in SAT pixels (y down).
     window: [f64; 4],
 }
@@ -53,7 +53,7 @@ fn finish(g: f64) -> f32 {
 impl TargetSampler {
     /// Tones the working image through `lut` and builds its SAT (§16 step 6).
     pub fn new(working: &WorkingImage, lut: &ToneLut) -> Self {
-        TargetSampler { sat: Sat::build(working.w, working.h, &working.v, |v| lut.apply(v)), window: working.window }
+        TargetSampler { sat: Arc::new(Sat::build(working.w, working.h, &working.v, |v| lut.apply(v))), window: working.window }
     }
 
     /// Samples a linear image directly at full resolution, with no tone or downsample
@@ -67,7 +67,21 @@ impl TargetSampler {
             return Err(Error::InvalidParams("empty crop".into()));
         }
         let sat = Sat::build(img.w, img.h, &img.px, |v| if v.is_finite() { v.clamp(0.0, 1.0) } else { 0.0 });
-        Ok(TargetSampler { sat, window })
+        Ok(TargetSampler { sat: Arc::new(sat), window })
+    }
+
+    /// The same image restricted to a sub-rectangle of the current window
+    /// (normalised `x0, y0, x1, y1`, y down), e.g. the layout's centre crop for a
+    /// fixed plate height (§2.1). Shares the SAT, so it is cheap.
+    pub fn cropped(&self, crop: Option<Crop>) -> Result<TargetSampler> {
+        let Some(c) = crop else { return Ok(self.clone()) };
+        if !c.iter().all(|v| v.is_finite()) || c[2] <= c[0] || c[3] <= c[1] {
+            return Err(Error::InvalidParams(format!("empty crop {c:?}")));
+        }
+        let [x0, y0, x1, y1] = self.window;
+        let (w, h) = (x1 - x0, y1 - y0);
+        let window = [x0 + c[0] * w, y0 + c[1] * h, x0 + c[2] * w, y0 + c[3] * h];
+        Ok(TargetSampler { sat: self.sat.clone(), window })
     }
 
     pub fn sat(&self) -> &Sat {
@@ -206,8 +220,8 @@ impl TargetSampler {
 
 /// Uncached §16 pipeline for one call: working copy at [`DEFAULT_MAX_SIDE`], tone,
 /// SAT, then [`TargetSampler::facet_targets`].
-// MERGE: wire to squama::prepare_target(img, opts, l: &Layout, p: &Partition) as
-// `prepare_target_for(img, opts, (l.w_mm, l.h_mm), p)`, or use TargetPipeline for caching.
+/// `squama::prepare_target` (§12) wraps this with the layout; the app caches the
+/// stages with [`TargetPipeline`].
 pub fn prepare_target_for(img: &LinearLuma, opts: &ImageOpts, plate_mm: (f64, f64), p: &Partition) -> Result<Target> {
     check_plate(plate_mm)?;
     let wk = build_working(img, opts, DEFAULT_MAX_SIDE)?;

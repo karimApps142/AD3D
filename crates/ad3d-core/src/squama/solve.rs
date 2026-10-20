@@ -130,9 +130,9 @@ fn check_limits(lim: &Limits) -> Result<()> {
 /// its response's inverse; `grad_k = −tan θ_k · a_k`. With one directional light,
 /// `Lambert { ambient: 0 }` and a square layout this equals the M0 §3 inverse.
 ///
-/// MERGE: the §12 signature takes `t: &Target` (image::prepare_target) and `p:
-/// &Partition`; pivots and full-cell corners come from the layout, so this takes
-/// the layout and a plain per-facet slice. Wire `Target::g` here.
+/// The §12 `solve_facets(t, p, ..)` is `pipeline::solve_job`, which passes
+/// `Target::g` here and runs the optimiser on the partition at `Quality::Final`;
+/// pivots and full-cell corners come from the layout, so this takes the layout.
 #[allow(clippy::too_many_arguments)]
 pub fn solve_facets_ex(
     g: &[f32],
@@ -264,9 +264,8 @@ pub fn solve_facets_ex(
         }
     }
     if quality == Quality::Final {
-        // MERGE: wire to squama::optimise::optimise (§15.1) when OptimiserOpts asks
-        // for shadow sweeps; it returns facets under the same Limits. Preview (and
-        // Final until then) uses the per-cell inverse above.
+        // The shadow-aware optimiser (§15.1) refines these facets in
+        // `pipeline::solve_job`, which owns the OptimiserOpts.
         cancel.check()?;
     }
 

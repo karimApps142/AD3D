@@ -26,37 +26,11 @@ use crate::error::{Error, Result};
 use crate::relief::{Facet, Partition, PartitionKind};
 pub use lines::{LineGeom, LineSet, Seg, Sweep};
 
-// MERGE: `Light` and `Response` are the §12/§15.2/§15.4 contract types. If another
-// module (squama or a shared `light` module) also defines them, keep one and
-// re-export it here; the fields below follow the contract exactly.
-
-/// The design light (§12, §15.4). Angles in radians, positions in plate space (mm).
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Light {
-    /// Parallel light from azimuth `az` (direction toward the light in the plate
-    /// plane, LuBan Left = π) at elevation `el` above the plate plane.
-    Directional { az: f64, el: f64 },
-    /// A lamp at `pos_mm = (u, v, w)` in plate space.
-    Point { pos_mm: DVec3 },
-}
-
-/// Tilt → brightness response (§15.2).
-#[derive(Debug, Clone, PartialEq)]
-pub enum Response {
-    /// `ambient + I·max(0, n·L)`; ambient is the room light as a fraction of the
-    /// lamp's irradiance on a surface facing it.
-    Lambert { ambient: f64 },
-    /// Brightness measured on the calibration tile at these tilts (radians,
-    /// ascending, positive = toward the light). Shadowed parts get the table's
-    /// minimum.
-    Measured { tilt_rad: Vec<f64>, brightness: Vec<f64> },
-}
-
-impl Default for Response {
-    fn default() -> Self {
-        Response::Lambert { ambient: 0.0 }
-    }
-}
+// `Light` and `Response` are the §12/§15.2/§15.4 contract types, defined once in
+// `squama::{light, response}` and re-exported here. The forward-model methods on
+// `Response` (`shadowed`, `direct`, `inverse`) live below.
+pub use crate::squama::light::Light;
+pub use crate::squama::response::Response;
 
 impl Response {
     /// Brightness of a part in cast shadow.

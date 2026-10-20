@@ -2,7 +2,8 @@
 // calibration tile, formats and orientation; then a native save dialog, progress streamed over a
 // Tauri channel, cancel, and "Reveal in Finder" when done.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { setExportHandler } from '../app/actions';
 import { useShallow } from 'zustand/react/shallow';
 import { getEngine } from '../engine';
 import { mergeWarnings } from '../engine/squamaChecks';
@@ -13,6 +14,7 @@ import { plateLayout } from './plateLayout';
 import { buildExportDto, defaultExportName } from './squamaDto';
 import { type ExportStatus, IDLE_EXPORT, reduceExportEvent, useSquamaUi } from './squamaUi';
 import { fitsBed, maxTileExtent, ORIENTATIONS, planTiles, PRINTERS, printSize, quarterTurns } from './tilePlan';
+import { useCoreTilePlan } from './useCoreTilePlan';
 import { Warnings } from './Warnings';
 import './panels.css';
 
@@ -58,10 +60,14 @@ export function ExportPanel() {
   const depth = meshDepth ?? params.baseMm + 1;
   const wholeSize = printSize(layout.wMm, layout.hMm, depth, k);
   const wholeFits = fitsBed(wholeSize, settings.bedMm, settings.marginMm);
-  const plan = useMemo(
+  const corePlan = useCoreTilePlan(params, settings);
+  const fallbackPlan = useMemo(
     () => planTiles(layout.nx, layout.ny, layout.cellMm, maxTileExtent(settings.orientation, settings.bedMm, settings.marginMm, params.lightAzimuthDeg)),
     [layout.nx, layout.ny, layout.cellMm, settings.orientation, settings.bedMm, settings.marginMm, params.lightAzimuthDeg],
   );
+  // The core's plan (squama::plan_tiles: hex seams, keys, the printer's bed axis) when the engine
+  // has one; the TypeScript estimate otherwise (browser mock).
+  const plan = corePlan ? { ...fallbackPlan, cols: corePlan.cols, rows: corePlan.rows, error: null } : fallbackPlan;
   const tiles = settings.tile ? plan : null;
   const running = status.phase === 'running';
 
@@ -104,6 +110,14 @@ export function ExportPanel() {
       setStatus({ phase: msg === 'cancelled' ? 'cancelled' : 'error', error: msg === 'cancelled' ? null : msg });
     }
   };
+
+  // File → Export… and ⌘E run the same flow as the Export button.
+  const startRef = useRef(startExport);
+  startRef.current = startExport;
+  useEffect(() => {
+    setExportHandler(() => (useSquamaUi.getState().exportStatus.phase === 'running' ? undefined : startRef.current()));
+    return () => setExportHandler(null);
+  }, []);
 
   const reveal = async (path: string) => {
     try {

@@ -5,13 +5,9 @@ import type { SquamaParams } from '../engine/types';
 import type { DisplayMesh } from '../state/store';
 import type { CellLayout } from './heightfield';
 
-/**
- * §12.1 `layout` (square default, or hex with an orientation).
- *
- * MERGE: wire to engine/types.ts SquamaParams.layout — read loosely until the DTO type has it.
- */
+/** §12.1 `layout` (square default, or hex with an orientation). */
 export function paramsLayoutKind(params: SquamaParams): { kind: 'square' } | { kind: 'hex'; orientation: 'pointy' | 'flat' } {
-  const l = (params as SquamaParams & { layout?: { kind?: string; orientation?: string } }).layout;
+  const l = params.layout;
   if (l && l.kind === 'hex') return { kind: 'hex', orientation: l.orientation === 'flat' ? 'flat' : 'pointy' };
   return { kind: 'square' };
 }

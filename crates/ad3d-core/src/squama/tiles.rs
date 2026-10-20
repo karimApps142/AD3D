@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{Error, Result};
 use crate::orient::{BedMotion, Orientation, QuarterTurns, Xform, auto_candidates, fixed_quarter_turns, light_score, standing_xform};
 use crate::relief::Partition;
-use crate::squama::{Layout, LayoutKind};
+use crate::squama::Layout;
 
 /// A printer's build volume (mm) and the clearance kept from its limits.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -131,6 +131,9 @@ pub struct TileOpts {
     /// Smallest tile side allowed when the plate is cut in that direction (keys
     /// need room on both sides of each seam). 0 = no limit.
     pub min_tile_mm: f64,
+    /// A user-forced grid `(cols, rows)` (clamped to the lattice). The tiles may
+    /// then not fit the bed; the export warns.
+    pub grid: Option<(u32, u32)>,
 }
 
 /// The result of [`plan_tiles`].
@@ -264,13 +267,13 @@ fn edges_mm(units: &[u32], pitch: f64, total: f64) -> Vec<f64> {
 
 /// Lattice pitch and line counts for a layout: cuts may only run along these lines.
 pub fn lattice(l: &Layout) -> Result<(DVec2, u32, u32)> {
-    #[allow(unreachable_patterns)]
-    match l.kind {
-        LayoutKind::Square => Ok((DVec2::splat(l.cell_mm), l.nx, l.ny)),
-        // MERGE: wire hex layouts (§6.2): pointy-top pitch = (cell/2, √3/2·cell) with
-        // (m, n) units from the hex snap; flat-top swaps u and v. The partition must
-        // then come from `squama::build_partition(l, &plan.cuts())`.
-        _ => Err(Error::InvalidParams("tiling is not wired for this cell layout yet".into())),
+    match l.hex_lattice() {
+        None => Ok((DVec2::splat(l.cell_mm), l.nx, l.ny)),
+        // §6.2 centre lines: `cell/2` across the flats (m units), the row pitch
+        // `√3/2·cell` along the rows (n units); flat-top swaps u and v. Cuts through
+        // hexes split them into pieces of one facet (`build_partition(l, cuts)`).
+        Some(lat) if !lat.flat => Ok((DVec2::new(lat.s_unit(), lat.pitch()), lat.m, lat.n)),
+        Some(lat) => Ok((DVec2::new(lat.pitch(), lat.s_unit()), lat.n, lat.m)),
     }
 }
 
@@ -355,16 +358,22 @@ pub fn plan_tiles(l: &Layout, bed: &Bed, o: Orientation, light_azimuth: f64, opt
             why = "one cell does not fit the usable bed".into();
             continue;
         }
-        let cols = nu.div_ceil(mu);
-        let rows = nv.div_ceil(mv);
-        if (cols > 1 && nu / cols < min_u) || (rows > 1 && nv / rows < min_v) {
+        let (cols, rows) = match opts.grid {
+            Some((c, r)) => (c.clamp(1, nu), r.clamp(1, nv)),
+            None => (nu.div_ceil(mu), nv.div_ceil(mv)),
+        };
+        if opts.grid.is_none() && ((cols > 1 && nu / cols < min_u) || (rows > 1 && nv / rows < min_v)) {
             why = format!("tiles would be narrower than {:.1} mm", opts.min_tile_mm);
             continue;
         }
-        let n = cols * rows;
+        // A forced grid ranks orientations by how well its tiles fit.
+        let n = match opts.grid {
+            None => cols * rows,
+            Some(_) => u32::from(nu.div_ceil(cols) > mu) + u32::from(nv.div_ceil(rows) > mv),
+        };
         if best.is_none_or(|b| n < b.0) {
             best = Some((n, cols, rows, 0, k));
-            best_max = (mu, mv);
+            best_max = (mu.max(nu.div_ceil(cols)), mv.max(nv.div_ceil(rows)));
         }
     }
     let Some((_, cols, rows, _, k)) = best else {
@@ -433,6 +442,7 @@ pub fn seam_step_cost(p: &Partition, h: &crate::relief::Heights, pitch: DVec2) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::squama::LayoutKind;
     use std::f64::consts::PI;
 
     fn square(nx: u32, ny: u32, cell: f64) -> Layout {
@@ -447,7 +457,7 @@ mod tests {
         }
     }
 
-    const OPTS: TileOpts = TileOpts { thickness_mm: 5.0, min_tile_mm: 0.0 };
+    const OPTS: TileOpts = TileOpts { thickness_mm: 5.0, min_tile_mm: 0.0, grid: None };
 
     #[test]
     fn balanced_63_rows() {
@@ -502,7 +512,7 @@ mod tests {
         let l = square(50, 63, 6.0);
         let plan = plan_tiles(&l, &Bed::CR6_SE, Orientation::Flat, PI, &OPTS).unwrap();
         assert_eq!((plan.cols, plan.rows), (2, 2));
-        let thick = TileOpts { thickness_mm: 400.0, min_tile_mm: 0.0 };
+        let thick = TileOpts { thickness_mm: 400.0, min_tile_mm: 0.0, grid: None };
         assert!(plan_tiles(&l, &Bed::CR6_SE, Orientation::Flat, PI, &thick).is_err());
     }
 
@@ -513,7 +523,7 @@ mod tests {
         let l = square(4, 4, 6.0);
         let o = Orientation::Standing(QuarterTurns::Q0);
         assert!(plan_tiles(&l, &bed, o, PI, &OPTS).is_ok());
-        assert!(plan_tiles(&l, &bed, o, PI, &TileOpts { thickness_mm: 5.0, min_tile_mm: 20.0 }).is_err());
+        assert!(plan_tiles(&l, &bed, o, PI, &TileOpts { thickness_mm: 5.0, min_tile_mm: 20.0, grid: None }).is_err());
     }
 
     #[test]

@@ -1,6 +1,6 @@
 // Per-triangle face kinds (docs/design/squama-mesher.md §12 FaceKind, §12.2 payload flags bit 1):
-// a u16 per triangle, low byte = kind, high byte = part index. Until the payload parser exposes
-// them, the viewport classifies triangles by their normal.
+// a u16 per triangle, low byte = kind, high byte = part index, parsed by engine/payload.ts. For
+// payloads without them (the mock engine, the spike), the viewport classifies by the normal.
 
 import type { MeshPayload } from '../engine/types';
 
@@ -13,15 +13,9 @@ export const FLAG_FACE_KINDS = 1 << 1;
 /** §12.2: flags bit 0 = final quality. */
 export const FLAG_FINAL = 1 << 0;
 
-/**
- * The payload's per-triangle face kinds, or null when it carries none.
- *
- * MERGE: wire to engine/payload.ts parseMeshPayload — when it parses the §12.2 face-kind section
- * (flags bit 1) it should expose it as `MeshPayload.faceKinds: Uint16Array` (triangleCount
- * entries). This adapter reads that field if present and otherwise returns null.
- */
+/** The payload's per-triangle face kinds, or null when it carries none. */
 export function payloadFaceKinds(payload: MeshPayload): Uint16Array | null {
-  const kinds = (payload as MeshPayload & { faceKinds?: Uint16Array | null }).faceKinds;
+  const kinds = payload.faceKinds;
   if (!kinds || (payload.flags & FLAG_FACE_KINDS) === 0) return null;
   return kinds.length >= payload.triangleCount ? kinds : null;
 }

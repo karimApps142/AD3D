@@ -44,33 +44,9 @@ const MAX_JSON: u64 = 16 << 20;
 const MAX_IMAGE: u64 = 512 << 20;
 const MAX_THUMB: u64 = 16 << 20;
 
-/// Image tone and crop options (design §12.1 `imageOpts`, §16).
-///
-/// MERGE: replace with the image module's `ImageOpts` DTO once it exists; the
-/// JSON shape is the §12.1 one, so stored projects stay readable.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ImageOptsDto {
-    /// Normalised `x0, y0, x1, y1` (y down).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub crop: Option<[f64; 4]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub gamma: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub contrast: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub brightness: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub invert: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub auto_levels: Option<[f64; 2]>,
-}
-
-impl ImageOptsDto {
-    pub fn is_default(&self) -> bool {
-        *self == ImageOptsDto::default()
-    }
-}
+/// Image tone and crop options (design §12.1 `imageOpts`, §16): the image
+/// module's type, so stored projects and the generator read the same JSON.
+pub type ImageOptsDto = crate::image::ImageOpts;
 
 /// Export orientation (design §9, §12.1 `SquamaExport.orientation`).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -193,6 +169,33 @@ impl Default for ExportSettings {
 }
 
 impl ExportSettings {
+    /// The core export options for these settings on `printer` (tiling bed with
+    /// the printer's moving-bed axis, keys, stand, calibration, tile grid).
+    pub fn squama_export(&self, printer: &PrinterProfile) -> crate::squama::export::SquamaExport {
+        use crate::squama::export::{KeyKind, SquamaExport, TileRequest};
+        SquamaExport {
+            orientation: self.orientation.orientation(),
+            bed: self.tile_bed(printer),
+            keys: match self.keys {
+                KeysDto::None => KeyKind::None,
+                KeysDto::Pegs => KeyKind::Pegs,
+            },
+            stand: self.stand,
+            calibration_tile: self.calibration_tile,
+            tiles: match self.tiles {
+                TilesDto::Mode(TileMode::Auto) => TileRequest::Auto,
+                TilesDto::Mode(TileMode::None) => TileRequest::None,
+                TilesDto::Grid([c, r]) => TileRequest::Grid(c, r),
+            },
+            ..SquamaExport::default()
+        }
+    }
+
+    /// The tiling bed (§14.1): [`bed`](Self::bed) plus the axis the bed moves in.
+    pub fn tile_bed(&self, printer: &PrinterProfile) -> crate::squama::tiles::Bed {
+        printer.tile_bed(&self.bed(printer))
+    }
+
     /// The bed to tile and lay out on: `bedMm`/`marginMm` override the printer.
     pub fn bed(&self, printer: &PrinterProfile) -> Bed {
         let margin = self.margin_mm.unwrap_or(printer.margin_mm);
@@ -235,6 +238,10 @@ pub struct ProjectDoc {
     pub printer: PrinterProfile,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<ImageRef>,
+    /// Viewport-only settings the app saves with the design (preview light,
+    /// ambient); opaque to the core.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub view: Option<Value>,
 }
 
 /// A project in memory.
@@ -316,6 +323,7 @@ impl Project {
             export,
             printer,
             image: image_ref,
+            view: None,
         };
         check_params(&doc.generator, &doc.params)?;
         Ok(Project { doc, image_bytes: image.map(|(_, b)| b), thumbnail_png: None })
@@ -449,19 +457,10 @@ impl Project {
     }
 }
 
-/// Decodes image bytes, applies EXIF orientation and linearises (design §16 steps 1–2).
-///
-/// MERGE: move next to `image::LinearLuma::load` (same steps, from memory).
+/// Decodes image bytes, applies EXIF orientation and linearises (design §16
+/// steps 1–2); the same as `image::decode_bytes`.
 pub fn luma_from_bytes(bytes: &[u8]) -> Result<LinearLuma> {
-    use image::ImageDecoder;
-    let reader = image::ImageReader::new(Cursor::new(bytes))
-        .with_guessed_format()
-        .map_err(|e| Error::Io(format!("image: {e}")))?;
-    let mut dec = reader.into_decoder().map_err(|e| Error::Io(format!("image: {e}")))?;
-    let orient = dec.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
-    let mut img = image::DynamicImage::from_decoder(dec).map_err(|e| Error::Io(format!("image: {e}")))?;
-    img.apply_orientation(orient);
-    Ok(LinearLuma::from_dynamic(&img))
+    crate::image::decode_bytes(bytes)
 }
 
 #[cfg(test)]
@@ -484,7 +483,7 @@ mod tests {
 
     #[test]
     fn round_trip_with_image_and_thumbnail() {
-        let opts = ImageOptsDto { gamma: Some(1.2), invert: Some(true), ..Default::default() };
+        let opts = ImageOptsDto { gamma: 1.2, invert: true, ..Default::default() };
         let mut p = Project::new_squama(params(), Some(opts.clone()), Some(("dir/photo.png", png_bytes())), ExportSettings::default(), default_printer())
             .unwrap();
         p.thumbnail_png = Some(png_bytes());

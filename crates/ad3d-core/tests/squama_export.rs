@@ -346,3 +346,70 @@ proptest! {
         }
     }
 }
+
+// ---- M1 integration: jobs (hex, point light, optimiser), calibration tile, 3MF.
+
+fn job_from(json: serde_json::Value) -> ad3d_core::squama::job::SquamaJob {
+    let d: ad3d_core::squama::SquamaParamsDto = serde_json::from_value(json).unwrap();
+    d.job().unwrap()
+}
+
+#[test]
+fn hex_plate_tiles_on_cr6se_with_calibration() {
+    for orientation in ["pointy", "flat"] {
+        let job = job_from(serde_json::json!({
+            "jobId": 1, "widthMm": 300, "heightMm": 260, "cellMm": 6, "layout": {"kind": "hex", "orientation": orientation},
+            "lightAzimuthDeg": 180, "lightElevationDeg": 8, "maxTiltDeg": 10, "baseMm": 3, "image": "synthetic"
+        }));
+        let e = SquamaExport { calibration_tile: true, ..SquamaExport::default() };
+        let mut sink = CollectSink::default();
+        let rep = ad3d_core::squama::export::squama_export_job(&job, None, &e, &CancelToken::new(), &mut sink).unwrap();
+        assert!(rep.cols * rep.rows > 1, "{orientation}: should need several tiles");
+        assert!(rep.calibration_key.is_some());
+        assert!(sink.parts.iter().any(|(p, _)| p.kind == PartKind::Calibration));
+        check_layout(orientation, &sink, &rep, &e.bed);
+        let tiles: f64 = sink.parts.iter().filter_map(|(p, _)| matches!(p.kind, PartKind::Tile { .. }).then(|| p.back_area.unwrap())).sum();
+        assert!((tiles - rep.plate_mm[0] * rep.plate_mm[1]).abs() < 1e-6 * tiles, "{orientation}: tile areas {tiles}");
+        for (p, _) in &sink.parts {
+            assert!(validate(&p.mesh, &p.validate_opts(true)).ok, "{orientation}: {}", p.name);
+        }
+    }
+}
+
+#[test]
+fn optimised_point_light_export_reports_scores() {
+    let job = job_from(serde_json::json!({
+        "jobId": 1, "widthMm": 120, "cellMm": 6, "lightAzimuthDeg": 180, "lightElevationDeg": 8,
+        "light": {"kind": "point", "posMm": [-600, 75, 200]}, "maxTiltDeg": 10, "baseMm": 3, "image": "synthetic",
+        "optimiser": {"kind": "shadow", "maxSweeps": 2}
+    }));
+    let e = SquamaExport { keys: KeyKind::None, stand: false, ..SquamaExport::default() };
+    let mut sink = CollectSink::default();
+    let rep = ad3d_core::squama::export::squama_export_job(&job, None, &e, &CancelToken::new(), &mut sink).unwrap();
+    let o = rep.optimise.expect("optimiser ran");
+    assert!(o.after.rmse <= o.before.rmse + 1e-12);
+    for (p, _) in &sink.parts {
+        assert!(validate(&p.mesh, &p.validate_opts(true)).ok, "{}", p.name);
+    }
+}
+
+#[test]
+fn three_mf_through_the_io_sink() {
+    use ad3d_core::io::threemf::{Meta, read_3mf};
+    use ad3d_core::squama::export::{IoSink, MultiSink};
+    let dir = std::env::temp_dir().join(format!("ad3d-m1-3mf-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("plate.3mf");
+    let p = SquamaParams { width_mm: 120.0, ..SquamaParams::default() };
+    let img = synthetic_target(squama::SYNTHETIC_PX.0, squama::SYNTHETIC_PX.1);
+    let e = SquamaExport { stand: true, ..SquamaExport::default() };
+    let tmf = ad3d_core::io::sink::ThreeMfSink::new(&path, &Meta::default(), None, None, CancelToken::new()).unwrap();
+    let mut sink = MultiSink(vec![Box::new(IoSink::new(tmf)), Box::new(StlDirSink::new(&dir, "p_").unwrap())]);
+    let rep = squama_export(&p, &img, &e, &CancelToken::new(), &mut sink).unwrap();
+    let model = read_3mf(&path).unwrap();
+    assert_eq!(model.objects.len(), rep.parts.len());
+    for r in &rep.parts {
+        assert!(dir.join(format!("p_{}.stl", r.name)).exists());
+    }
+    std::fs::remove_dir_all(&dir).ok();
+}

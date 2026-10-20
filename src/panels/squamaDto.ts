@@ -11,6 +11,7 @@ import type {
   Vec3,
 } from '../engine/types';
 import { isFullCrop } from './cropMath';
+import { PRINTERS } from './tilePlan';
 
 /** Slider interaction phase: 'drag' while the thumb moves, 'commit' for a final value. */
 export type ChangePhase = 'drag' | 'commit';
@@ -118,6 +119,8 @@ export function buildExportDto(params: SquamaParams, settings: ExportSettings, s
     stand: settings.stand,
     calibrationTile: settings.calibrationTile,
   };
+  const printer = PRINTERS.find((p) => p.id === settings.printerId);
+  if (printer) dto.bedMotion = printer.bedMotion ?? 'none';
   if (settings.tile) dto.bedMm = [...settings.bedMm] as Vec3;
   return dto;
 }

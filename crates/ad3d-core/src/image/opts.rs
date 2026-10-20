@@ -28,7 +28,9 @@ pub struct ImageOpts {
     /// Normalised `x0, y0, x1, y1` (y down) in the rotated and mirrored picture. The
     /// caller snaps it to whole cells (§2.1, §6.2). `None` = the whole picture.
     pub crop: Option<[f64; 4]>,
-    /// Clockwise rotation in degrees; a multiple of 90 (any sign).
+    /// Clockwise rotation in degrees; a multiple of 90 (any sign). The app's DTO
+    /// calls it `rotate`.
+    #[serde(alias = "rotate")]
     pub rotate_deg: i32,
     /// Mirror left↔right (after rotating).
     pub mirror: bool,
@@ -101,6 +103,11 @@ impl ImageOpts {
             }
         }
         Ok(())
+    }
+
+    /// `true` when every option is the identity default.
+    pub fn is_default(&self) -> bool {
+        *self == ImageOpts::default()
     }
 
     /// Clockwise quarter turns, 0–3.

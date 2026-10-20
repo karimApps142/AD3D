@@ -48,19 +48,10 @@ use crate::sim::{
     invert_direct, line_set, match_score, shade_lines, target_range,
 };
 
-// MERGE: `Limits` is the §12 contract type; if the solver module defines it,
-// re-export that one here instead.
-/// Geometric limits on facets (§12).
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Limits {
-    /// Largest facet tilt S (radians).
-    pub max_tilt: f64,
-    /// Minimum material behind any facet, T (mm).
-    pub base_mm: f64,
-    /// Height budget above T for every facet corner. `None`: the centre-pivot
-    /// relief `2·e_max·tan S`, so the plate is no thicker than the plain solve.
-    pub max_relief_mm: Option<f64>,
-}
+/// Geometric limits on facets (§12), shared with the solver. For the optimiser,
+/// `max_relief_mm: None` means the centre-pivot relief `2·e_max·tan S`, so the
+/// plate is no thicker than the plain solve.
+pub use super::solve::Limits;
 
 /// Optimiser settings (§12.1 `optimiser: { kind: 'shadow', maxSweeps }`).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -93,9 +84,8 @@ impl Default for OptimiserOpts {
     }
 }
 
-/// Per-facet target brightness source. MERGE: wire to the §16 `Target` from
-/// `squama::prepare_target` (implement this trait for it); the optimiser only
-/// needs linear `g ∈ [0, 1]` per facet, indexed like `Facet`s.
+/// Per-facet target brightness source: linear `g ∈ [0, 1]` per facet, indexed
+/// like `Facet`s (the §16 `Target`, plain slices, `CellBrightness`).
 pub trait FacetTargets {
     fn facet_g(&self) -> &[f32];
 }
@@ -109,6 +99,12 @@ impl FacetTargets for [f32] {
 impl FacetTargets for Vec<f32> {
     fn facet_g(&self) -> &[f32] {
         self
+    }
+}
+
+impl FacetTargets for crate::image::Target {
+    fn facet_g(&self) -> &[f32] {
+        &self.g
     }
 }
 
@@ -147,9 +143,10 @@ struct Param {
     h: f64,
 }
 
-/// Area centroid of each facet's pieces (the §4 pivot for unclipped cells).
-/// MERGE: for hex cells clipped by the plate edge the pivot must be the full
-/// hexagon's centre (§4); take it from the layout once hex lands.
+/// Area centroid of each facet's pieces (the §4 pivot for unclipped cells). For
+/// hex cells clipped by the plate edge the §4 pivot is the full hexagon's
+/// centre: `pipeline::solve_job` therefore starts the optimiser from the
+/// solver's facets ([`optimise_from`]), whose pivots come from the layout.
 pub fn facet_centroids(p: &Partition) -> Vec<DVec2> {
     let nf = facet_count(p);
     let mut a = vec![0.0; nf];
@@ -445,8 +442,7 @@ pub fn optimise_from(
 
 /// Square-grid convenience for the M0 pipeline: the squama plate's partition,
 /// directional light, Lambert response with `ambient`, and the default relief
-/// budget. MERGE: wire into `squama::solve_facets(.., Quality::Final, ..)` once
-/// the solver takes a `Quality`/`OptimiserOpts` (§12).
+/// budget. The app and exports reach the optimiser through `pipeline::solve_job`.
 pub fn optimise_squama(
     sp: &super::SquamaParams,
     cb: &CellBrightness,

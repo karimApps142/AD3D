@@ -181,3 +181,27 @@ describe('mesh payload', () => {
     expect(b.max).toEqual([1, 5, 3]);
   });
 });
+
+describe('§12.2 face kinds', () => {
+  it('parses the u16 face-kind section after the indices (flags bit 1)', () => {
+    const nv = 4;
+    const ni = 9; // 3 triangles → 6 bytes, padded to 8
+    const bytes = HEADER_BYTES + nv * 12 + ni * 4 + 8;
+    const buf = new ArrayBuffer(bytes);
+    const dv = new DataView(buf);
+    dv.setUint32(0, MESH_MAGIC, true);
+    dv.setUint32(4, 1, true);
+    dv.setUint32(8, nv, true);
+    dv.setUint32(12, ni, true);
+    for (let k = 0; k < 3; k++) dv.setFloat32(28 + 4 * k, 1, true); // bbox max
+    dv.setUint32(52, 3, true); // final + face kinds
+    const idx = new Uint32Array(buf, HEADER_BYTES + nv * 12, ni);
+    idx.set([0, 1, 2, 0, 1, 3, 1, 2, 3]);
+    const kinds = new Uint16Array(buf, HEADER_BYTES + nv * 12 + ni * 4, 3);
+    kinds.set([0, 1 | (2 << 8), 2]);
+    const p = parseMeshPayload(buf);
+    expect(p.flags).toBe(3);
+    expect(Array.from(p.faceKinds ?? [])).toEqual([0, 1 | (2 << 8), 2]);
+    expect(() => parseMeshPayload(buf.slice(0, bytes - 4))).toThrow();
+  });
+});

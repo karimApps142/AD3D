@@ -69,8 +69,8 @@ function axisCuts(length: number, unit: number, maxLen: number): number[] {
  * Tiles that fit the bed. Standing: u along the bed's X, v up the Z axis (the facets face the
  * bed's Y, the axis a bed-slinger moves). Flat: u along X, v along Y.
  *
- * MERGE: wire to squama::plan_tiles — once the engine returns a TilePlan, put it in
- * useViewportStore.tilePlan (source 'core') and this fallback is no longer used.
+ * Only used without the core's plan: panels/useCoreTilePlan.ts puts squama::plan_tiles' result
+ * in useViewportStore.tilePlan (source 'core') whenever the engine provides it.
  */
 export function planTilesFallback(l: CellLayout, bed: BedSpec = CR6_SE_BED, orientation: TileOrientation = 'standing'): TilePlanOverlay {
   const maxU = bed.xMm - 2 * bed.marginMm;

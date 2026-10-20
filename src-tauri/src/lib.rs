@@ -253,6 +253,7 @@ pub fn run() {
             squama_cmds::generate_squama,
             squama_cmds::squama_job_info,
             squama_cmds::squama_target,
+            squama_cmds::squama_tile_plan,
             squama_cmds::squama_image_open,
             squama_cmds::squama_image_thumbnail,
             squama_cmds::export_squama,

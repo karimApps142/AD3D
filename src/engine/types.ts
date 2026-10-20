@@ -80,6 +80,8 @@ export interface SquamaExportDto {
   keys?: 'none' | 'pegs';
   stand?: boolean;
   calibrationTile?: boolean;
+  /** AD3D addition: the axis the printer's bed moves in (default 'y', the CR-6 SE). */
+  bedMotion?: 'x' | 'y' | 'none';
 }
 
 export interface CoreWarning {
@@ -87,15 +89,56 @@ export interface CoreWarning {
   message: string;
 }
 
+/** Match of the simulated appearance (§15.1 forward model, cast shadows) against the target. */
+export interface MatchScore {
+  /** Area-weighted Pearson correlation, −1…1. */
+  pearson: number;
+  /** RMSE relative to the target range. */
+  rmseRel: number;
+  /** Visible contrast p99 / p1; null when the darkest facets are fully black. */
+  contrast: number | null;
+}
+
 /** What the core reports about one generation (squama_job_info). */
 export interface SquamaJobInfo {
   jobId: number;
   quality: Quality;
-  layout: { kind: 'square' | 'hex'; nx: number; ny: number; wMm: number; hMm: number; cellMm: number };
+  layout: {
+    kind: 'square' | 'hex';
+    orientation?: HexOrientation | null;
+    nx: number;
+    ny: number;
+    wMm: number;
+    hMm: number;
+    cellMm: number;
+    facets?: number;
+  };
   warnings: CoreWarning[];
   genMs: number;
   triangles: number;
   validated: boolean | null;
+  /** Achievable contrast (B_hi − B_lo) / B_hi of the design light. */
+  contrast?: number;
+  maxTiltUsedDeg?: number;
+  /** Final quality only: match of the simulated plate (after the optimiser when it ran). */
+  score?: MatchScore | null;
+  /** The plain inverse's score, when the optimiser ran. */
+  scoreBefore?: MatchScore | null;
+  optimiserSweeps?: number | null;
+  timings?: Record<string, number>;
+}
+
+/** The tile plan an export would use (squama_tile_plan). */
+export interface TilePlan {
+  /** Cells (square) or lattice units (hex) per column / row, from the lower left. */
+  cols: number[];
+  rows: number[];
+  /** Tile boundaries in plate mm. */
+  uEdgesMm: number[];
+  vEdgesMm: number[];
+  quarterTurns: number | null;
+  wMm: number;
+  hMm: number;
 }
 
 export interface ImageInfo {
@@ -144,6 +187,8 @@ export interface ExportResult {
   tiles: { cols: number[]; rows: number[] } | null;
   warnings: CoreWarning[];
   elapsedMs: number;
+  /** Optimiser before → after, when it ran. */
+  optimise?: { sweeps: number; before: MatchScore; after: MatchScore; timedOut: boolean } | null;
 }
 
 /** The user-editable part of the request (everything but the job id). */
@@ -181,6 +226,8 @@ export interface MeshPayload {
   readonly positions: Float32Array<ArrayBuffer>;
   /** Triangle list (u32). Usually a view into the payload. */
   readonly indices: Uint32Array<ArrayBuffer>;
+  /** §12.2 face kinds (flags bit 1): low byte = kind (Facet, Wall, Back, Key, Stand), high byte = part. */
+  readonly faceKinds?: Uint16Array<ArrayBuffer> | null;
   /** Total payload size in bytes. */
   readonly byteLength: number;
   /** True when positions/indices are views into the received buffer (no copy was made). */
@@ -214,6 +261,10 @@ export interface Engine {
   /** Native save dialog; resolves to the chosen path, or null. */
   pickSavePath(defaultName: string): Promise<string | null>;
   exportSquama(dto: SquamaExportDto, onEvent: (e: ExportEvent) => void): Promise<ExportResult>;
+  /** The tile plan an export with these settings would use; null when the engine cannot plan. */
+  squamaTilePlan?(dto: SquamaExportDto): Promise<TilePlan | null>;
+  /** Writes a PNG of the viewport; resolves to where it went. */
+  savePreviewImage?(png: Uint8Array, suggestedName: string): Promise<string>;
   /** True when an export was running and has been asked to stop. */
   cancelExport(): Promise<boolean>;
   revealInFinder(path: string): Promise<void>;

@@ -12,10 +12,12 @@
 //   40      f32      gen_ms     (producer's generation time)
 //   44      f32      encode_ms  (producer's encode time)
 //   48      u32      job_id     (echo of the request's jobId)
-//   52      u32      flags (0)
+//   52      u32      flags: bit 0 = final quality, bit 1 = face kinds follow (§12.2)
 //   56      u32[2]   reserved
 //   64      f32      positions[3 * vertex_count]
 //   ...     u32      indices[index_count]
+//   ...     u16      face kinds[triangles] (flags bit 1 only; low byte = kind, high byte = part),
+//                    padded to 4 bytes
 //
 // Every section starts on a 4-byte boundary, so on a little-endian host (x86_64, arm64) the arrays
 // are exposed as zero-copy Float32Array/Uint32Array views into the received buffer.
@@ -50,8 +52,17 @@ export class PayloadError extends Error {
 export const HOST_LITTLE_ENDIAN =
   new Uint8Array(new Uint32Array([0x01020304]).buffer)[0] === 0x04;
 
-export function expectedPayloadBytes(vertexCount: number, indexCount: number): number {
-  return HEADER_BYTES + vertexCount * 12 + indexCount * 4;
+/** §12.2 flags bit 1: a u16 face kind per triangle follows the indices. */
+export const PAYLOAD_FLAG_FACE_KINDS = 1 << 1;
+
+/** Bytes of the face-kind section for `triangles` triangles (u16 each, padded to 4). */
+export function faceKindBytes(triangles: number): number {
+  return Math.ceil((2 * triangles) / 4) * 4;
+}
+
+export function expectedPayloadBytes(vertexCount: number, indexCount: number, flags = 0): number {
+  const kinds = flags & PAYLOAD_FLAG_FACE_KINDS ? faceKindBytes(indexCount / 3) : 0;
+  return HEADER_BYTES + vertexCount * 12 + indexCount * 4 + kinds;
 }
 
 function isArrayBuffer(x: unknown): x is ArrayBuffer {
@@ -124,7 +135,8 @@ export function parseMeshPayload(
   if (indexCount % 3 !== 0) {
     throw new PayloadError(`index_count ${indexCount} is not a multiple of 3`);
   }
-  const expected = expectedPayloadBytes(vertexCount, indexCount);
+  const flags = dv.getUint32(HEADER_OFFSETS.flags, true);
+  const expected = expectedPayloadBytes(vertexCount, indexCount, flags);
   if (length !== expected) {
     throw new PayloadError(
       `size mismatch: header says ${expected} bytes (vertex_count ${vertexCount}, ` +
@@ -154,11 +166,15 @@ export function parseMeshPayload(
 
   const posOffset = base + HEADER_BYTES;
   const idxOffset = posOffset + vertexCount * 12;
+  const kindOffset = idxOffset + indexCount * 4;
+  const triangleCount = indexCount / 3;
   let positions: Float32Array<ArrayBuffer>;
   let indices: Uint32Array<ArrayBuffer>;
+  let faceKinds: Uint16Array<ArrayBuffer> | null = null;
   if (HOST_LITTLE_ENDIAN) {
     positions = new Float32Array(buffer, posOffset, vertexCount * 3);
     indices = new Uint32Array(buffer, idxOffset, indexCount);
+    if (flags & PAYLOAD_FLAG_FACE_KINDS) faceKinds = new Uint16Array(buffer, kindOffset, triangleCount);
   } else {
     // Big-endian hosts (none we ship to) get a decoded copy.
     payloadZeroCopy = false;
@@ -167,6 +183,10 @@ export function parseMeshPayload(
     const all = new DataView(buffer);
     for (let i = 0; i < positions.length; i++) positions[i] = all.getFloat32(posOffset + i * 4, true);
     for (let i = 0; i < indices.length; i++) indices[i] = all.getUint32(idxOffset + i * 4, true);
+    if (flags & PAYLOAD_FLAG_FACE_KINDS) {
+      faceKinds = new Uint16Array(triangleCount);
+      for (let i = 0; i < triangleCount; i++) faceKinds[i] = all.getUint16(kindOffset + i * 2, true);
+    }
   }
 
   if (options.checkIndices) {
@@ -182,15 +202,16 @@ export function parseMeshPayload(
     version,
     vertexCount,
     indexCount,
-    triangleCount: indexCount / 3,
+    triangleCount,
     bboxMin,
     bboxMax,
     genMs: dv.getFloat32(HEADER_OFFSETS.genMs, true),
     encodeMs: dv.getFloat32(HEADER_OFFSETS.encodeMs, true),
     jobId: dv.getUint32(HEADER_OFFSETS.jobId, true),
-    flags: dv.getUint32(HEADER_OFFSETS.flags, true),
+    flags,
     positions,
     indices,
+    faceKinds,
     byteLength: length,
     payloadZeroCopy,
   };
