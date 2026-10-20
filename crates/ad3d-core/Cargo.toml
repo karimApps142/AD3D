@@ -30,6 +30,10 @@ serde_json.workspace = true
 name = "squama"
 harness = false
 
+[[bench]]
+name = "squama_layouts"
+harness = false
+
 [[test]]
 name = "manifold_oracle"
 required-features = ["manifold-oracle"]
