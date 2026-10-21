@@ -36,6 +36,8 @@ mod squama_cmds;
 mod e2e_m1;
 #[cfg(test)]
 mod m1_review_tests;
+#[cfg(test)]
+mod m1_review2_tests;
 
 #[derive(Default)]
 struct AppState {

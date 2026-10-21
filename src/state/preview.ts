@@ -52,9 +52,9 @@ export function startPreview(engine: Engine): PreviewController {
       useAppStore.setState({ previewError: error instanceof Error ? error.message : String(error) });
     },
     onBusyChange: (busy) => useAppStore.setState({ previewBusy: busy }),
-    // A final plate (optimiser: up to its time budget) must not hold back the next drag tick:
-    // abort it in the core and send the drag at once.
-    shouldCancel: (inFlight, next) => (inFlight.quality ?? 'final') === 'final' && next.quality === 'preview',
+    // A final plate (optimiser: up to its time budget) must not hold back the next request: a
+    // drag tick, or a newer final (typed values, undo) that supersedes it. Abort it in the core.
+    shouldCancel: (inFlight) => (inFlight.quality ?? 'final') === 'final',
     cancel: engine.cancelGenerate ? () => void engine.cancelGenerate?.() : undefined,
   });
 

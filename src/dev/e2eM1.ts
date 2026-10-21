@@ -6,6 +6,7 @@
 // app's own "Save preview image" path (save_preview_image → ~/Pictures/AD3D) three times: at the
 // design light, with the free preview light swung, and in the front view.
 
+import { useImage } from '../app/actions';
 import { getEngine } from '../engine';
 import { useSquamaUi } from '../panels/squamaUi';
 import { useAppStore } from '../state/store';
@@ -27,9 +28,11 @@ export async function runE2eM1(path: string): Promise<void> {
   try {
     await waitFor('the native engine', () => !!useAppStore.getState().engine?.isNative);
     const e = await getEngine();
-    const info = await e.imageInfo(path);
-    useSquamaUi.getState().set({ image: info, imageError: null });
-    useAppStore.getState().setParams({ image: path, imageOpts: undefined, heightMm: undefined, widthMm: 160, quality: 'final', ...(import.meta.env.VITE_AD3D_E2E_OPT ? { optimiser: { kind: 'shadow', maxSweeps: 8 } } : {}) });
+    // Round 2: the app's one photo entry point (File → Open / Import / drop / Image panel).
+    await useImage(path);
+    const ui = useSquamaUi.getState().image;
+    log(`ui.image after useImage: ${ui ? `${ui.widthPx}x${ui.heightPx}` : 'null'}; params.quality ${useAppStore.getState().params.quality}`);
+    useAppStore.getState().setParams({ widthMm: 160, ...(import.meta.env.VITE_AD3D_E2E_OPT ? { optimiser: { kind: 'shadow', maxSweeps: 8 } } : {}) });
     const t0 = performance.now();
     await waitFor('the photo plate', () => {
       const s = useAppStore.getState();

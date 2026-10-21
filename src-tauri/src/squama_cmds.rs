@@ -37,8 +37,8 @@ use ad3d_core::mesh::validate::validate;
 use ad3d_core::orient::BedMotion;
 use ad3d_core::relief::Partition;
 use ad3d_core::squama::export::{
-    ExportReport, IoSink, KeyKind, PartReport as CorePartReport, PartSink, SquamaExport, TileRequest, export_plate,
-    parse_orientation, preview_tile_plan,
+    ExportReport, IoSink, KeyKind, PartReport as CorePartReport, PartSink, SquamaExport, TileRequest, export_plate_solved,
+    parse_orientation, preview_tile_plan, preview_tile_plan_solved,
 };
 use ad3d_core::squama::job::{QualityDto, SquamaJob};
 use ad3d_core::squama::parts::Part;
@@ -340,7 +340,13 @@ type PartKey = (u8, u32, u32, u64);
 pub struct SquamaState {
     newest_job: AtomicU64,
     newest_target: AtomicU64,
+    newest_plan: AtomicU64,
     running: Mutex<Option<(u64, CancelToken)>>,
+    /// The tile plan in flight: a newer plan or a drag cancels it.
+    planning: Mutex<Option<(u64, CancelToken)>>,
+    /// Solves of recent final plates, by settings key: the tile plan and the export
+    /// reuse them instead of repeating the optimiser.
+    solves: Mutex<VecDeque<(String, Arc<ad3d_core::squama::pipeline::SolvedJob>)>>,
     sources: Mutex<Vec<(String, Arc<Source>)>>,
     partitions: Mutex<Vec<(PartKey, Arc<Partition>)>>,
     /// Simulated appearance raster of recent final plates, by settings key.
@@ -367,15 +373,37 @@ pub fn decode_image(path: &str) -> Result<LinearLuma, String> {
     if ad3d_core::image::heic::needs_sips(p) {
         return ad3d_core::image::heic::decode_with_sips(p).map_err(core_err);
     }
+    if !p.exists() {
+        return Err("the file does not exist (moved or renamed?)".into());
+    }
     LinearLuma::load(p).map_err(|e| {
         let m = e.to_string();
-        if m.contains("limit") {
-            let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            format!("{name} is too large to open (over the 512 MB decoder limit, roughly 100 megapixels); scale it down and try again")
-        } else {
-            m
-        }
+        eprintln!("[squama] could not open {path}: {m}");
+        readable_image_error(&m)
     })
+}
+
+/// A short message for a photo that could not be read: no path (the toast names
+/// the file) and no decoder wording. The full error goes to the console log.
+pub fn readable_image_error(m: &str) -> String {
+    let l = m.to_ascii_lowercase();
+    if l.contains("limit") {
+        "it is too large to open (over the 512 MB decoder limit, roughly 100 megapixels); scale it down and try again".into()
+    } else if l.contains(ad3d_core::image::decode::TRUNCATED) || l.contains("unexpected eof") || l.contains("failed to fill whole buffer") {
+        "the file ends early (an interrupted download or a cloud placeholder?); download or export it again".into()
+    } else if l.contains("gif") {
+        "GIF is not supported; convert it to PNG or JPEG".into()
+    } else if l.contains("unrecognised image format") || l.contains("not supported") || l.contains("format") {
+        "not an image AD3D can read; use PNG, JPEG, TIFF, BMP, WebP or HEIC".into()
+    } else if l.contains("permission denied") {
+        "AD3D is not allowed to read it (check the file's permissions)".into()
+    } else if l.contains("is a directory") {
+        "that is a folder, not a photo".into()
+    } else if l.contains("no pixels") {
+        "the image has no pixels".into()
+    } else {
+        "the photo could not be decoded (it may be damaged); open it in Preview and export it as PNG or JPEG".into()
+    }
 }
 
 /// Key of everything that shapes a plate except the job id and quality.
@@ -528,6 +556,13 @@ impl SquamaState {
         } else {
             None
         };
+        if is_final {
+            let mut c = lock(&self.solves);
+            let key = settings_key(dto);
+            c.retain(|(k, _)| *k != key);
+            c.push_front((key, Arc::new(out.solved_job())));
+            c.truncate(SIM_CACHE_MAX);
+        }
         if let Some(a) = &out.appearance {
             let raster = facet_raster(&l, &a.sim);
             let mut c = lock(&self.sims);
@@ -581,13 +616,31 @@ impl SquamaState {
         lock(&self.jobs).iter().rev().find(|j| j.job_id == job_id).cloned()
     }
 
+    /// The solve of the last final plate with these settings, if still cached.
+    fn cached_solve(&self, dto: &SquamaParamsM1) -> Option<Arc<ad3d_core::squama::pipeline::SolvedJob>> {
+        let key = settings_key(dto);
+        lock(&self.solves).iter().find(|(k, _)| *k == key).map(|(_, s)| s.clone())
+    }
+
+    /// Cancels the tile plan in flight, if any (a drag started).
+    pub fn cancel_plan(&self) {
+        if let Some((_, t)) = lock(&self.planning).as_ref() {
+            t.cancel();
+        }
+    }
+
     /// The tile plan an export with these settings would cut: the export's own
     /// planning stage (final solve, optimiser when on, refined seams) on the cached
     /// final-quality target.
     pub fn tile_plan(&self, e: &SquamaExportDto, cancel: &CancelToken) -> Result<TilePlanDto, String> {
         let job = e.params.job().map_err(core_err)?.with_quality(Quality::Final);
         let (l, _, target, _) = self.prepared(&job)?;
-        let (plan, thickness) = preview_tile_plan(&job, &l, Some(&target.g), &e.options()?, cancel).map_err(core_err)?;
+        cancel.check().map_err(core_err)?;
+        let (plan, thickness) = match self.cached_solve(&e.params) {
+            Some(sj) => preview_tile_plan_solved(&job, &l, &target.g, (*sj).clone(), &e.options()?, cancel),
+            None => preview_tile_plan(&job, &l, Some(&target.g), &e.options()?, cancel),
+        }
+        .map_err(core_err)?;
         let print_mm = plan
             .tiles
             .iter()
@@ -642,7 +695,8 @@ impl SquamaState {
             ..Default::default()
         };
         let mut sink = AppSink::new(&out_dir, &base, &e.formats, &meta, cancel, emit)?;
-        let report = export_plate(&job, &l, &target.g, warnings, &opts, cancel, &mut sink).map_err(|err| match err {
+        let solved = self.cached_solve(&e.params).map(|s| (*s).clone());
+        let report = export_plate_solved(&job, &l, &target.g, warnings, solved, &opts, cancel, &mut sink).map_err(|err| match err {
             CoreError::Cancelled => "cancelled".to_string(),
             err => core_err(err),
         })?;
@@ -881,6 +935,10 @@ pub async fn generate_squama(params: SquamaParamsM1, state: State<'_, Arc<Squama
     if let Some((_, old)) = lock(&state.running).replace((seq, token.clone())) {
         old.cancel();
     }
+    // A drag preview must not compete with a tile plan for the cores.
+    if params.quality == Some(QualityDto::Preview) {
+        state.cancel_plan();
+    }
     blocking(move || {
         let result = if state.newest_job.load(Ordering::SeqCst) != seq {
             Err("cancelled".to_owned())
@@ -929,7 +987,26 @@ pub async fn squama_target(params: SquamaParamsM1, state: State<'_, Arc<SquamaSt
 #[tauri::command]
 pub async fn squama_tile_plan(export: SquamaExportDto, state: State<'_, Arc<SquamaState>>) -> Result<TilePlanDto, String> {
     let state: Arc<SquamaState> = state.inner().clone();
-    blocking(move || state.tile_plan(&export, &CancelToken::new())).await
+    // Latest wins: a newer plan cancels this one at its next cancel check, and a plan
+    // already superseded when the worker picks it up is skipped.
+    let seq = state.newest_plan.fetch_add(1, Ordering::SeqCst) + 1;
+    let token = CancelToken::new();
+    if let Some((_, old)) = lock(&state.planning).replace((seq, token.clone())) {
+        old.cancel();
+    }
+    blocking(move || {
+        let result = if state.newest_plan.load(Ordering::SeqCst) != seq {
+            Err("cancelled".to_owned())
+        } else {
+            state.tile_plan(&export, &token).map_err(|e| if token.is_cancelled() { "cancelled".to_owned() } else { e })
+        };
+        let mut planning = lock(&state.planning);
+        if planning.as_ref().is_some_and(|(s, _)| *s == seq) {
+            *planning = None;
+        }
+        result
+    })
+    .await
 }
 
 #[tauri::command]

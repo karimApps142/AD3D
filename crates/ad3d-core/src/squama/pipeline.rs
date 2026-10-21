@@ -196,6 +196,9 @@ pub struct PlateResult {
     pub warnings: Vec<Warning>,
     pub report: SolveReport,
     pub optimise: Option<OptimiseReport>,
+    /// The plain inverse (before the optimiser), so an export or tile plan can
+    /// reuse this solve ([`PlateResult::solved_job`]).
+    pub solved: Solved,
     /// Final quality only.
     pub appearance: Option<Appearance>,
     pub mesh_stats: MeshStats,
@@ -206,6 +209,13 @@ pub struct PlateResult {
 }
 
 impl PlateResult {
+    /// The solve behind this plate, for [`crate::squama::export::export_plate_solved`]
+    /// and [`crate::squama::export::preview_tile_plan_solved`] (final quality only:
+    /// a preview solve differs from the export's).
+    pub fn solved_job(&self) -> SolvedJob {
+        SolvedJob { facets: self.facets.clone(), solved: self.solved.clone(), optimise: self.optimise.clone() }
+    }
+
     pub fn validate_opts(&self, transform: crate::orient::Xform) -> crate::mesh::validate::ValidateOpts {
         crate::mesh::validate::ValidateOpts {
             transform,
@@ -268,7 +278,8 @@ pub fn plate_from_target(
         facets: sj.facets,
         heights,
         warnings,
-        report: sj.solved.report,
+        report: sj.solved.report.clone(),
+        solved: sj.solved,
         optimise: sj.optimise,
         appearance,
         mesh_stats,

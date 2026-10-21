@@ -17,13 +17,27 @@ export function imageSizePx(params: SquamaParams, image: ImageInfo | null): [num
 export function predictPlate(params: SquamaParams, image: ImageInfo | null): PredictedLayout {
   const [w, h] = imageSizePx(params, image);
   const c = params.imageOpts?.crop ?? [0, 0, 1, 1];
-  return predictLayout(params.widthMm, params.cellMm, (c[2] - c[0]) * w, (c[3] - c[1]) * h, params.heightMm);
+  return predictLayout(params.widthMm, params.cellMm, (c[2] - c[0]) * w, (c[3] - c[1]) * h, params.heightMm, params.layout);
+}
+
+/** True when a core report is for a plate of the current params' kind and snapping. */
+export function infoMatches(params: SquamaParams, predicted: PredictedLayout, info: SquamaJobInfo | null): info is SquamaJobInfo {
+  if (!info) return false;
+  const kind = params.layout?.kind ?? 'square';
+  const orient = params.layout?.kind === 'hex' ? params.layout.orientation : null;
+  return (
+    info.layout.kind === kind &&
+    (kind === 'square' || (info.layout.orientation ?? null) === orient) &&
+    info.layout.nx === predicted.nx &&
+    info.layout.ny === predicted.ny &&
+    Math.abs(info.layout.cellMm - predicted.cellMm) < 1e-9
+  );
 }
 
 /** Core report when it matches the current snapping (a stale report never wins), else the prediction. */
 export function plateLayout(params: SquamaParams, image: ImageInfo | null, info: SquamaJobInfo | null): PredictedLayout {
   const predicted = predictPlate(params, image);
-  if (info && info.layout.nx === predicted.nx && info.layout.ny === predicted.ny && Math.abs(info.layout.cellMm - predicted.cellMm) < 1e-9) {
+  if (infoMatches(params, predicted, info)) {
     const { nx, ny, wMm, hMm, cellMm } = info.layout;
     return { nx, ny, wMm, hMm, cellMm };
   }

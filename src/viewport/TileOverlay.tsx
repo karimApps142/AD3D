@@ -14,11 +14,15 @@ const LINE_COLOR = '#4fd1ff';
 export function useTilePlan(): TilePlanOverlay | null {
   const mesh = useAppStore((s) => s.mesh);
   const fromCore = useViewportStore((s) => s.tilePlan);
+  const state = useViewportStore((s) => s.tilePlanState);
   return useMemo(() => {
     if (fromCore) return fromCore;
+    // The CR-6 estimate only stands in for a missing core planner (browser mock): never for an
+    // export that is one piece, nor for a plan the core refused.
+    if (state !== 'estimate') return null;
     const layout = layoutFromDisplay(mesh);
     return layout ? planTilesFallback(layout) : null;
-  }, [mesh, fromCore]);
+  }, [mesh, fromCore, state]);
 }
 
 export function TileOverlay() {

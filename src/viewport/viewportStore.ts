@@ -25,8 +25,12 @@ export interface ViewportSettings {
   frontView: boolean;
   /** Draw the tile outlines and part labels. */
   showTiles: boolean;
-  /** Tile layout from the core; null = use the viewport's fallback planner. */
+  /** Tile layout from the core; null = see tilePlanState. */
   tilePlan: TilePlanOverlay | null;
+  /** 'estimate': no core planner (browser mock), use the fallback; 'off': the export is one
+   *  piece ("Split to the bed" off); 'error': the core could not plan (tilePlanError). */
+  tilePlanState: 'core' | 'estimate' | 'off' | 'error';
+  tilePlanError: string | null;
   /** Last "Save preview image" result, for the toolbar's status line. */
   lastSaved: string | null;
 }
@@ -52,6 +56,8 @@ export const DEFAULT_VIEWPORT: ViewportSettings = {
   frontView: false,
   showTiles: false,
   tilePlan: null,
+  tilePlanState: 'estimate',
+  tilePlanError: null,
   lastSaved: null,
 };
 

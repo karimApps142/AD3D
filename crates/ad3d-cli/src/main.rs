@@ -208,8 +208,14 @@ enum Cmd {
         /// Largest tile `WxH` mm.
         #[arg(long = "max-size", default_value = "120x90")]
         max_size: String,
+        /// standing (the tile's own best turn), standing-q0..q3, or flat.
         #[arg(long, default_value = "standing")]
         orientation: String,
+        /// Quarter turns the plate will print with (its export report's
+        /// `standing-qN`): the tile then stacks its layers the same way relative to
+        /// the light whenever its ledges allow, so the measured response transfers.
+        #[arg(long = "plate-turns", value_parser = clap::value_parser!(u32).range(0..4))]
+        plate_turns: Option<u32>,
         #[command(flatten)]
         bed: BedArgs,
         #[command(flatten)]
@@ -733,7 +739,7 @@ fn real_main() -> R<ExitCode> {
             }
             Ok(code)
         }
-        Cmd::Calibration { cell, azimuth, elevation, max_tilt, base, steps, max_size, orientation, bed, out } => {
+        Cmd::Calibration { cell, azimuth, elevation, max_tilt, base, steps, max_size, orientation, plate_turns, bed, out } => {
             let p = SquamaParams {
                 width_mm: 100.0,
                 height_mm: None,
@@ -747,10 +753,33 @@ fn real_main() -> R<ExitCode> {
             spec.steps = steps;
             spec.max_size_mm = parse_dims::<2>(&max_size)?;
             let t = Instant::now();
-            let tile = calibration_tile(&spec, &GenOptions::default(), &CancelToken::new())?;
+            let gopts = GenOptions::default();
+            let mut tile = calibration_tile(&spec, &gopts, &CancelToken::new())?;
             let gen_ms = ms(t);
+            let printer = printer_of(&bed)?;
+            let tbed = printer.tile_bed(&printer.bed());
+            use ad3d_core::orient::{Orientation, QuarterTurns, fixed_quarter_turns, standing_xform};
             let o = OrientationDto::parse(&orientation)?.orientation();
-            let (x, k) = ad3d_core::orient::export_xform(o, tile.key.w_mm, tile.key.h_mm, p.light_azimuth);
+            let (k, ledge) = match o {
+                Orientation::Flat => (None, None),
+                Orientation::Standing(QuarterTurns::Auto) => {
+                    let (k, l) = tile.best_turn(plate_turns, &gopts.tol);
+                    (Some(k), Some(l))
+                }
+                o => {
+                    let k = fixed_quarter_turns(o).unwrap_or(0);
+                    let all: Vec<u32> = (0..tile.partition.pieces.len() as u32).collect();
+                    let l = ad3d_core::orient::max_downward_ledge(&tile.partition, &tile.heights, &all, ad3d_core::orient::down_in_plate(k), &gopts.tol);
+                    (Some(k), Some(l))
+                }
+            };
+            tile.set_print_turn(k);
+            // Face parallel to the bed's motion, placed inside the margins like the plate's parts.
+            let base_x = k.map_or(ad3d_core::orient::Xform::IDENTITY, |k| standing_xform(k, tile.key.w_mm, tile.key.h_mm, tbed.motion));
+            let (lo, hi) = ad3d_core::squama::parts::mesh_box(&tile.mesh);
+            let item = ad3d_core::squama::parts::LayoutItem { base: base_x, min: lo, max: hi, may_rotate: k.is_none() };
+            let placed = ad3d_core::squama::parts::layout_on_beds(&[item], &tbed)?;
+            let x = placed[0].transform;
             let rep = validate(&tile.mesh, &ValidateOpts { check_self_intersection: out.strict, ..tile.validate_opts(x) });
             println!(
                 "calibration tile: {} x {} mm, {} steps ({:.1}° .. {:.1}°), light side {:?}, {} triangles ({gen_ms:.1} ms)",
@@ -762,12 +791,25 @@ fn real_main() -> R<ExitCode> {
                 tile.key.light_side,
                 tile.mesh.triangle_count()
             );
-            println!("orientation: {}", k.map(|k| format!("standing, {k} quarter turn(s)")).unwrap_or_else(|| "flat".into()));
+            println!(
+                "orientation: {}",
+                k.map(|k| format!("standing, {k} quarter turn(s), largest downward ledge {:.2} mm", ledge.unwrap_or(0.0)))
+                    .unwrap_or_else(|| "flat".into())
+            );
+            if let (Some(k), Some(pk)) = (k, plate_turns)
+                && (k + 4 - pk) % 2 != 0
+            {
+                println!(
+                    "warning [calibration_turn_differs]: the tile prints with {k} quarter turn(s), the plate with {pk}: its layer lines run the other way relative to the light"
+                );
+            }
+            if ledge.is_some_and(|l| l > ad3d_core::squama::calibration::MAX_LEDGE_MM) {
+                println!("warning [downward_ledge]: largest downward-facing ledge {:.2} mm (above 0.6 mm may sag)", ledge.unwrap_or(0.0));
+            }
             for w in &tile.warnings {
                 println!("warning [{}]: {}", w.code, w.message);
             }
             print!("{}", rep.summary());
-            let printer = printer_of(&bed)?;
             let outs = outputs(&out.out, &out.format, "calibration")?;
             let key_json = serde_json::to_string_pretty(&tile.key)?;
             let meta = Meta {

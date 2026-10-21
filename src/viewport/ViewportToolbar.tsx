@@ -49,6 +49,15 @@ export function ViewportToolbar() {
   const setView = useAppStore((s) => s.setView);
   const designLamp = useAppStore((s) => designPointLight(s.params) !== null);
   const plan = useTilePlan();
+  const planState = useViewportStore((s) => s.tilePlanState);
+  const planError = useViewportStore((s) => s.tilePlanError);
+  const tilesTitle = plan
+    ? `Tile layout (${plan.source === 'core' ? 'from the core' : 'estimated for a CR-6 SE bed'})`
+    : planState === 'off'
+      ? 'Exported in one piece: turn on "Split to the bed" in Tiling & export to see tiles'
+      : planState === 'error'
+        ? `No tile plan: ${planError ?? 'the core could not plan the tiles'}`
+        : 'No plate';
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lampActive = (follow && designLamp) || vp.lightKind === 'point';
@@ -110,7 +119,7 @@ export function ViewportToolbar() {
         <button type="button" data-vp="front" className={vp.frontView ? 'on' : undefined} aria-pressed={vp.frontView} title="Look straight at the plate, as it hangs on a wall (orthographic)" onClick={() => vp.set({ frontView: !vp.frontView })}>
           Front view
         </button>
-        <button type="button" data-vp="tiles" className={vp.showTiles ? 'on' : undefined} aria-pressed={vp.showTiles} disabled={!plan} title={plan ? `Tile layout (${plan.source === 'core' ? 'from the core' : 'estimated for a CR-6 SE bed'})` : 'No plate'} onClick={() => vp.set({ showTiles: !vp.showTiles })}>
+        <button type="button" data-vp="tiles" className={vp.showTiles ? 'on' : undefined} aria-pressed={vp.showTiles} disabled={!plan} title={tilesTitle} onClick={() => vp.set({ showTiles: !vp.showTiles })}>
           Tiles{plan && plan.tiles.length > 1 ? ` (${plan.tiles.length})` : ''}
         </button>
         <button type="button" data-vp="save-image" disabled={saving} title="Save the view as a PNG" onClick={save}>

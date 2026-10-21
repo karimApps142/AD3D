@@ -15,7 +15,7 @@ use crate::cancel::CancelToken;
 use crate::error::{Error, Result, Warning};
 use crate::image::{CellBrightness, LinearLuma};
 use crate::mesh::validate::validate;
-use crate::orient::{BedMotion, Orientation, QuarterTurns, down_in_plate, max_downward_ledge};
+use crate::orient::{BedMotion, Orientation, QuarterTurns, down_in_plate, downward_ledge_area, max_downward_ledge, pieces_with_downward_ledge};
 use crate::relief::{BackRegion, PieceSet, mesh_relief, quantise};
 use crate::squama::parts::{
     KeySpec, LayoutItem, Part, PartKind, STAND_KEY_CLEARANCE_MM, StandSpec, engrave_regions, key_layout, key_regions, layout_on_beds, layout_on_beds_lenient, mesh_box,
@@ -24,7 +24,7 @@ use crate::squama::parts::{
 use crate::squama::calibration::{CalibrationKey, CalibrationSpec, calibration_tile};
 use crate::squama::job::SquamaJob;
 use crate::squama::layout::TileCut as LayoutCut;
-use crate::squama::pipeline::{dedup_warnings, job_layout, prepare_target, solve_job};
+use crate::squama::pipeline::{SolvedJob, dedup_warnings, job_layout, prepare_target, solve_job};
 use crate::squama::solve::Quality;
 use crate::squama::tiles::{Bed, CutAxis, DRect, MAX_STANDING_RATIO, SeamPolicy, TileOpts, plan_tiles, seam_step_cost, tile_xform};
 use crate::squama::{GenOptions, Layout, LayoutKind, SquamaParams, SquamaParamsDto, build_partition, check_params};
@@ -438,7 +438,7 @@ pub fn squama_export_job(
         let part = build_partition(&l, &[])?;
         let t = prepare_target(img, &job.image_opts, &l, &part)?;
         cancel.check()?;
-        export_inner(job, &l, &t.g, warnings, e, cancel, sink)
+        export_inner(job, &l, &t.g, warnings, None, e, cancel, sink)
     };
     match run() {
         Ok(r) => Ok(r),
@@ -481,7 +481,7 @@ pub fn squama_export_cb(
         if l.h_mm > 2048.0 + 1e-9 {
             return Err(Error::InvalidParams(format!("plate height {} mm above 2048 mm", l.h_mm)));
         }
-        export_inner(&SquamaJob::from_params(p), &l, &cb.g, warnings, e, cancel, sink)
+        export_inner(&SquamaJob::from_params(p), &l, &cb.g, warnings, None, e, cancel, sink)
     };
     match run() {
         Ok(r) => Ok(r),
@@ -503,7 +503,23 @@ pub fn export_plate(
     cancel: &CancelToken,
     sink: &mut dyn PartSink,
 ) -> Result<ExportReport> {
-    match export_inner(job, l, g, warnings, e, cancel, sink) {
+    export_plate_solved(job, l, g, warnings, None, e, cancel, sink)
+}
+
+/// [`export_plate`] reusing a final-quality solve of the same job (the app's last
+/// final plate, [`crate::squama::pipeline::PlateResult::solved_job`]); `None` solves.
+#[allow(clippy::too_many_arguments)]
+pub fn export_plate_solved(
+    job: &SquamaJob,
+    l: &Layout,
+    g: &[f32],
+    warnings: Vec<Warning>,
+    solved: Option<SolvedJob>,
+    e: &SquamaExport,
+    cancel: &CancelToken,
+    sink: &mut dyn PartSink,
+) -> Result<ExportReport> {
+    match export_inner(job, l, g, warnings, solved, e, cancel, sink) {
         Ok(r) => Ok(r),
         Err(err) => {
             sink.abort();
@@ -590,19 +606,54 @@ fn heights_thickness(h: &crate::relief::Heights, tol: &crate::relief::Tol) -> f6
     max_corner.max(max_apex)
 }
 
-fn plan_export(job: &SquamaJob, l: &Layout, g: &[f32], e: &SquamaExport, cancel: &CancelToken) -> Result<Planned> {
+/// Downward ledges above this may sag (§9 report; the export warns past it).
+pub const MAX_LEDGE_MM: f64 = 0.6;
+/// Ledge walls shallower than this print fine and do not count towards
+/// [`downward_ledge_area`] when Auto compares quarter turns.
+const LEDGE_AREA_MIN_DEPTH_MM: f64 = 0.2;
+
+fn plan_export(job: &SquamaJob, l: &Layout, g: &[f32], pre: Option<SolvedJob>, e: &SquamaExport, cancel: &CancelToken) -> Result<Planned> {
     let tol = e.gen_opts.tol;
     let job = job.with_quality(Quality::Final);
     let pc = check_params(&job.params, &e.gen_opts)?.0;
     let plain = build_partition(l, &[])?;
-    let sj = solve_job(&job, l, &plain, g, &e.gen_opts, cancel)?;
-    let heights0 = quantise(&plain, &sj.facets, pc.base_mm, &tol)?;
+    let mut sj = match pre {
+        Some(sj) if sj.facets.len() == sj.solved.facets.len() => sj,
+        _ => solve_job(&job, l, &plain, g, &e.gen_opts, cancel)?,
+    };
+    let mut heights0 = quantise(&plain, &sj.facets, pc.base_mm, &tol)?;
     cancel.check()?;
-    let thickness0 = heights_thickness(&heights0, &tol);
+    let mut thickness0 = heights_thickness(&heights0, &tol);
     if e.keys != KeyKind::None {
         e.key_spec.check()?;
     }
-    let mut plan = plan_tiles(l, &e.bed, e.orientation, planning_azimuth(&job, l)?, &tile_opts(e, thickness0))?;
+    let az = planning_azimuth(&job, l)?;
+    let all: Vec<u32> = (0..plain.pieces.len() as u32).collect();
+    let plan_for = |thickness: f64, h: &crate::relief::Heights| -> Result<crate::squama::tiles::TilePlan> {
+        let opts = tile_opts(e, thickness);
+        let plan = plan_tiles(l, &e.bed, e.orientation, az, &opts)?;
+        prefer_lower_ledges(plan, l, &e.bed, e.orientation, az, &opts, &plain, h, &all, &tol)
+    };
+    let mut plan = plan_for(thickness0, &heights0)?;
+    // The optimiser does not know which way the print stands: clamp its moves where
+    // they would leave a downward ledge past MAX_LEDGE_MM in the planned direction.
+    if sj.optimise.is_some() {
+        for _ in 0..2 {
+            let Some(k) = plan.quarter_turns else { break };
+            let Some((facets, h)) =
+                clamp_ledges(&plain, &sj.solved.facets, &sj.facets, pc.base_mm, &tol, down_in_plate(k), MAX_LEDGE_MM, cancel)?
+            else {
+                break;
+            };
+            sj.facets = facets;
+            heights0 = h;
+            thickness0 = heights_thickness(&heights0, &tol);
+            plan = plan_for(thickness0, &heights0)?;
+            if plan.quarter_turns == Some(k) {
+                break;
+            }
+        }
+    }
     // Square seams follow cell edges and can hide in flat areas; a hex seam runs
     // through cells that keep one plane, so it never steps.
     if e.seam_policy == SeamPolicy::SmallestStep && plan.tile_count() > 1 && l.hex_lattice().is_none() {
@@ -612,12 +663,98 @@ fn plan_export(job: &SquamaJob, l: &Layout, g: &[f32], e: &SquamaExport, cancel:
     Ok(Planned { sj, plain, heights0, thickness0, plan })
 }
 
+/// Standing(Auto): among the quarter turns that give the same tile grid as the
+/// light-based choice, the one with clearly less down-facing ledge wall on the
+/// solved heights (half the area or less, and no deeper maximum past the sag limit).
+#[allow(clippy::too_many_arguments)]
+fn prefer_lower_ledges(
+    plan: crate::squama::tiles::TilePlan,
+    l: &Layout,
+    bed: &Bed,
+    o: Orientation,
+    az: f64,
+    opts: &TileOpts,
+    p: &crate::relief::Partition,
+    h: &crate::relief::Heights,
+    all: &[u32],
+    tol: &crate::relief::Tol,
+) -> Result<crate::squama::tiles::TilePlan> {
+    let (Orientation::Standing(QuarterTurns::Auto), Some(k0)) = (o, plan.quarter_turns) else { return Ok(plan) };
+    let measure = |k: u32| {
+        let d = down_in_plate(k);
+        (downward_ledge_area(p, h, all, d, tol, LEDGE_AREA_MIN_DEPTH_MM), max_downward_ledge(p, h, all, d, tol))
+    };
+    let (a0, m0) = measure(k0);
+    let mut best: Option<(f64, crate::squama::tiles::TilePlan)> = None;
+    for k in (1..4).map(|i| (k0 + i) % 4) {
+        let q = [QuarterTurns::Q0, QuarterTurns::Q1, QuarterTurns::Q2, QuarterTurns::Q3][k as usize];
+        let Ok(alt) = plan_tiles(l, bed, Orientation::Standing(q), az, opts) else { continue };
+        if alt.cols != plan.cols || alt.rows != plan.rows {
+            continue;
+        }
+        let (a, m) = measure(k);
+        if a <= 0.5 * a0 && m <= m0.max(MAX_LEDGE_MM) + 1e-9 && best.as_ref().is_none_or(|b| a < b.0) {
+            best = Some((a, alt));
+        }
+    }
+    Ok(best.map_or(plan, |b| b.1))
+}
+
+/// Pulls optimised facets back towards the plain inverse (`plain_f`, same pivots)
+/// until no downward ledge in direction `down` is deeper than `limit_mm`; only the
+/// facets beside a too-deep ledge move, halving their share of the optimiser's
+/// change each round (the plain inverse is the last resort). Both endpoints keep
+/// every corner inside the relief budget, so every blend does too. `None` when
+/// nothing needed clamping.
+#[allow(clippy::too_many_arguments)]
+fn clamp_ledges(
+    p: &crate::relief::Partition,
+    plain_f: &[crate::relief::Facet],
+    opt_f: &[crate::relief::Facet],
+    base_mm: f64,
+    tol: &crate::relief::Tol,
+    down: DVec2,
+    limit_mm: f64,
+    cancel: &CancelToken,
+) -> Result<Option<(Vec<crate::relief::Facet>, crate::relief::Heights)>> {
+    let all: Vec<u32> = (0..p.pieces.len() as u32).collect();
+    let limit_q = (limit_mm / tol.q + 1e-9).floor() as i64;
+    let mut share = vec![1.0f64; opt_f.len()];
+    let mut facets = opt_f.to_vec();
+    let mut changed = false;
+    for round in 0..12 {
+        cancel.check()?;
+        let h = quantise(p, &facets, base_mm, tol)?;
+        let bad = pieces_with_downward_ledge(p, &h, &all, down, limit_q);
+        let mut moved = false;
+        for pi in bad {
+            let f = p.pieces[pi as usize].facet as usize;
+            if share[f] > 0.0 {
+                share[f] = if round >= 9 { 0.0 } else { 0.5 * share[f] };
+                moved = true;
+            }
+        }
+        if !moved {
+            return Ok(changed.then_some((facets, h)));
+        }
+        changed = true;
+        for (f, (a, b)) in plain_f.iter().zip(opt_f).enumerate() {
+            let t = share[f];
+            let ha = a.eval(b.pivot);
+            facets[f] = crate::relief::Facet { pivot: b.pivot, h: ha + t * (b.h - ha), grad: a.grad + t * (b.grad - a.grad) };
+        }
+    }
+    let h = quantise(p, &facets, base_mm, tol)?;
+    Ok(Some((facets, h)))
+}
+
 #[allow(clippy::too_many_arguments)]
 fn export_inner(
     job: &SquamaJob,
     l: &Layout,
     g: &[f32],
     mut warnings: Vec<Warning>,
+    pre: Option<SolvedJob>,
     e: &SquamaExport,
     cancel: &CancelToken,
     sink: &mut dyn PartSink,
@@ -629,7 +766,7 @@ fn export_inner(
     // Facets once for the whole plate (§14.1), at final quality (optimiser when on),
     // then the tile plan with refined seams.
     sink.stage(if job.optimiser.is_some_and(|o| o.max_sweeps > 0) { "solving and optimising facets" } else { "solving facets" });
-    let Planned { sj, plain, heights0, thickness0, mut plan } = plan_export(&job, l, g, e, cancel)?;
+    let Planned { sj, plain, heights0, thickness0, mut plan } = plan_export(&job, l, g, pre, e, cancel)?;
     sink.stage("planning tiles and keys");
     warnings.extend(sj.solved.warnings.iter().cloned());
     let facets = sj.facets;
@@ -761,16 +898,32 @@ fn export_inner(
     if e.calibration_tile {
         let (spec, w) = calibration_spec(&job, l)?;
         warnings.extend(w);
-        let ct = calibration_tile(&spec, &e.gen_opts, cancel)?;
+        let mut ct = calibration_tile(&spec, &e.gen_opts, cancel)?;
         warnings.extend(ct.warnings.iter().cloned());
-        if let Some(k) = plan.quarter_turns {
-            let all: Vec<u32> = (0..ct.partition.pieces.len() as u32).collect();
-            calibration_ledge = Some(max_downward_ledge(&ct.partition, &ct.heights, &all, down_in_plate(k), &tol));
-        }
+        // Its own standing turn (smallest ledge, the plate's layer direction when
+        // that is within the sag limit), not the plate's.
+        let ck = plan.quarter_turns.map(|k| {
+            let (ck, ledge) = ct.best_turn(Some(k), &tol);
+            calibration_ledge = Some(ledge);
+            if (ck + 4 - k) % 2 != 0 {
+                warnings.push(Warning {
+                    code: "calibration_turn_differs",
+                    message: format!(
+                        "the calibration tile prints with {ck} quarter turn(s), the plate with {k}: its layer lines run the other way relative to the light, so check the measured response against the plate"
+                    ),
+                });
+            }
+            ck
+        });
+        ct.set_print_turn(ck);
         let (min, max) = mesh_box(&ct.mesh);
         let rect = DRect { min: DVec2::new(min[0], min[1]), max: DVec2::new(max[0], max[1]) };
-        let base = tile_xform(plan.orientation, plan.motion, &rect);
-        let item = LayoutItem { base, min, max, may_rotate: plan.quarter_turns.is_none() };
+        let co = match ck {
+            Some(k) => Orientation::Standing([QuarterTurns::Q0, QuarterTurns::Q1, QuarterTurns::Q2, QuarterTurns::Q3][k as usize]),
+            None => plan.orientation,
+        };
+        let base = tile_xform(co, plan.motion, &rect);
+        let item = LayoutItem { base, min, max, may_rotate: ck.is_none() };
         let (mf, ba) = (ct.min_facet_w, ct.back_area);
         calibration_key = Some(ct.key);
         pending.push(("calibration".into(), PartKind::Calibration, Pending::Ready(ct.mesh), item, Some(mf), Some(ba), 1));
@@ -859,10 +1012,10 @@ fn export_inner(
             message: format!("{tall_parts} part(s) stand more than {BRIM_RATIO:.0}× taller than their footprint: {b}"),
         });
     }
-    if max_ledge > 0.6 {
+    if max_ledge > MAX_LEDGE_MM {
         warnings.push(Warning {
             code: "downward_ledge",
-            message: format!("largest downward-facing ledge {max_ledge:.2} mm (above 0.6 mm may sag)"),
+            message: format!("largest downward-facing ledge {max_ledge:.2} mm (above {MAX_LEDGE_MM} mm may sag)"),
         });
     }
     dedup_warnings(&mut warnings);
@@ -920,7 +1073,7 @@ pub fn preview_tile_plan(
 ) -> Result<(crate::squama::tiles::TilePlan, f64)> {
     match g {
         Some(g) => {
-            let p = plan_export(job, l, g, e, cancel)?;
+            let p = plan_export(job, l, g, None, e, cancel)?;
             Ok((p.plan, p.thickness0))
         }
         None => {
@@ -928,4 +1081,18 @@ pub fn preview_tile_plan(
             Ok((plan_tiles(l, &e.bed, e.orientation, planning_azimuth(job, l)?, &tile_opts(e, t))?, t))
         }
     }
+}
+
+/// [`preview_tile_plan`] reusing a final-quality solve of the same job (the
+/// app's last final plate), so the overlay does not repeat the optimiser.
+pub fn preview_tile_plan_solved(
+    job: &SquamaJob,
+    l: &Layout,
+    g: &[f32],
+    solved: SolvedJob,
+    e: &SquamaExport,
+    cancel: &CancelToken,
+) -> Result<(crate::squama::tiles::TilePlan, f64)> {
+    let p = plan_export(job, l, g, Some(solved), e, cancel)?;
+    Ok((p.plan, p.thickness0))
 }

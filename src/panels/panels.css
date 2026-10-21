@@ -207,3 +207,10 @@ textarea {
   font-size: 11px;
   font-family: var(--mono);
 }
+
+/* A number box whose text is not a number (Slider.tsx): refused, not applied. */
+.field input.num.invalid {
+  border-color: var(--danger);
+  outline-color: var(--danger);
+  color: var(--danger);
+}

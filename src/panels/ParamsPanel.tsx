@@ -3,15 +3,16 @@
 // optimiser, response model, max relief; the preview ambient is in the viewport toolbar). Dragging regenerates at preview quality;
 // releasing regenerates at final quality (§13). Range inputs keep their spike data-param names.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { ledgeWarning, mergeWarnings, predictWarnings, reliefMm } from '../engine/squamaChecks';
 import { useSquamaInfo } from '../engine/squamaInfo';
 import { wrapDeg } from '../engine/squamaMath';
 import type { LayoutSpec } from '../engine/types';
 import { useAppStore } from '../state/store';
-import { plateLayout } from './plateLayout';
-import { lampElevationDeg, lampPosition, parseMeasuredTable } from './squamaDto';
+import { type LampPlacement, lampFromPos, placeLamp } from './lamp';
+import { infoMatches, plateLayout, predictPlate } from './plateLayout';
+import { type ChangePhase, lampElevationDeg, parseMeasuredTable } from './squamaDto';
 import { useSquamaUi } from './squamaUi';
 import { lightAlongPrintZ, quarterTurns } from './tilePlan';
 import { Slider } from './Slider';
@@ -64,20 +65,21 @@ export function ParamsPanel() {
   const relief = reliefMm(layout.cellMm, params.lightAzimuthDeg, params.maxTiltDeg);
   const heightAuto = params.heightMm === undefined;
 
-  // Keep the lamp position in step with the plate size and azimuth.
-  useEffect(() => {
-    if (!pointLight) return;
-    const posMm = lampPosition(layout.wMm, layout.hMm, params.lightAzimuthDeg, lamp.distanceMm, lamp.heightMm);
-    const cur = useAppStore.getState().params.light?.posMm;
-    if (!cur || cur.some((v, k) => v !== posMm[k])) patch({ light: { kind: 'point', posMm } });
-  }, [pointLight, layout.wMm, layout.hMm, params.lightAzimuthDeg, lamp.distanceMm, lamp.heightMm, patch]);
+  // The lamp controls are derived from the saved lamp position (lamp.ts): opening, undo and
+  // redo restore them with the params, and nothing re-places the lamp on render.
+  const lampNow = params.light?.kind === 'point' ? lampFromPos(layout.wMm, layout.hMm, params.light.posMm) : lamp;
+  const moveLamp = (placement: LampPlacement, phase: ChangePhase) => {
+    setUi({ lamp: placement }); // remembered for the next "Point lamp"
+    patch(placeLamp(layout.wMm, layout.hMm, params.lightAzimuthDeg, placement), phase);
+  };
 
   const warnings = useMemo(() => {
     const k = quarterTurns(orientation, params.lightAzimuthDeg);
     const ledge = ledgeWarning(layout.cellMm, params.maxTiltDeg, k !== null, lightAlongPrintZ(params.lightAzimuthDeg, k));
-    const fresh = info && info.layout.nx === layout.nx ? info.warnings : [];
+    // Core warnings only when its report is for this plate (kind and snapping), never a stale one.
+    const fresh = infoMatches(params, predictPlate(params, image), info) ? info.warnings : [];
     return mergeWarnings(fresh, predictWarnings(params), ledge ? [ledge] : []);
-  }, [info, params, layout.cellMm, layout.nx, orientation]);
+  }, [info, params, image, layout.cellMm, orientation]);
 
   const measured = params.response?.kind === 'measured';
   const parsed = measured ? parseMeasuredTable(table) : null;
@@ -183,9 +185,7 @@ export function ParamsPanel() {
           <button
             type="button"
             className={pointLight ? 'active' : ''}
-            onClick={() =>
-              patch({ light: { kind: 'point', posMm: lampPosition(layout.wMm, layout.hMm, params.lightAzimuthDeg, lamp.distanceMm, lamp.heightMm) } })
-            }
+            onClick={() => patch(placeLamp(layout.wMm, layout.hMm, params.lightAzimuthDeg, lamp))}
           >
             Point lamp
           </button>
@@ -194,18 +194,20 @@ export function ParamsPanel() {
           <>
             <Slider
               param="lampDistanceMm" label="Lamp distance" unit="mm" min={100} max={3000} step={10}
-              value={lamp.distanceMm}
+              value={Math.round(lampNow.distanceMm)}
               hint="From the plate centre, along the azimuth"
-              onChange={(v) => setUi({ lamp: { ...lamp, distanceMm: v } })}
+              onChange={(v, ph) => moveLamp({ distanceMm: v, heightMm: lampNow.heightMm }, ph)}
+              onCommit={commit}
             />
             <Slider
               param="lampHeightMm" label="Lamp height" unit="mm" min={5} max={1000} step={5}
-              value={lamp.heightMm}
+              value={Math.round(lampNow.heightMm)}
               hint="Out of the plate's front face"
-              onChange={(v) => setUi({ lamp: { ...lamp, heightMm: v } })}
+              onChange={(v, ph) => moveLamp({ distanceMm: lampNow.distanceMm, heightMm: v }, ph)}
+              onCommit={commit}
             />
             <p className="derived">
-              Lamp at {params.light?.posMm.map((v) => v.toFixed(0)).join(', ')} mm · {lampElevationDeg(lamp.distanceMm, lamp.heightMm).toFixed(1)}° at the centre
+              Lamp at {params.light?.posMm.map((v) => v.toFixed(0)).join(', ')} mm · {lampElevationDeg(lampNow.distanceMm, lampNow.heightMm).toFixed(1)}° at the centre
             </p>
           </>
         )}

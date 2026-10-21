@@ -46,6 +46,10 @@ pub struct ProjectDoc {
     /// Printer profile id the design was made for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub printer: Option<String>,
+    /// The export panel's settings (UI shape: printerId, bedMm, marginMm, orientation,
+    /// formats, keys, bedMotion, stand, calibrationTile, tile). Optional.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub export: Option<Value>,
     /// App version that wrote the file (informational).
     #[serde(default)]
     pub app_version: String,
@@ -136,8 +140,8 @@ pub mod adapter {
             app_version: env!("CARGO_PKG_VERSION").into(),
             params,
             image_opts: None,
-            export: ExportSettings::default(),
-            printer: printer_for(doc.printer.as_deref()),
+            export: export_to_core(doc.export.as_ref()),
+            printer: printer_with_motion(printer_for(doc.printer.as_deref()), doc.export.as_ref()),
             image,
             view: doc.view.clone(),
         };
@@ -177,7 +181,64 @@ pub mod adapter {
             params,
             view: d.view.clone(),
             printer: Some(d.printer.id.clone()),
+            export: Some(export_from_core(&d.export, &d.printer)),
             app_version: d.app_version.clone(),
+        })
+    }
+
+    /// The export panel's settings → the core's export settings. Missing or bad fields keep
+    /// the core defaults.
+    pub fn export_to_core(ui: Option<&Value>) -> ExportSettings {
+        use ad3d_core::project::{TileMode, TilesDto};
+        let mut e = ExportSettings::default();
+        let Some(ui) = ui.and_then(Value::as_object) else { return e };
+        let get = |k: &str| ui.get(k).cloned();
+        if let Some(v) = get("formats").and_then(|v| serde_json::from_value(v).ok()) {
+            e.formats = v;
+        }
+        if let Some(v) = get("orientation").and_then(|v| serde_json::from_value(v).ok()) {
+            e.orientation = v;
+        }
+        if let Some(v) = get("keys").and_then(|v| serde_json::from_value(v).ok()) {
+            e.keys = v;
+        }
+        e.bed_mm = get("bedMm").and_then(|v| serde_json::from_value(v).ok());
+        e.margin_mm = get("marginMm").and_then(|v| v.as_f64());
+        e.stand = get("stand").and_then(|v| v.as_bool()).unwrap_or(false);
+        e.calibration_tile = get("calibrationTile").and_then(|v| v.as_bool()).unwrap_or(false);
+        if get("tile").and_then(|v| v.as_bool()) == Some(false) {
+            e.tiles = TilesDto::Mode(TileMode::None);
+        }
+        e
+    }
+
+    /// The printer with the export panel's bed motion (kept when the bed size is edited).
+    fn printer_with_motion(mut p: ad3d_core::profiles::PrinterProfile, ui: Option<&Value>) -> ad3d_core::profiles::PrinterProfile {
+        use ad3d_core::profiles::Axis;
+        match ui.and_then(|v| v.get("bedMotion")).and_then(Value::as_str) {
+            Some("x") => p.moving_bed_axis = Some(Axis::X),
+            Some("y") => p.moving_bed_axis = Some(Axis::Y),
+            Some("none") => p.moving_bed_axis = None,
+            _ => {}
+        }
+        p
+    }
+
+    /// The core's export settings → the export panel's shape.
+    pub fn export_from_core(e: &ExportSettings, printer: &ad3d_core::profiles::PrinterProfile) -> Value {
+        use ad3d_core::profiles::Axis;
+        use ad3d_core::project::{TileMode, TilesDto};
+        serde_json::json!({
+            "printerId": printer.id,
+            "bedMm": e.bed_mm.unwrap_or(printer.build_mm),
+            "marginMm": e.margin_mm.unwrap_or(printer.margin_mm),
+            "orientation": e.orientation,
+            "formats": e.formats,
+            "keys": e.keys,
+            "bedMotion": match printer.moving_bed_axis { Some(Axis::X) => "x", Some(Axis::Y) => "y", _ => "none" },
+            "stand": e.stand,
+            "calibrationTile": e.calibration_tile,
+            "tile": e.tiles != TilesDto::Mode(TileMode::None),
         })
     }
 
@@ -349,6 +410,9 @@ mod tests {
                             "imageOpts": { "gamma": 1.2 } }),
             view: Some(json!({ "ambient": 0.05 })),
             printer: Some("creality-cr6-se".into()),
+            export: Some(json!({ "printerId": "creality-cr6-se", "bedMm": [235.0, 235.0, 250.0], "marginMm": 6.0,
+                                 "orientation": "standing-q2", "formats": ["3mf", "stl"], "keys": "pegs",
+                                 "bedMotion": "y", "stand": true, "calibrationTile": true, "tile": false })),
             app_version: String::new(),
         }
     }
@@ -373,6 +437,7 @@ mod tests {
         assert_eq!(opened.doc.params, doc().params, "unknown params fields survive");
         assert_eq!(opened.doc.view, doc().view);
         assert_eq!(opened.doc.printer.as_deref(), Some("creality-cr6-se"));
+        assert_eq!(opened.doc.export, doc().export, "export settings survive");
         assert_eq!(opened.doc.app_version, env!("CARGO_PKG_VERSION"));
         // The file is the core's zip container.
         assert!(std::fs::read(&written).unwrap().starts_with(b"PK\x03\x04"));

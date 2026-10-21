@@ -268,37 +268,91 @@ pub fn max_downward_ledge(
     down: glam::DVec2,
     tol: &crate::relief::Tol,
 ) -> f64 {
+    let mut best = 0i64;
+    for_each_downward_ledge(p, h, pieces, down, |d, _, _, _| best = best.max(d));
+    best as f64 * tol.q
+}
+
+/// Area (mm²) of the downward-facing walls of `pieces` deeper than `min_depth_mm`:
+/// each wall end counts half its edge times its depth. A measure of how much
+/// unsupported perimeter a standing print has (compare quarter turns with it).
+pub fn downward_ledge_area(
+    p: &crate::relief::Partition,
+    h: &crate::relief::Heights,
+    pieces: &[u32],
+    down: glam::DVec2,
+    tol: &crate::relief::Tol,
+    min_depth_mm: f64,
+) -> f64 {
+    let mut area = 0.0;
+    for_each_downward_ledge(p, h, pieces, down, |d, _, _, len| {
+        let d = d as f64 * tol.q;
+        if d > min_depth_mm {
+            area += 0.5 * len * d;
+        }
+    });
+    area
+}
+
+/// The pieces on either side of every interior wall of `pieces` whose downward
+/// ledge (as in [`max_downward_ledge`]) is deeper than `limit_q` (units of `q`).
+pub fn pieces_with_downward_ledge(
+    p: &crate::relief::Partition,
+    h: &crate::relief::Heights,
+    pieces: &[u32],
+    down: glam::DVec2,
+    limit_q: i64,
+) -> Vec<u32> {
+    let mut out = Vec::new();
+    for_each_downward_ledge(p, h, pieces, down, |d, a, b, _| {
+        if d > limit_q {
+            out.push(a);
+            out.push(b);
+        }
+    });
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
+/// Calls `f(depth_q, piece_a, piece_b, edge_len_mm)` for every downward-facing ledge end.
+fn for_each_downward_ledge(
+    p: &crate::relief::Partition,
+    h: &crate::relief::Heights,
+    pieces: &[u32],
+    down: glam::DVec2,
+    mut f: impl FnMut(i64, u32, u32, f64),
+) {
     use std::collections::HashMap;
     let next = |pi: u32, s: usize| {
         let r = &p.pieces[pi as usize].ring;
         if s + 1 == r.end as usize { r.start as usize } else { s + 1 }
     };
-    // Directed edge (a, b) → (slot of a, slot of b) in the piece that owns it.
-    let mut edge: HashMap<(u32, u32), (usize, usize)> = HashMap::with_capacity(pieces.len() * 4);
+    // Directed edge (a, b) → (slot of a, slot of b, piece) in the piece that owns it.
+    let mut edge: HashMap<(u32, u32), (usize, usize, u32)> = HashMap::with_capacity(pieces.len() * 4);
     for &pi in pieces {
         let r = p.pieces[pi as usize].ring.clone();
         for s in r.start as usize..r.end as usize {
             let ns = next(pi, s);
-            edge.insert((p.rings[s], p.rings[ns]), (s, ns));
+            edge.insert((p.rings[s], p.rings[ns]), (s, ns, pi));
         }
     }
     let down = down.normalize_or_zero();
-    let mut best = 0i64;
-    for (&(a, b), &(sa, sb)) in &edge {
+    for (&(a, b), &(sa, sb, pa)) in &edge {
         if a > b {
             continue; // each interior edge once
         }
-        let Some(&(tb, ta)) = edge.get(&(b, a)) else { continue };
+        let Some(&(tb, ta, pb)) = edge.get(&(b, a)) else { continue };
         let e = p.verts[b as usize] - p.verts[a as usize];
         let right = glam::DVec2::new(e.y, -e.x).normalize_or_zero();
+        let len = e.length();
         for d in [h.corner[sa] - h.corner[ta], h.corner[sb] - h.corner[tb]] {
             let facing = if d > 0 { right } else { -right };
             if d != 0 && facing.dot(down) >= 0.5 {
-                best = best.max(d.abs());
+                f(d.abs(), pa, pb, len);
             }
         }
     }
-    best as f64 * tol.q
 }
 
 #[cfg(test)]

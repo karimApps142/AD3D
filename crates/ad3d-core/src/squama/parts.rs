@@ -128,7 +128,19 @@ impl KeySpec {
     /// Smallest tile side across a seam: holes from the seams on both sides plus
     /// the gap rules.
     pub fn min_tile_mm(&self) -> f64 {
-        2.0 * (self.offset_mm + self.hole_d_mm) + BACK_REGION_GAP_MM + 2.0
+        (2.0 * (self.offset_mm + self.hole_d_mm) + BACK_REGION_GAP_MM + 2.0).max(2.0 * self.crossing_margin_mm())
+    }
+
+    /// Splint bar length: both pegs at `offset` from the seam plus their rims.
+    pub fn splint_len_mm(&self) -> f64 {
+        2.0 * self.offset_mm + self.peg_d_mm + 3.0
+    }
+
+    /// Smallest distance from a key centre to a seam crossing along its seam, so
+    /// its splint clears the splints of the crossing seam (half of each bar plus a
+    /// 0.5 mm gap).
+    pub fn crossing_margin_mm(&self) -> f64 {
+        (0.5 * self.splint_len_mm() + 0.5 * self.splint_w_mm + 0.5).max(self.end_margin_mm)
     }
 
     pub fn check(&self) -> Result<()> {
@@ -165,8 +177,12 @@ pub fn key_layout(plan: &TilePlan, ks: &KeySpec) -> KeyLayout {
     let mut out = KeyLayout { holes: vec![Vec::new(); plan.tiles.len()], pairs: Vec::new() };
     let (cols, rows) = (plan.cols as usize, plan.rows as usize);
     let idx = |c: usize, r: usize| r * cols + c;
-    let positions = |a: f64, b: f64| -> Vec<f64> {
-        let (lo, hi) = (a + ks.end_margin_mm, b - ks.end_margin_mm);
+    // Where a seam segment ends at another seam, its end key keeps the crossing
+    // margin, so the two seams' splints never overlap on the back.
+    let cross = ks.crossing_margin_mm();
+    let margin = |at_crossing: bool| if at_crossing { cross } else { ks.end_margin_mm };
+    let positions = |a: f64, b: f64, ma: f64, mb: f64| -> Vec<f64> {
+        let (lo, hi) = (a + ma, b - mb);
         if hi <= lo {
             return vec![0.5 * (a + b)];
         }
@@ -186,7 +202,7 @@ pub fn key_layout(plan: &TilePlan, ks: &KeySpec) -> KeyLayout {
                     t.rect_mm.min.y
                 };
                 let lo = if lo + 2.0 * ks.end_margin_mm < t.rect_mm.max.y { lo } else { t.rect_mm.min.y };
-                let mut ps = positions(lo, t.rect_mm.max.y);
+                let mut ps = positions(lo, t.rect_mm.max.y, margin(r > 0), margin(r + 1 < rows));
                 ps.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
                 for y in ps {
                     let (l, rr) = (DVec2::new(x - ks.offset_mm, y), DVec2::new(x + ks.offset_mm, y));
@@ -198,7 +214,7 @@ pub fn key_layout(plan: &TilePlan, ks: &KeySpec) -> KeyLayout {
             // Seam above (horizontal line v = max.y).
             if r + 1 < rows {
                 let y = t.rect_mm.max.y;
-                let mut ps = positions(t.rect_mm.min.x, t.rect_mm.max.x);
+                let mut ps = positions(t.rect_mm.min.x, t.rect_mm.max.x, margin(c > 0), margin(c + 1 < cols));
                 ps.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
                 for x in ps {
                     let (b, a) = (DVec2::new(x, y - ks.offset_mm), DVec2::new(x, y + ks.offset_mm));
@@ -237,7 +253,7 @@ pub fn key_regions(holes: &[DVec2], ks: &KeySpec) -> Vec<BackRegion> {
 /// origin: each a `splint_w × (2·offset + peg_d + 3)` bar with two pegs `2·offset`
 /// apart, printed flat with the pegs up. Faces are `FaceKind::Key`.
 pub fn splints_mesh(count: u32, ks: &KeySpec) -> Mesh {
-    let len = 2.0 * ks.offset_mm + ks.peg_d_mm + 3.0;
+    let len = ks.splint_len_mm();
     let (w, gap) = (ks.splint_w_mm, 4.0);
     let per_row = ((count as f64).sqrt().ceil() as u32).max(1);
     let mut m = Mesh::default();
@@ -556,61 +572,158 @@ pub fn layout_on_beds_lenient(items: &[LayoutItem], bed: &Bed) -> Result<Vec<Pla
     layout_inner(items, bed, true)
 }
 
+/// Free rectangle of one bed, in usable-area coordinates (origin at the margin).
+#[derive(Debug, Clone, Copy)]
+struct FreeRect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+}
+
+impl FreeRect {
+    fn contains(&self, o: &FreeRect) -> bool {
+        o.x >= self.x - 1e-9 && o.y >= self.y - 1e-9 && o.x + o.w <= self.x + self.w + 1e-9 && o.y + o.h <= self.y + self.h + 1e-9
+    }
+}
+
+/// One bed being filled: maximal free rectangles. Every part claims its footprint
+/// plus [`PART_GAP_MM`] on the far sides, and the bed is that gap larger than the
+/// usable area, so parts are a gap apart and stay inside the margins.
+struct BedFill {
+    free: Vec<FreeRect>,
+    /// (item, x, y, w, h) placed on this bed.
+    placed: Vec<(usize, f64, f64, f64, f64)>,
+}
+
+impl BedFill {
+    fn new(ux: f64, uy: f64) -> Self {
+        BedFill { free: vec![FreeRect { x: 0.0, y: 0.0, w: ux + PART_GAP_MM, h: uy + PART_GAP_MM }], placed: Vec::new() }
+    }
+
+    /// Bottom-left position for a `w × h` part (gap included), if any.
+    fn find(&self, w: f64, h: f64) -> Option<(f64, f64)> {
+        self.free
+            .iter()
+            .filter(|f| w <= f.w + 1e-9 && h <= f.h + 1e-9)
+            .map(|f| (f.x, f.y))
+            .min_by(|a, b| a.1.total_cmp(&b.1).then(a.0.total_cmp(&b.0)))
+    }
+
+    fn claim(&mut self, r: FreeRect) {
+        let mut next = Vec::with_capacity(self.free.len() + 4);
+        for f in &self.free {
+            let disjoint = r.x >= f.x + f.w - 1e-9 || r.x + r.w <= f.x + 1e-9 || r.y >= f.y + f.h - 1e-9 || r.y + r.h <= f.y + 1e-9;
+            if disjoint {
+                next.push(*f);
+                continue;
+            }
+            if r.x > f.x + 1e-9 {
+                next.push(FreeRect { x: f.x, y: f.y, w: r.x - f.x, h: f.h });
+            }
+            if r.x + r.w < f.x + f.w - 1e-9 {
+                next.push(FreeRect { x: r.x + r.w, y: f.y, w: f.x + f.w - (r.x + r.w), h: f.h });
+            }
+            if r.y > f.y + 1e-9 {
+                next.push(FreeRect { x: f.x, y: f.y, w: f.w, h: r.y - f.y });
+            }
+            if r.y + r.h < f.y + f.h - 1e-9 {
+                next.push(FreeRect { x: f.x, y: r.y + r.h, w: f.w, h: f.y + f.h - (r.y + r.h) });
+            }
+        }
+        // Drop rectangles contained in another (keep the first of equal ones).
+        let mut keep = vec![true; next.len()];
+        for i in 0..next.len() {
+            for j in 0..next.len() {
+                if i != j && keep[j] && next[j].contains(&next[i]) && !(next[i].contains(&next[j]) && i < j) {
+                    keep[i] = false;
+                    break;
+                }
+            }
+        }
+        self.free = next.into_iter().zip(keep).filter_map(|(f, k)| k.then_some(f)).collect();
+    }
+}
+
 fn layout_inner(items: &[LayoutItem], bed: &Bed, lenient: bool) -> Result<Vec<Placement>> {
     let [ux, uy, uz] = bed.usable();
     let m = bed.margin_mm;
-    let mut out = Vec::with_capacity(items.len());
-    let (mut b, mut x, mut y, mut shelf) = (0u32, 0.0f64, 0.0f64, 0.0f64);
-    let mut used = false;
+    let g = PART_GAP_MM;
+    // (bed, x, y, rotated, fits) per item, in usable coordinates.
+    let mut spots: Vec<(u32, f64, f64, bool, bool)> = Vec::with_capacity(items.len());
+    let mut beds: Vec<Option<BedFill>> = Vec::new(); // None = a bed holding one oversize part
     for (i, it) in items.iter().enumerate() {
         let (lo, hi) = it.base.apply_box(it.min, it.max);
-        let (mut fx, mut fy, fz) = (hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-        let mut rot = false;
-        if it.may_rotate && (fx > ux + 1e-9 || fy > uy + 1e-9) && fy <= ux + 1e-9 && fx <= uy + 1e-9 {
-            rot = true;
-            std::mem::swap(&mut fx, &mut fy);
+        let (fx, fy, fz) = (hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+        let fits_as = |w: f64, h: f64| w <= ux + 1e-9 && h <= uy + 1e-9 && fz <= uz + 1e-9;
+        let mut shapes = Vec::with_capacity(2);
+        if fits_as(fx, fy) {
+            shapes.push((fx, fy, false));
         }
-        let fits = !(fx > ux + 1e-9 || fy > uy + 1e-9 || fz > uz + 1e-9);
-        if !fits && lenient {
-            if used {
-                b += 1;
+        if it.may_rotate && fits_as(fy, fx) && (fx - fy).abs() > 1e-9 {
+            shapes.push((fy, fx, true));
+        }
+        if shapes.is_empty() {
+            if lenient {
+                beds.push(None);
+                spots.push(((beds.len() - 1) as u32, 0.0, 0.0, false, false));
+                continue;
             }
-            let (lo2, _) = it.base.apply_box(it.min, it.max);
-            let origin = [m, m, 0.0];
-            let t = it.base.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
-            out.push(Placement { transform: t, bed: b, fits: false });
-            b += 1;
-            (x, y, shelf, used) = (0.0, 0.0, 0.0, false);
-            continue;
-        }
-        if !fits {
             return Err(Error::InvalidParams(format!(
                 "part {i} ({fx:.1} × {fy:.1} × {fz:.1} mm) does not fit the usable bed ({ux:.1} × {uy:.1} × {uz:.1} mm)"
             )));
         }
-        if used && x + fx > ux + 1e-9 {
-            // New shelf.
-            x = 0.0;
-            y += shelf + PART_GAP_MM;
-            shelf = 0.0;
+        // The earliest bed with room (unrotated first), else a new bed.
+        let mut spot = None;
+        'beds: for (b, fill) in beds.iter().enumerate() {
+            let Some(fill) = fill else { continue };
+            for &(w, h, rot) in &shapes {
+                if let Some((x, y)) = fill.find(w + g, h + g) {
+                    spot = Some((b, x, y, w, h, rot));
+                    break 'beds;
+                }
+            }
         }
-        if used && y + fy > uy + 1e-9 {
-            b += 1;
-            x = 0.0;
-            y = 0.0;
-            shelf = 0.0;
+        let (b, x, y, w, h, rot) = match spot {
+            Some(s) => s,
+            None => {
+                beds.push(Some(BedFill::new(ux, uy)));
+                let (w, h, rot) = shapes[0];
+                (beds.len() - 1, 0.0, 0.0, w, h, rot)
+            }
+        };
+        let fill = beds[b].as_mut().expect("a packing bed");
+        fill.claim(FreeRect { x, y, w: w + g, h: h + g });
+        fill.placed.push((i, x, y, w, h));
+        spots.push((b as u32, x, y, rot, true));
+    }
+    // Centre each bed's group on the usable area (the middle of a bed is its
+    // flattest and best-levelled part, and brims stay clear of the edges).
+    let mut shift = vec![(0.0f64, 0.0f64); beds.len()];
+    for (b, fill) in beds.iter().enumerate() {
+        let Some(fill) = fill else { continue };
+        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for &(_, x, y, w, h) in &fill.placed {
+            x0 = x0.min(x);
+            y0 = y0.min(y);
+            x1 = x1.max(x + w);
+            y1 = y1.max(y + h);
         }
+        if x0.is_finite() {
+            shift[b] = (0.5 * (ux - (x1 - x0)) - x0, 0.5 * (uy - (y1 - y0)) - y0);
+        }
+    }
+    let mut out = Vec::with_capacity(items.len());
+    for (it, &(b, x, y, rot, fits)) in items.iter().zip(&spots) {
         let mut t = it.base;
         if rot {
             t = t.then(&Xform::rot_z(1));
         }
         let (lo2, _) = t.apply_box(it.min, it.max);
-        let origin = [m + x, m + y, 0.0];
+        let (sx, sy) = if fits { shift[b as usize] } else { (0.0, 0.0) };
+        let origin = [m + x + sx, m + y + sy, 0.0];
         t = t.then(&Xform::translation([origin[0] - lo2[0], origin[1] - lo2[1], -lo2[2]]));
-        out.push(Placement { transform: t, bed: b, fits: true });
-        x += fx + PART_GAP_MM;
-        shelf = shelf.max(fy);
-        used = true;
+        out.push(Placement { transform: t, bed: b, fits });
     }
     Ok(out)
 }

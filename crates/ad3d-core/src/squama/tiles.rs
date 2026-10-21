@@ -193,7 +193,8 @@ impl TilePlan {
         edges_mm(&self.v_units, self.pitch.y, self.plate.y)
     }
 
-    /// Moves seams within the allowed range to the lattice line with the lowest
+    /// Moves seams within the allowed range (±10 % of a tile, never more than one
+    /// unit past the balanced cut's largest tile) to the lattice line with the lowest
     /// `cost(axis, index)` (ties: closest to the balanced position), one seam at a
     /// time from the left/bottom, then rebuilds the tiles. Piece lists are cleared.
     pub fn refine_seams(&mut self, mut cost: impl FnMut(CutAxis, u32) -> f64) {
@@ -202,10 +203,15 @@ impl TilePlan {
             (CutAxis::V, &mut self.v_units, self.max_units.1, self.min_units.1),
         ] {
             let n = units.len();
+            // Keep tiles near balanced: a seam moves at most ±10 % of its tile, and no
+            // tile grows more than one unit past the balanced cut's largest (a taller
+            // standing tile is less stable and may no longer fit the bed's margins).
+            let balanced_max = units.windows(2).map(|w| w[1] - w[0]).max().unwrap_or(1);
+            let maxu = maxu.min(balanced_max + 1);
             for c in 1..n - 1 {
                 let (prev, cur, next) = (units[c - 1], units[c], units[c + 1]);
                 let span = (cur - prev).max(1);
-                let slack = (span / 4).max(1);
+                let slack = (span / 10).max(1);
                 let lo = cur.saturating_sub(slack).max(prev + minu).max(next.saturating_sub(maxu));
                 let hi = (cur + slack).min(next.saturating_sub(minu)).min(prev + maxu);
                 if lo > hi {

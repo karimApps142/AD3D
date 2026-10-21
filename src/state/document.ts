@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import type { SquamaParams } from '../engine/types';
 import { paramsEqual } from './paramsHistory';
+import type { ExportSettings } from '../panels/squamaDto';
 import { type AppState, DEFAULT_PARAMS, type ViewSettings } from './store';
 
 export const GENERATOR_ID = 'shadow_plate';
@@ -18,6 +19,8 @@ export interface ProjectDoc {
   params: SquamaParams & Record<string, unknown>;
   view?: Partial<Pick<ViewSettings, 'ambient' | 'followDesignLight' | 'previewAzimuthDeg' | 'previewElevationDeg'>>;
   printer?: string;
+  /** The export panel's settings (tiling, keys, stand, calibration tile, orientation, bed). */
+  export?: Partial<ExportSettings>;
   appVersion?: string;
 }
 
@@ -64,15 +67,35 @@ export function windowTitle(path: string | null, dirty: boolean): string {
   return `${documentName(path)}${dirty ? ' — Edited' : ''} — AD3D`;
 }
 
-export function buildProjectDoc(state: Pick<AppState, 'params' | 'view'>, printer?: string): ProjectDoc {
+export function buildProjectDoc(state: Pick<AppState, 'params' | 'view'>, printer?: string, exportSettings?: ExportSettings): ProjectDoc {
   const { ambient, followDesignLight, previewAzimuthDeg, previewElevationDeg } = state.view;
-  return {
+  const doc: ProjectDoc = {
     generator: GENERATOR_ID,
     generatorVersion: GENERATOR_VERSION,
     params: { ...state.params },
     view: { ambient, followDesignLight, previewAzimuthDeg, previewElevationDeg },
-    printer,
+    printer: exportSettings?.printerId ?? printer,
   };
+  if (exportSettings) doc.export = { ...exportSettings, bedMm: [...exportSettings.bedMm], formats: [...exportSettings.formats] };
+  return doc;
+}
+
+/** The export settings a document carries, over `base` (fields of the wrong type are ignored). */
+export function exportFromDoc(doc: ProjectDoc, base: ExportSettings): ExportSettings {
+  const e = doc.export;
+  if (!e || typeof e !== 'object') return base;
+  const out: ExportSettings = { ...base, bedMm: [...base.bedMm], formats: [...base.formats] };
+  if (typeof e.printerId === 'string') out.printerId = e.printerId;
+  if (Array.isArray(e.bedMm) && e.bedMm.length === 3 && e.bedMm.every((v) => typeof v === 'number' && v > 0)) out.bedMm = [...e.bedMm] as ExportSettings['bedMm'];
+  if (typeof e.marginMm === 'number' && e.marginMm >= 0) out.marginMm = e.marginMm;
+  if (typeof e.orientation === 'string') out.orientation = e.orientation;
+  if (Array.isArray(e.formats) && e.formats.length && e.formats.every((f) => f === 'stl' || f === '3mf')) out.formats = [...e.formats];
+  if (e.keys === 'none' || e.keys === 'pegs' || e.keys === 'auto') out.keys = e.keys;
+  if (e.bedMotion === 'x' || e.bedMotion === 'y' || e.bedMotion === 'none') out.bedMotion = e.bedMotion;
+  if (typeof e.stand === 'boolean') out.stand = e.stand;
+  if (typeof e.calibrationTile === 'boolean') out.calibrationTile = e.calibrationTile;
+  if (typeof e.tile === 'boolean') out.tile = e.tile;
+  return out;
 }
 
 const NUMERIC_KEYS = ['widthMm', 'cellMm', 'lightAzimuthDeg', 'lightElevationDeg', 'maxTiltDeg', 'baseMm'] as const;
@@ -87,6 +110,9 @@ export function paramsFromDoc(doc: ProjectDoc): SquamaParams {
   }
   if (!doc.params || typeof doc.params !== 'object') throw new Error('project has no parameters');
   const merged = { ...DEFAULT_PARAMS, ...doc.params } as SquamaParams & Record<string, unknown>;
+  // No optimiser field means none (the core's SquamaJob meaning; spike/v1 projects and CLI
+  // projects saved without --optimise). The optimiser is on only for new documents.
+  if (doc.params.optimiser === undefined || doc.params.optimiser === null) merged.optimiser = { kind: 'none' };
   for (const k of NUMERIC_KEYS) {
     const v = merged[k];
     if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error(`project parameter ${k} is not a number`);

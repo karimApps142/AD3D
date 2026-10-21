@@ -3,7 +3,7 @@
 // answers. The core stays the authority; these only make the panels responsive.
 
 import { brightnessToTilt, DEG } from './squamaMath';
-import type { CoreWarning, ImageOpts, SquamaParams } from './types';
+import type { CoreWarning, ImageOpts, LayoutSpec, SquamaParams } from './types';
 
 // ---- §2.1 snapping (integer µm, half-up, never f64 division on decimals).
 
@@ -29,6 +29,9 @@ export interface PredictedLayout {
 /**
  * §2.1 layout for a crop of `cropWPx × cropHPx` pixels. With heightMm the height snaps on its
  * own (the core then crops to fill); otherwise ny = (2·nx·ch + cw) / (2·cw).
+ *
+ * Hex layouts mirror the core's `layout_for` (§6.2): nx counts half-cells across the flats,
+ * ny rows of pitch √3/2·cell, axes swapped for flat-top, and an explicit height snaps down.
  */
 export function predictLayout(
   widthMm: number,
@@ -36,17 +39,31 @@ export function predictLayout(
   cropWPx: number,
   cropHPx: number,
   heightMm?: number,
+  layout?: LayoutSpec,
 ): PredictedLayout {
-  const nx = snapCells(widthMm, cellMm);
-  let ny: number;
-  if (heightMm !== undefined) {
-    ny = snapCells(heightMm, cellMm);
-  } else {
-    const cw = Math.max(1, Math.round(cropWPx));
-    const ch = Math.max(1, Math.round(cropHPx));
-    ny = Math.max(1, Math.floor((2 * nx * ch + cw) / (2 * cw)));
+  const cellUm = toUm(cellMm);
+  const cell = cellUm / 1000;
+  const cw = Math.max(1, Math.round(cropWPx));
+  const ch = Math.max(1, Math.round(cropHPx));
+  if (layout?.kind === 'hex' && cellUm > 0) {
+    const pitch = (3 * cell) / (2 * Math.sqrt(3));
+    const halfCells = (lenUm: number) => Math.max(2, Math.floor((2 * lenUm + Math.floor(cellUm / 2)) / cellUm));
+    const halfCellsDown = (lenUm: number) => Math.max(2, Math.floor((2 * lenUm) / cellUm));
+    const rows = (lenMm: number) => Math.max(1, Math.floor(lenMm / pitch + 0.5));
+    const rowsDown = (lenMm: number) => Math.max(1, Math.floor(lenMm / pitch + 1e-9));
+    if (layout.orientation !== 'flat') {
+      const m = halfCells(toUm(widthMm));
+      const w = (m * cell) / 2;
+      const n = heightMm !== undefined ? rowsDown(heightMm) : rows((w * ch) / cw);
+      return { nx: m, ny: n, wMm: w, hMm: n * pitch, cellMm: cell };
+    }
+    const n = rows(widthMm);
+    const w = n * pitch;
+    const m = heightMm !== undefined ? halfCellsDown(toUm(heightMm)) : halfCells(toUm((w * ch) / cw));
+    return { nx: m, ny: n, wMm: w, hMm: (m * cell) / 2, cellMm: cell };
   }
-  const cell = toUm(cellMm) / 1000;
+  const nx = snapCells(widthMm, cellMm);
+  const ny = heightMm !== undefined ? snapCells(heightMm, cellMm) : Math.max(1, Math.floor((2 * nx * ch + cw) / (2 * cw)));
   return { nx, ny, wMm: nx * cell, hMm: ny * cell, cellMm: cell };
 }
 

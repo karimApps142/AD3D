@@ -1,124 +1,185 @@
-# M1 end-to-end proof (verify round 1)
+# M1 end-to-end proof (verify round 2)
 
-2026-10-20, first run on `main` at `a1a9cbe`. **Re-run after the round 1 fixes** (same day, commit "M1: fix verification findings (round 1)"): the outputs, logs and validation numbers below are from the re-run; the screenshots, `bench.log`, `check_3mf_trimesh.log` and `tauri-dev*.log` are from the first run. The machine was shared with other agents (load 4–7), so the timings are indicative.
+2026-10-20, on `main` at `d807bf9` ("M1: fix verification findings (round 1)"). Every output, log, screenshot and bench number below is from this run. The machine was shared with other agents (load 2–4.5), so the timings are indicative.
 
 ## What was tested
 
-- **Input:** `tests/fixtures/mona-lisa.jpg`. The Mona Lisa (C2RMF retouched, public domain) from Wikimedia Commons, re-encoded by `sips` to 1006 × 1500 px (770 KB).
-- **Printer:** the default profile, Creality CR-6 SE (235 × 235 × 250 mm, bed moves in Y). The margin is now 8 mm (room for a brim; it was 5 mm in the first run).
+- **Input:** `tests/fixtures/mona-lisa.jpg`, the Mona Lisa (C2RMF retouched, public domain) from Wikimedia Commons. It is 1006 × 1500 px, 770 KB, and tracked in git.
+- **Printer:** the default profile, Creality CR-6 SE: 235 × 235 × 250 mm, bed moves in Y, 8 mm margin.
 - **Two code paths:**
   - **CLI:** release `target/release/ad3d`, every run with `--strict` (self-intersection stage on).
-  - **App:** the `SquamaState` methods behind the Tauri commands (`squama_image_open`, `generate_squama` at preview then final quality, `squama_target`, `squama_tile_plan`, `export_squama`). The harness is `src-tauri/src/e2e_m1.rs`; run it with `cargo test -p ad3d-app e2e_m1 -- --ignored --nocapture`. The commands only wrap these methods in `spawn_blocking`; the IPC layer itself was exercised by the live app run in the Screenshot section.
-- **Logs:** `docs/m1/logs/` (`cli-*.log`, `app-e2e.log`, `validate-ad3d.log`, `validate-summary.tsv`, `check_mesh.log`, `check_3mf_trimesh.log`, `bench.log`, `tauri-dev*.log`).
+  - **App:** the `SquamaState` methods behind the Tauri commands (`squama_image_open`, then `generate_squama` at preview and then final quality, `squama_target`, `squama_tile_plan`, `export_squama`).
+    - Harness: `src-tauri/src/e2e_m1.rs`. Run it with `cargo test -p ad3d-app e2e_m1_app_exports -- --ignored --nocapture`.
+    - The live app run in the Screenshot section covers the IPC layer itself.
+- **Logs:** `docs/m1/logs/`:
+  - `cli-*.log`, `app-e2e.log`
+  - `validate-ad3d.log`, `validate-summary.tsv`
+  - `check_mesh.log`, `check_3mf_trimesh.log`
+  - `bench.log`, `tauri-dev.log`
 
-## Results
+## Result in one paragraph
 
-Generation and export work end to end on both paths. Every part of every output is a closed, consistently wound, positive-volume mesh with 0 self-intersecting triangle pairs. Three independent checks agree on this: `ad3d validate --strict`, `tools/check_mesh.py` (trimesh), and trimesh on each 3MF object.
+Generation and export work end to end on both paths.
 
-Five findings follow below, ranked. None of them breaks the exported geometry.
+Every part of every output passes all three checks:
+- Each part is a closed, consistently wound mesh with positive volume.
+- Each part has 0 self-intersecting triangle pairs.
+- Each part sits inside its bed (except the LuBan default, which is expected and warned).
+- The three checkers (`ad3d validate --strict`, `tools/check_mesh.py`, and an independent trimesh check of each 3MF object) agree on all 56 files.
+
+The four round-1 fixes I could check end to end hold:
+- The tile plan shown equals the plan cut.
+- The validator accepts the splints.
+- The CLI output is rounded.
+- The photo entry point loads the image size, and the first plate is generated at final quality.
+
+There are **two new problems and one unfixed one**, ranked at the end. None of them breaks the geometry; both of the top two are about downward ledges, which can sag in a standing print.
 
 ## Outputs
 
-All paths are relative to the repo. Each STL has a matching 3MF in the same folder with every part laid out on the bed.
+All paths are relative to `docs/m1/out/`. Each STL has a matching 3MF in the same folder, with every part placed on its bed.
 
 | Case | CLI flags (beyond `--image … --format stl,3mf --strict`) | CLI output | App output | Plate / parts |
 |---|---|---|---|---|
-| LuBan default (300 / 6 / 5° / 10° / 3) | `--tiles none --orientation flat` | `out/cli/default/squama.{stl,3mf}` | `out/app/luban-default/` | 50 × 75 cells, 300 × 450 mm, 25 154 tris. Warns `part_exceeds_bed` (expected; the part report now says `fitsBed: false`) |
-| CR-6 SE, one piece, standing | `--width 160 --tiles none --orientation standing` | `out/cli/cr6-onepiece/` | `out/app/cr6-onepiece/` | 27 × 40 cells, 162 × 240 mm. Prints 3.8 × 162 × 240 (face along Y). Height/footprint 63: warns `tall_standing_tile` and `brim_recommended` |
-| 300 × 378, tiled, keys, stand | `--width 300 --height 378 --tiles auto --keys pegs --stand --orientation standing` | `out/cli/tiled-300x378/` | `out/app/tiled-300x378/` | 2 × 2 tiles, cols 25/25 × rows 27/36 (Y 162/216 × Z 150 mm, ≤ 40 × thickness), `key_splints` (21 shells), 2 stands. **Two beds, two 3MFs:** `squama.3mf` (4 tiles + splints), `squama_bed2.3mf` (stands) |
-| Hex cells | `--width 160 --layout hex --tiles none --orientation standing` | `out/cli/hex/` | `out/app/hex/` | 53 × 46 pointy hex, 159.0 × 239.0 mm, 17 116 tris |
-| Point light (−400, 120, 80) mm | `--width 160 --light-point=-400,120,80 …` | `out/cli/point/` | `out/app/point/` | 162 × 240 mm, depth 4.3 mm |
-| Optimised | `--width 160 --optimise shadow …` | `out/cli/optimised/` | `out/app/optimised/` | 8 sweeps, match r 0.974 → 0.992, rel. RMSE 0.030 → 0.017. Still warns `downward_ledge` 0.70 mm (see the checklist) |
-| Calibration tile | `ad3d calibration --out … --strict` | `out/cli/calibration/calibration.{stl,3mf,key.json}` | `out/app/calibration/` (with the plate) | 120 × 84 mm, 12 steps **−5.7°…10°** (one black step, ledges ≤ 0.60 mm), light side Left |
-| Extra: hex + tiled + optimised + calibration tile + project | `--width 300 --height 378 --layout hex --optimise shadow --tiles auto --keys pegs --stand --calibration-tile --save-project …/job.ad3d` | `out/cli/hex-tiled-opt-cal/` | — | Plate 300 × **374.1** mm (an explicit hex height now snaps down). 2 × 2 tiles (Y 187.1 × Z 150), splints (22 shells), 2 stands, calibration tile (ledge 0.60 mm), two beds / two 3MFs, `job.ad3d` |
+| LuBan default (300 / 6 / 5° / 10° / 3) | `--tiles none --orientation flat` | `cli/default/` | `app/luban-default/` | 50 × 75 cells, 300.0 × 450.0 mm, 25 154 tris. Warns `part_exceeds_bed`, `fitsBed: false` (expected) |
+| CR-6 SE, one piece, standing | `--width 160 --tiles none --orientation standing` | `cli/cr6-onepiece/` | `app/cr6-onepiece/` | 27 × 40 cells, 162 × 240 mm. Prints 3.8 × 162 × 240 (face along Y), 2 quarter turns, ledge 0.33 mm. Warns `tall_standing_tile` (63×) and `brim_recommended` |
+| 300 × 378, tiled, keys, stand | `--width 300 --height 378 --tiles auto --keys pegs --stand --orientation standing` | `cli/tiled-300x378/` | `app/tiled-300x378/` | 2 × 2 tiles, cols 25/25 × rows 27/36 (Y 162/216 × Z 150 mm, height/footprint 39.6, ledges ≤ 0.52 mm). `key_splints` (21 shells), 2 stands. Two beds, two 3MFs: `squama.3mf` (4 tiles + splints), `squama_bed2.3mf` (stands) |
+| Hex cells | `--width 160 --layout hex --tiles none --orientation standing` | `cli/hex/` | `app/hex/` | 53 × 46 pointy hex, 159.0 × 239.0 mm, 17 116 tris, ledge 0.26 mm |
+| Point light (−400, 120, 80) mm | `--width 160 --light-point=-400,120,80 …` | `cli/point/` | `app/point/` | 162 × 240 mm, depth 4.3 mm, ledge 0.28 mm, match r 0.9999 (lamp ≈ 11° up, so almost no shadowing) |
+| Optimised | `--width 160 --optimise shadow …` | `cli/optimised/` | `app/optimised/` | 8 sweeps, match r 0.974 → 0.992, rel. RMSE 0.030 → 0.017. **Ledge 0.70 mm, warns `downward_ledge`** (finding 2) |
+| Calibration tile, standalone | `ad3d calibration --out … --strict` | `cli/calibration/` (`calibration.{stl,3mf,key.json}`) | — | 120 × 84 mm, 12 steps −5.7°…10°, light side Left, 1 quarter turn, inside the bed at (8, 8) |
+| Calibration tile with the plate | `--width 160 --tiles none --orientation standing --calibration-tile` | `cli/cr6-cal/` | `app/calibration/` | Plate + calibration tile + key on one bed. **The tile takes the plate's 2 quarter turns: 4.1 × 120 × 84, ledge 0.83 mm, warns `downward_ledge`** (finding 1) |
+| Extra: hex, tiled, optimised, calibration tile, project | `--width 300 --height 378 --layout hex --optimise shadow --tiles auto --keys pegs --stand --calibration-tile --save-project …/job.ad3d` | `cli/hex-tiled-opt-cal/` | — | Plate 300 × 374.1 mm (hex height snaps down). 2 × 2 tiles (Y 187.1 × Z 150), splints (22 shells), 2 stands, calibration tile (1 quarter turn here, ledge 0.60 mm), two beds / two 3MFs, `job.ad3d`. r 0.969 → 0.982 |
 
-The CLI and the app produce identical meshes for the same settings (same triangle counts and volumes).
+The CLI and the app give identical meshes for the same settings: the same triangle counts, sizes and ledges.
 
-The app run's timings: the photo opens in 57 ms on the first call. Preview generates in 1.2–3.4 ms with the photo cached. Final quality takes 19–87 ms (test profile, `validate()` on, `validated: true` every time). Exports take 123–540 ms.
+**App timings:**
+- The photo opens on the first call.
+- Preview: 1.0–2.6 ms with the photo cached. The first, cold call is 45.7 ms, with the target taking 42.2 ms.
+- Final quality: 15–41 ms, or 74 ms for the 300 × 450 plate. `validated: true` every time.
+- Exports: 107–465 ms.
 
 ## Validation
 
-Re-run on 53 files (37 STLs, 16 3MFs: one 3MF per bed now). Script: every file through `ad3d validate --strict`, every STL through `tools/check_mesh.py`.
+56 files: 37 STLs and 19 3MFs (one 3MF per bed).
 
 | Check | Result |
 |---|---|
-| `ad3d validate --strict` (STL and 3MF) | **53/53 OK**, self-intersecting pairs 0 everywhere. Multi-shell parts (`*key_splints*`) are now validated as N genus-0 shells (Euler = 2·N) without `--components`; every other object must be one shell (`validate-summary.tsv`, `validate-ad3d.log`) |
-| `tools/check_mesh.py` (trimesh, STL) | **35/35 OK**; splint files are checked with the same multi-shell rule (`check_mesh.log`) |
-| App harness (`e2e_m1_app_exports`) | exit 0; final previews `validated: true`; exported STLs re-validated with self-intersection; the tile plan the UI asks for equals the cut the export makes (`app-e2e.log`, e.g. `[tiled-300x378] tile plan cols [25, 25] rows [27, 36]` = export) |
-| Every part on its own bed | every 3MF opens on the 235 mm plate: parts are placed in their bed's own coordinates and each bed gets its own file |
+| `ad3d validate --strict` (every STL and 3MF) | **56/56 OK**, 0 self-intersecting pairs in every file (`validate-summary.tsv`, `validate-ad3d.log`). Splint parts are checked as N genus-0 shells (Euler = 2·N) |
+| `tools/check_mesh.py` (trimesh, every STL) | **37/37 OK**, exit 0 (`check_mesh.log`) |
+| Independent trimesh check of every 3MF object, with the build-item transform applied: watertight, consistent winding, positive volume, Euler 2 (2·N for splints), inside 235 × 235 × 250 with min z = 0, no XY overlap between parts on a bed | **37 objects: all watertight and wound.** 35 are inside their bed with no overlaps. The 2 outside are the LuBan-default 300 × 450 plates (expected, `part_exceeds_bed`) (`check_3mf_trimesh.log`; script at the end) |
+| App harness `e2e_m1_app_exports` | Passes. Every final preview returns `validated: true`. Exported STLs are re-validated with the self-intersection check. Tile plan = export cut for every case, e.g. `[tiled-300x378] tile plan cols [25, 25] rows [27, 36]`, the same as the export (`app-e2e.log`) |
+| Test suites | `cargo test --workspace --no-fail-fast`: 313 passed, 2 failed. `pnpm test`: 190 passed, 4 failed. **Every failure is in a new, untracked round-2 reviewer file** (`src-tauri/src/m1_review2_tests.rs`, `crates/ad3d-core/tests/printability_r2.rs`, `src/app/m1Review2.test.ts`). Every committed test passes |
+
+My mesh checks cannot detect one case: a splint piece nested entirely inside another. `printability_r2.rs::splints_do_not_overlap_at_seam_crossings`, from a parallel reviewer, covers it.
 
 ## Screenshot: live preview in the real app
 
-**How it was run:** `pnpm tauri dev` (debug build). A dev-only harness, `src/dev/e2eM1.ts`, does what ImagePanel's "Open photo…" does after the dialog: `engine.imageInfo(path)`, then the params patch with `quality: 'final'` and width 160. It saves the canvas through the app's own **Save preview image** path (`save_preview_image` writes to `~/Pictures/AD3D`). The harness is switched on by `VITE_AD3D_E2E_PHOTO=/abs/photo.jpg` (plus `VITE_AD3D_E2E_OPT=1` for the optimiser) and this hook in `src/main.tsx`, inside the `import.meta.env.DEV` block. I removed the hook again after the run:
+**How it was run:**
+- `pnpm tauri dev` (debug build) with `VITE_AD3D_E2E_PHOTO=…/tests/fixtures/mona-lisa.jpg`, plus the one-line hook in `src/main.tsx` from round 1. I removed the hook after the run.
+- The harness `src/dev/e2eM1.ts` now opens the photo through the app's real entry point, **`useImage(path)`** (the one File → Open, Import, drop and the Image panel use). It then sets width 160 and saves the canvas through **Save preview image** (`save_preview_image` → `~/Pictures/AD3D`).
 
-```ts
-const e2ePhoto = import.meta.env.VITE_AD3D_E2E_PHOTO as string | undefined;
-if (e2ePhoto) void import('./dev/e2eM1').then((m) => m.runE2eM1(e2ePhoto));
-```
+**What the live app reported** (`tauri-dev.log`):
+- `ui.image after useImage: 1006x1500; params.quality final`. So round-1 finding 6 (photo entry point) and finding 8 (quality at launch) are fixed on this path.
+- The first plate arrived 1011 ms after the patch, already final (flags 3). 7812 tris.
+- Debug build: generated in 191 ms (optimise 47 ms, mesh 4 ms). `validated: true`, r 0.974 → 0.992, 8 sweeps.
+- The optimiser was on because `DEFAULT_PARAMS` turns it on (`src/state/store.ts:19`).
 
-**What the live app reported:** the first plate came 308 ms after the photo patch, and it was already final quality (flags 3). The debug Rust build took 267 ms: target 75, optimise 48, mesh 4. It reported `validated: true`, score r 0.974 → 0.992, 8 sweeps.
-
-**`docs/m1/preview.png`:** the photo loaded, with the preview light moved off the design light (free light, azimuth 160°, elevation 9°; the design light is 180° / 5°). Optimiser off.
+**`docs/m1/preview.png`:** the photo loaded, with the preview light moved off the design light to a free light at azimuth 160°, elevation 9°. The design light is 180° / 5°.
 
 ![preview, light moved](preview.png)
 
-Other captures in `docs/m1/`:
-- **Design light:** `preview-design-light.png`, `preview-front-design.png`.
-- **Front view, light moved:** `preview-front-moved.png`.
-- **Optimiser on:** `preview-opt-design-light.png`, `preview-opt-moved.png`, `preview-opt-front-design.png`, `preview-opt-front-moved.png`.
-- **Core's own target and simulated appearance (12 px per facet):** `sim-plain-target.png`, `sim-plain-sim.png`, `sim-opt-target.png`, `sim-opt-sim.png`.
+Other captures:
+- `preview-design-light.png`: perspective view, design light.
+- `preview-front-moved.png`: front view, moved light.
+- `preview-front-design.png`: front view, design light.
+
+The other images in `docs/m1/` are from round 1.
 
 **What I see:**
-- At the design light, the plate clearly reads as the Mona Lisa at 27 × 40 cells: light sky, dark hair framing the face, bright face, chest and hands.
-- Moving the light washes the image out and lights the floor. That is the expected behaviour: the plate only works at its design light.
-- The front view fills the frame. The light marker and its ray are drawn.
-- **The defect:** the brightest cells (face, chest, a few sky cells) are cut by dark vertical cast-shadow slits, about 15–30 % of a cell wide. See finding 1.
-- Repeat captures with identical inputs were byte-identical, so the preview is deterministic.
+- At the design light (front view), the plate clearly reads as the Mona Lisa: bright sky, dark hair framing a bright face, bright chest, hands bottom-left.
+- With the light moved, the image washes out as expected. The lamp marker and its ray are drawn.
+- The face and chest still show dark vertical cast-shadow slits. Round 1 showed they are physical, and that the core's forward model counts them (`src/viewport/shadowAgreement.test.ts`), so I am not reporting them again.
 
-## Benchmarks (criterion, `--warm-up-time 1 --measurement-time 3`, shared machine)
+## Benchmarks
 
-| Bench | Median |
+Criterion, `cargo bench -p ad3d-core --bench squama --bench squama_layouts --bench sim -- --warm-up-time 1 --measurement-time 3`, median (`bench.log`).
+
+| Bench | 50×63 | 100×126 | 150×189 |
+|---|---|---|---|
+| end-to-end generate | 1.34 ms | 6.02 ms | 10.12 ms |
+| end-to-end generate, noise target | 2.00 ms | 7.39 ms | 14.74 ms |
+| quantise+mesh | 1.18 ms | 4.47 ms | 9.18 ms |
+| mesh_relief | 0.89 ms | 3.84 ms | 8.45 ms |
+| back-face CDT | 10.3 µs | 24.3 µs | 30.1 µs |
+| payload encode | 29.3 µs | 81.0 µs | 356.9 µs |
+| sim: shade left / oblique / point | 1.08 / 4.11 / 6.33 ms | 5.55 / 18.36 / 25.14 ms | — |
+| optimiser: 1 sweep, left light | 5.74 ms | 17.93 ms | — |
+| sim: render 2 px/mm ss2 | 26.70 ms | 39.94 ms | — |
+
+| Bench (layouts) | square (12 600 facets) | hex-pointy (14 673) | hex-flat (14 616) |
+|---|---|---|---|
+| solve, Lambert, directional | 0.325 ms | 0.540 ms | 0.528 ms |
+| solve, Lambert, point | 0.935 ms | 1.36 ms | 1.23 ms |
+| solve, measured response, directional | 14.07 ms | 14.89 ms | 17.42 ms |
+| solve, measured response, point | 14.32 ms | 20.73 ms | 20.53 ms |
+| generate_plate, directional | 5.28 ms | 9.63 ms | 8.23 ms |
+| generate_plate, point | 5.27 ms | 9.45 ms | 9.07 ms |
+
+Sampling `cell_brightness`, 12 MP: 22.9 ms (→ 100×75), 23.4 ms (→ 150×113).
+
+Every drag-path stage fits the ≤ 50 ms budget at the §13 size (about 100 × 126 cells), including a measured response and a point light. The optimiser (8 sweeps ≈ 145 ms at 100 × 126) runs at final quality only.
+
+## Round-1 findings: status
+
+| Round-1 finding | Status in round 2 |
 |---|---|
-| end-to-end generate 50×63 / 100×126 / 150×189 | 1.18 ms / 4.90 ms / 14.75 ms |
-| end-to-end generate, noise target, same sizes | 1.79 / 6.32 / 19.43 ms |
-| quantise+mesh 50×63 / 100×126 / 150×189 | 1.09 / 4.70 / 11.51 ms |
-| mesh_relief, same sizes | 0.88 / 3.64 / 8.85 ms |
-| back-face CDT, same sizes | 10.8 / 17.7 / 30.5 µs |
-| payload encode, same sizes | 19.9 / 83.4 / 488.7 µs |
-| sampling cell_brightness 12 MP → 100×75 / 150×113 | 29.9 / 30.1 ms |
-| layouts: solve, Lambert, directional (square 12 600 / hex-pointy 14 673 / hex-flat 14 616 facets) | 0.405 / 0.589 / 0.509 ms |
-| layouts: solve, Lambert, point light (same) | 1.11 / 1.52 / 1.30 ms |
-| layouts: solve, measured response, directional (same) | 15.5 / 17.7 / 14.6 ms |
-| layouts: solve, measured response, point light (same) | 17.5 / 17.3 / 16.8 ms |
-| layouts: generate_plate, directional (same) | 6.93 / 11.41 / 9.06 ms |
-| layouts: generate_plate, point light (same) | 6.60 / 10.02 / 9.69 ms |
-| sim: shade left / oblique / point, 50×63 | 1.12 / 4.12 / 6.48 ms |
-| sim: shade left / oblique / point, 100×126 | 5.75 / 20.5 / 32.6 ms |
-| optimiser: 1 sweep, left light, 50×63 / 100×126 | 5.41 / 23.6 ms |
-| sim: render 2 px/mm ss2, 50×63 / 100×126 | 27.5 / 48.4 ms |
+| Preview slits vs the core simulation | Closed in round 1 (both models agree, fixture test). Not re-reported |
+| Tile plan shown ≠ cut | **Fixed.** `squama_tile_plan` equals the export cut in every app case |
+| 0.70 mm downward ledge on the optimised plate | **Not fixed, and wider than reported.** See finding 2 |
+| Validator rejects our splints | **Fixed.** Both validators accept the 21- and 22-shell splints |
+| CLI raw floats, hex overshoot, timings label | **Fixed.** Sizes print to 0.1 mm, hex 378 → 374.1, the label reads "whole-plate stage timings" |
+| Photo entry points skip imageInfo | **Fixed** on the `useImage` path: the live app shows `ui.image` = 1006 × 1500 |
+| Undo after a slider drag | Not exercised end to end here. The committed tests pass |
+| Plate at launch generated at Preview | **Fixed.** `params.quality` is `final` after `useImage`, and the first live plate had flags 3 (final) |
+| Point light + measured response read differently | **Consistent now.** With the optimiser, the "before" score drops as the lamp goes lower, identically for point and directional lamps at the same elevation (point at 11°: r 1.000; directional at 11°: 0.998; point at 5°: 0.989; directional at 5°: 0.974). With a measured response, the point plate gives 1.000 and the directional plate 0.985 → 0.993. No sign of solver/forward-model mismatch |
 
-Every drag-path stage fits the ≤ 50 ms budget at the §13 size (~100 × 126 cells), with a measured response or a point light. The optimiser (8 sweeps ≈ 190 ms at 100 × 126) runs at final quality only, as designed.
+## New and unfixed problems (ranked)
 
-## Findings of the first run and what round 1 did
+1. **Minor, new. The calibration tile exported with a one-piece plate inherits the plate's quarter turn and gets a 0.83 mm downward ledge.**
+   - **What happens:** `export_plate` (`crates/ad3d-core/src/squama/export.rs`, around lines 761–776) measures and places the calibration tile with `plan.quarter_turns`, the plate's turn, and forbids rotation (`may_rotate: plan.quarter_turns.is_none()`).
+   - **Results by case:**
+     - CR-6 one-piece plate (2 turns): the tile stands 120 wide × 84 tall with a **0.83 mm** ledge, and the export warns `downward_ledge` on both paths (`cli/cr6-cal/`, `app/calibration/`).
+     - Tiled plate (1 turn): the tile stands 84 × 120 with 0.60 mm, within its design.
+   - **Contradicts:** round 1's "ledges ≤ 0.60 mm" guarantee in `calibration.rs`, which only holds in that one turn.
+   - **Fix:** give the calibration part its own best standing turn (the one with the smallest ledge that keeps the steps facing the light). Or keep the plate's turn but choose the ramp axis to match. Add a test that the ledge stays ≤ 0.6 mm for one-piece and tiled exports.
+2. **Minor, unfixed and broader than reported. The optimiser raises downward ledges past the 0.6 mm sag limit.**
+   - **Scale:** it is not just the 0.70 mm on the 160 mm plate. On the same CR-6 one-piece plate (2 quarter turns):
 
-1. **Preview slits vs the core simulation — no model was wrong.** The new fixture `tests/fixtures/mona-lisa-160-shadow.json` (written by `e2e_m1_dump_shadow_fixture`) holds this plate's facets, the core's per-facet lit fraction and its simulated appearance. `src/viewport/shadowAgreement.test.ts` traces the same planes with the viewport's `traceShadow`: lit fractions agree to < 1 % on average and within one sample column per cell, plain and optimised. The core does count the slits (37 cells lose more than 10 % of their area); `sim-plain-sim.png` shows per-facet averages, so a slit inside a cell cannot appear in it. The Appearance view now gets the core's unnormalised radiance and adds the preview ambient like the shader; the same test checks Pearson ≥ 0.98 between it and the shader's per-facet brightness.
-2. **Tile plan shown ≠ cut: fixed.** `squama_tile_plan` runs the export's own planning stage (final solve, refined seams). Test: `preview_tile_plan_equals_the_export_cut_lines`.
-3. **0.70 mm downward ledge on the optimised plate: left.** It is on the hand-over checklist (support-free is fine up to ~0.6 mm; at 0.7 mm expect a little sag on a few cells, or print light-from-below at k = 1).
-4. **Validator rejected our splints: fixed** (per-object shell rule in `ad3d validate` and `check_mesh.py`).
-5. **CLI output: fixed.** Sizes print to 0.1 mm, explicit hex heights snap down (378 → 374.1), the timings line is labelled "whole-plate stage timings".
+     | Light | Ledge with optimiser |
+     |---|---|
+     | Directional, 11° | 0.73 mm |
+     | Point (−900, 120, 79) | 0.75 mm |
+     | Point (−400, 120, 80) + measured response | 0.84 mm |
+     | Point (−400, 120, 35) | **0.92 mm**, against 0.19 mm with the optimiser off |
+
+   - **Why it is not seen on tiled plates:** they print with 1 quarter turn and stay ≤ 0.52 mm with the optimiser.
+   - **Why it matters more now:** the optimiser is **on by default** in the app (`DEFAULT_PARAMS`), so the default CR-6 export carries this warning.
+   - **Cause:** the optimiser does not know the print's down direction.
+   - **Fix:** pass the planned standing turn into the optimiser and clamp each move so the downward ledge stays ≤ 0.6 mm in that direction. Alternatively, run a final ledge-clamp pass after optimising. Test across directional and point lamps.
+3. **Note: the app harness and the live capture now use the real photo entry point.** `src/dev/e2eM1.ts` calls `useImage` instead of setting `ui.image` by hand, so round-1 finding 6 is covered by the live run.
 
 ## Hand-over checklist for printing (CR-6 SE)
 
-- Brim 6–8 mm, outer only, brim-object gap 0.1 mm on every standing tile (the export warns `brim_recommended` and prints this advice). 3–4 perimeters or 100 % infill, 0.12–0.16 mm layers.
-- Elephant-foot compensation 0.2 mm (Cura: Initial Layer Horizontal Expansion −0.2): a tile's bed edge can be a seam.
+- Brim 6–8 mm, outer only, brim-object gap 0.1 mm on every standing part. 3–4 perimeters or 100 % infill. Layers 0.12–0.16 mm.
+- Elephant-foot compensation 0.2 mm (Cura: Initial Layer Horizontal Expansion −0.2).
 - One 3MF per bed: print `…_bed2.3mf` as a second job.
-- Keys: holes Ø3.5 for Ø3.0 pegs (0.5 mm clearance); splints stay above the stand's slot. Stand slot = plate thickness + 0.5 mm.
-- The optimised 160 mm plate has a 0.70 mm downward ledge: watch those steps; if they sag, re-export with the optimiser off or the light from below.
-- Print the calibration tile first if you plan to measure the response.
+- Keys: holes Ø3.5 for Ø3.0 pegs. Stand slot = plate thickness + 0.5 mm.
+- Watch the 0.70 mm steps on the optimised 160 mm plate. If they sag, re-export with the optimiser off.
+- Until finding 1 is fixed, print the calibration tile from `ad3d calibration` (`cli/calibration/`), not alongside a one-piece plate.
 
 ## Uncommitted files from this round
 
-- `tests/fixtures/mona-lisa.jpg`: the test photo.
-- `src-tauri/src/e2e_m1.rs`: the app-path harness (two `#[ignore]` tests: `e2e_m1_app_exports`, `e2e_m1_dump_core_sim`), plus `#[cfg(test)] mod e2e_m1;` in `src-tauri/src/lib.rs`. That file also has another agent's `mod m1_review_tests;`.
-- `src/dev/e2eM1.ts`: the live-app capture harness. It is inert without the `main.tsx` hook above.
-- `docs/m1/`: this report, the screenshots, logs and `out/` (16 MB of STL/3MF/key/project outputs).
+- `src/dev/e2eM1.ts`: now uses `useImage`. The `main.tsx` hook was added for the run and removed again.
+- `docs/m1/`: this report, the four new screenshots (`preview.png`, `preview-design-light.png`, `preview-front-moved.png`, `preview-front-design.png`), the logs, and the regenerated `out/`. `out/cli/cr6-cal/` is new.
+- The 3MF checker used here: `/private/tmp/claude-501/-Users-apple-Desktop-workspace-nextjs-AD3D/56351967-942a-4feb-8aa2-59554c373fd2/scratchpad/check3mf.py`. It is not in the repo; copy it to `tools/` if you want to keep it.

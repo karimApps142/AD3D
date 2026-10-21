@@ -1,13 +1,15 @@
 // File and app actions behind the menu, palette and shortcuts. Each flow asks about unsaved
 // changes first where it would discard them, and reports problems as toasts instead of throwing.
 
-import { documentName, buildProjectDoc, isDirty, paramsFromDoc, pathKind, suggestedName, useDocumentStore, viewFromDoc } from '../state/document';
+import { documentName, buildProjectDoc, exportFromDoc, isDirty, paramsFromDoc, pathKind, suggestedName, useDocumentStore, viewFromDoc } from '../state/document';
 import { paramsHistory } from '../state/paramsHistory';
 import { normaliseSettings, type Settings, type Theme, useSettingsStore } from '../state/settings';
 import { DEFAULT_PARAMS, DEFAULT_VIEW, useAppStore } from '../state/store';
 import { askUnsaved, toast } from '../state/ui';
 import { getEngine } from '../engine';
-import { useSquamaUi } from '../panels/squamaUi';
+import { followLamp } from '../panels/lamp';
+import { DEFAULT_EXPORT, useSquamaUi } from '../panels/squamaUi';
+import type { ImageInfo, SquamaParams } from '../engine/types';
 import { getHost } from './host';
 
 function message(err: unknown): string {
@@ -36,6 +38,7 @@ export async function newProject(): Promise<void> {
   if (!(await guardUnsaved())) return;
   useAppStore.getState().setView({ ...DEFAULT_VIEW, lightDragging: false });
   paramsHistory.load(DEFAULT_PARAMS);
+  useSquamaUi.getState().set({ export: DEFAULT_EXPORT });
   void loadImageInfo(DEFAULT_PARAMS.image);
   useDocumentStore.setState({ path: null, savedParams: DEFAULT_PARAMS });
   useAppStore.getState().requestFit();
@@ -56,6 +59,7 @@ export async function openPath(path: string): Promise<void> {
     const params = paramsFromDoc(opened.doc);
     const view = viewFromDoc(opened.doc);
     if (Object.keys(view).length) useAppStore.getState().setView(view);
+    if (opened.doc.export) useSquamaUi.getState().set({ export: exportFromDoc(opened.doc, DEFAULT_EXPORT) });
     paramsHistory.load(params);
     useDocumentStore.setState({ path: opened.path, savedParams: params });
     useAppStore.getState().requestFit();
@@ -74,19 +78,51 @@ export async function openDialog(): Promise<void> {
 
 /**
  * Puts a photo into the current project: the one entry point for File → Open, Import, drop and
- * the Image panel's "Open photo…". A new photo starts uncropped, unrotated and with the height
- * from its aspect (one undo step), then its size is loaded so the panels and the point lamp use
- * the real plate size.
+ * the Image panel's "Open photo…". Its size is loaded first, then the new photo goes in
+ * uncropped, unrotated and with the height from its aspect (one undo step), with a point lamp
+ * moved along with the plate. When the size cannot be read the photo still goes in (the
+ * generator reports the problem) and the panels show no photo size.
  */
 export async function useImage(path: string): Promise<void> {
-  const { imageOpts: _o, heightMm: _h, ...rest } = useAppStore.getState().params;
-  useAppStore.setState({ params: { ...rest, image: path, quality: 'final' } });
+  const ui = useSquamaUi.getState();
+  const prevImage = ui.image;
+  ui.set({ imageLoading: true, imageError: null });
+  let info: ImageInfo | null = null;
+  let error: string | null = null;
+  try {
+    info = await (await getEngine()).imageInfo(path);
+  } catch (err) {
+    error = message(err);
+  }
+  const prev = useAppStore.getState().params;
+  const { imageOpts: _o, heightMm: _h, ...rest } = prev;
+  const next: SquamaParams = { ...rest, image: path, quality: 'final' };
+  useSquamaUi.getState().set({ image: info, imageError: error, imageLoading: false });
+  placingImage = true; // its size is already loaded (or failed): startImageSync has nothing to do
+  try {
+    useAppStore.setState({ params: { ...next, ...(info ? followLamp(prev, next, prevImage, info) : null) } });
+  } finally {
+    placingImage = false;
+  }
   useAppStore.getState().requestFit();
-  await loadImageInfo(path);
+  if (error) toast(`Could not open ${documentName(path)}: ${error}`, 'error', 8000);
 }
 
-/** Loads (and caches in the core) the size of the project's photo for the panels. */
-export async function loadImageInfo(path: string): Promise<void> {
+let placingImage = false;
+let imageLoad: { path: string; done: Promise<void> } | null = null;
+
+/** Loads (and caches in the core) the size of the project's photo for the panels. A failure
+ *  clears the size, so the panels never show another photo's. */
+export function loadImageInfo(path: string): Promise<void> {
+  if (imageLoad?.path === path) return imageLoad.done;
+  const done = loadImageInfoNow(path).finally(() => {
+    if (imageLoad?.done === done) imageLoad = null;
+  });
+  imageLoad = { path, done };
+  return done;
+}
+
+async function loadImageInfoNow(path: string): Promise<void> {
   const ui = useSquamaUi.getState();
   if (path === 'synthetic') {
     ui.set({ image: null, imageError: null, imageLoading: false });
@@ -100,12 +136,26 @@ export async function loadImageInfo(path: string): Promise<void> {
     if (useAppStore.getState().params.image === path) useSquamaUi.getState().set({ image: info, imageError: null });
   } catch (err) {
     if (useAppStore.getState().params.image === path) {
-      useSquamaUi.getState().set({ imageError: message(err) });
+      useSquamaUi.getState().set({ image: null, imageError: message(err) });
       toast(`Could not open ${documentName(path)}: ${message(err)}`, 'error', 8000);
     }
   } finally {
     if (useAppStore.getState().params.image === path) useSquamaUi.getState().set({ imageLoading: false });
   }
+}
+
+/**
+ * Keeps the panels' photo size in step with `params.image` whatever changed it (undo, redo,
+ * opening a project, New). Returns a stop function.
+ */
+export function startImageSync(): () => void {
+  return useAppStore.subscribe((state, prev) => {
+    const path = state.params.image;
+    if (placingImage || path === prev.params.image) return;
+    const shown = useSquamaUi.getState().image;
+    if (path === 'synthetic' ? shown === null : shown?.path === path) return;
+    void loadImageInfo(path);
+  });
 }
 
 export async function importImageDialog(): Promise<void> {
@@ -118,7 +168,7 @@ async function writeTo(path: string): Promise<boolean> {
   const state = useAppStore.getState();
   const params = state.params;
   try {
-    const written = await host.writeProject(path, buildProjectDoc(state, useSettingsStore.getState().settings.defaultPrinter));
+    const written = await host.writeProject(path, buildProjectDoc(state, useSettingsStore.getState().settings.defaultPrinter, useSquamaUi.getState().export));
     useDocumentStore.setState({ path: written, savedParams: params });
     await rememberRecent(written);
     return true;

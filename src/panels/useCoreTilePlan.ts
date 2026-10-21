@@ -2,7 +2,7 @@
 // viewport overlay. Debounced and latest-wins; null while unavailable (browser mock, errors), so
 // callers fall back to the TypeScript planner.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getEngine } from '../engine';
 import type { SquamaParams, TilePlan } from '../engine/types';
 import { tileLabel, type TilePlanOverlay } from '../viewport/tiles';
@@ -32,21 +32,48 @@ export function overlayFromPlan(plan: TilePlan): TilePlanOverlay {
 export function useCoreTilePlan(params: SquamaParams, settings: ExportSettings): TilePlan | null {
   const [plan, setPlan] = useState<TilePlan | null>(null);
   // Quality is preview-loop state: a drag must not re-plan (the core plan runs a final solve).
-  const { quality: _q, ...doc } = params;
+  const { quality, ...doc } = params;
   const key = JSON.stringify([doc, settings]);
+  // Plan only once the plate has settled: not while a slider drags (quality 'preview') and not
+  // while the final plate is being generated, whose heights the core plan then reuses.
+  const busy = useAppStore((s) => s.previewBusy);
+  const settled = quality !== 'preview' && !busy;
+  const planned = useRef<string | null>(null);
   useEffect(() => {
+    if (!settled || planned.current === key) return;
     let live = true;
     const t = setTimeout(async () => {
+      const vp = useViewportStore.getState();
       try {
         const engine = await getEngine();
-        if (!engine.squamaTilePlan || !settings.tile) {
-          if (live) setPlan(null);
+        if (!engine.squamaTilePlan) {
+          if (live) {
+            setPlan(null);
+            vp.set({ tilePlanState: 'estimate', tilePlanError: null });
+          }
+          return;
+        }
+        if (!settings.tile) {
+          if (live) {
+            planned.current = key;
+            setPlan(null);
+            vp.set({ tilePlanState: 'off', tilePlanError: null });
+          }
           return;
         }
         const p = await engine.squamaTilePlan(buildExportDto(useAppStore.getState().params, settings, '/plan/plate.3mf'));
-        if (live) setPlan(p);
-      } catch {
-        if (live) setPlan(null);
+        if (live) {
+          planned.current = key;
+          setPlan(p);
+          vp.set({ tilePlanState: 'core', tilePlanError: null });
+        }
+      } catch (err) {
+        if (live) {
+          setPlan(null);
+          const msg = err instanceof Error ? err.message : String(err);
+          // A superseded plan is not an error to show.
+          if (!/cancel/i.test(msg)) vp.set({ tilePlanState: 'error', tilePlanError: msg });
+        }
       }
     }, DEBOUNCE_MS);
     return () => {
@@ -54,7 +81,7 @@ export function useCoreTilePlan(params: SquamaParams, settings: ExportSettings):
       clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, settled]);
   useEffect(() => {
     useViewportStore.getState().set({ tilePlan: plan ? overlayFromPlan(plan) : null });
   }, [plan]);

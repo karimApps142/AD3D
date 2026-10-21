@@ -95,6 +95,7 @@ export function useAppShell(): void {
 
     cleanups.push(registerShellCommands());
     cleanups.push(startParamsHistory({ limit: useSettingsStore.getState().settings.undoDepth }));
+    cleanups.push(actions.startImageSync());
     paramsHistory.reset();
     useDocumentStore.setState({ savedParams: useAppStore.getState().params });
     cleanups.push(applyTheme());

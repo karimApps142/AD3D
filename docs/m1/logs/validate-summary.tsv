@@ -1,54 +1,57 @@
-file	ad3d_validate_exit
-docs/m1/out/app/calibration/calibration.3mf	0
-docs/m1/out/app/calibration/calibration.stl	0
-docs/m1/out/app/calibration/calibration_calibration.stl	0
-docs/m1/out/app/cr6-onepiece/cr6-onepiece.3mf	0
-docs/m1/out/app/cr6-onepiece/cr6-onepiece.stl	0
-docs/m1/out/app/hex/hex.3mf	0
-docs/m1/out/app/hex/hex.stl	0
-docs/m1/out/app/luban-default/luban-default.3mf	0
-docs/m1/out/app/luban-default/luban-default.stl	0
-docs/m1/out/app/optimised/optimised.3mf	0
-docs/m1/out/app/optimised/optimised.stl	0
-docs/m1/out/app/point/point.3mf	0
-docs/m1/out/app/point/point.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378.3mf	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_bed2.3mf	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_key_splints.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_stand_1.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_stand_2.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c1_r1.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c1_r2.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c2_r1.stl	0
-docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c2_r2.stl	0
-docs/m1/out/cli/calibration/calibration.3mf	0
-docs/m1/out/cli/calibration/calibration.stl	0
-docs/m1/out/cli/cr6-onepiece/squama.3mf	0
-docs/m1/out/cli/cr6-onepiece/squama.stl	0
-docs/m1/out/cli/default/squama.3mf	0
-docs/m1/out/cli/default/squama.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama.3mf	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_bed2.3mf	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_calibration.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_key_splints.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_stand_1.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_stand_2.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c1_r1.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c1_r2.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c2_r1.stl	0
-docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c2_r2.stl	0
-docs/m1/out/cli/hex/squama.3mf	0
-docs/m1/out/cli/hex/squama.stl	0
-docs/m1/out/cli/optimised/squama.3mf	0
-docs/m1/out/cli/optimised/squama.stl	0
-docs/m1/out/cli/point/squama.3mf	0
-docs/m1/out/cli/point/squama.stl	0
-docs/m1/out/cli/tiled-300x378/squama.3mf	0
-docs/m1/out/cli/tiled-300x378/squama_bed2.3mf	0
-docs/m1/out/cli/tiled-300x378/squama_key_splints.stl	0
-docs/m1/out/cli/tiled-300x378/squama_stand_1.stl	0
-docs/m1/out/cli/tiled-300x378/squama_stand_2.stl	0
-docs/m1/out/cli/tiled-300x378/squama_tile_c1_r1.stl	0
-docs/m1/out/cli/tiled-300x378/squama_tile_c1_r2.stl	0
-docs/m1/out/cli/tiled-300x378/squama_tile_c2_r1.stl	0
-docs/m1/out/cli/tiled-300x378/squama_tile_c2_r2.stl	0
+file	ad3d_validate	self_intersecting_pairs
+docs/m1/out/app/calibration/calibration.3mf	OK	0
+docs/m1/out/app/calibration/calibration.stl	OK	0
+docs/m1/out/app/calibration/calibration_calibration.stl	OK	0
+docs/m1/out/app/cr6-onepiece/cr6-onepiece.3mf	OK	0
+docs/m1/out/app/cr6-onepiece/cr6-onepiece.stl	OK	0
+docs/m1/out/app/hex/hex.3mf	OK	0
+docs/m1/out/app/hex/hex.stl	OK	0
+docs/m1/out/app/luban-default/luban-default.3mf	OK	0
+docs/m1/out/app/luban-default/luban-default.stl	OK	0
+docs/m1/out/app/optimised/optimised.3mf	OK	0
+docs/m1/out/app/optimised/optimised.stl	OK	0
+docs/m1/out/app/point/point.3mf	OK	0
+docs/m1/out/app/point/point.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378.3mf	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_bed2.3mf	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_key_splints.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_stand_1.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_stand_2.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c1_r1.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c1_r2.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c2_r1.stl	OK	0
+docs/m1/out/app/tiled-300x378/tiled-300x378_tile_c2_r2.stl	OK	0
+docs/m1/out/cli/calibration/calibration.3mf	OK	0
+docs/m1/out/cli/calibration/calibration.stl	OK	0
+docs/m1/out/cli/cr6-cal/squama.3mf	OK	0
+docs/m1/out/cli/cr6-cal/squama_calibration.stl	OK	0
+docs/m1/out/cli/cr6-cal/squama_plate.stl	OK	0
+docs/m1/out/cli/cr6-onepiece/squama.3mf	OK	0
+docs/m1/out/cli/cr6-onepiece/squama.stl	OK	0
+docs/m1/out/cli/default/squama.3mf	OK	0
+docs/m1/out/cli/default/squama.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama.3mf	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_bed2.3mf	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_calibration.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_key_splints.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_stand_1.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_stand_2.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c1_r1.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c1_r2.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c2_r1.stl	OK	0
+docs/m1/out/cli/hex-tiled-opt-cal/squama_tile_c2_r2.stl	OK	0
+docs/m1/out/cli/hex/squama.3mf	OK	0
+docs/m1/out/cli/hex/squama.stl	OK	0
+docs/m1/out/cli/optimised/squama.3mf	OK	0
+docs/m1/out/cli/optimised/squama.stl	OK	0
+docs/m1/out/cli/point/squama.3mf	OK	0
+docs/m1/out/cli/point/squama.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama.3mf	OK	0
+docs/m1/out/cli/tiled-300x378/squama_bed2.3mf	OK	0
+docs/m1/out/cli/tiled-300x378/squama_key_splints.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_stand_1.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_stand_2.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_tile_c1_r1.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_tile_c1_r2.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_tile_c2_r1.stl	OK	0
+docs/m1/out/cli/tiled-300x378/squama_tile_c2_r2.stl	OK	0

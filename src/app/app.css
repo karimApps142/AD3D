@@ -334,6 +334,28 @@ input[type='range']:disabled {
   -webkit-user-select: none;
 }
 
+/* The 3D view is always dark (a lamp in a dark room), so its overlays (toolbar, hints, stats,
+   status) keep the dark palette whatever the app theme: light-theme tokens on a near-black
+   view are unreadable. */
+:root[data-theme='light'] .viewport {
+  --panel: #13161b;
+  --panel-raised: #191d24;
+  --border: #2f3540;
+  --text: #d9dde4;
+  --muted: #a3abb8;
+  --faint: #7d8594;
+  --accent: #f2b54c;
+  --accent-dim: #8a6a33;
+  --ok: #5fd38d;
+  --danger: #ff6b6b;
+  --track: #2a303a;
+  --overlay-bg: rgba(14, 16, 20, 0.8);
+  --hud-bg: rgba(25, 29, 36, 0.85);
+  --hud-bg-strong: rgba(25, 29, 36, 0.92);
+  color-scheme: dark;
+  color: var(--text);
+}
+
 .viewport.alt-held,
 .viewport.alt-held canvas {
   cursor: crosshair;

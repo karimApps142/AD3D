@@ -15,6 +15,7 @@ import { buildExportDto, defaultExportName } from './squamaDto';
 import { type ExportStatus, IDLE_EXPORT, reduceExportEvent, useSquamaUi } from './squamaUi';
 import { fitsBed, KEY_MIN_BASE_MM, maxTileExtent, ORIENTATIONS, planTiles, PRINTERS, printSize, quarterTurns } from './tilePlan';
 import { useCoreTilePlan } from './useCoreTilePlan';
+import { useViewportStore } from '../viewport/viewportStore';
 import { Warnings } from './Warnings';
 import './panels.css';
 
@@ -57,6 +58,7 @@ export function ExportPanel() {
 
   const layout = plateLayout(params, image, info);
   const corePlan = useCoreTilePlan(params, settings);
+  const corePlanError = useViewportStore((s) => (s.tilePlanState === 'error' ? s.tilePlanError : null));
   // The core's orientation choice when it has planned; the §9 estimate otherwise.
   const k = corePlan ? corePlan.quarterTurns : quarterTurns(settings.orientation, params.lightAzimuthDeg);
   const depth = corePlan?.thicknessMm ?? meshDepth ?? params.baseMm + 1;
@@ -81,11 +83,12 @@ export function ExportPanel() {
       w.push({ code: 'keys_need_thickness', message: `Alignment keys need a base ≥ ${KEY_MIN_BASE_MM.toFixed(1)} mm (now ${params.baseMm.toFixed(1)} mm).` });
     }
     if (!settings.tile && !wholeFits) w.push({ code: 'plate_exceeds_bed', message: 'The plate does not fit the bed in one piece; turn on tiling.' });
-    if (plan.error) w.push({ code: 'tile_plan', message: plan.error });
+    if (corePlanError && settings.tile) w.push({ code: 'tile_plan', message: `The core could not plan the tiles: ${corePlanError}` });
+    else if (plan.error) w.push({ code: 'tile_plan', message: plan.error });
     if (settings.orientation === 'flat') w.push({ code: 'flat_print', message: 'Printed flat, tilted facets come out poorly; standing is recommended.' });
     if (!settings.formats.length) w.push({ code: 'no_format', message: 'Choose STL and/or 3MF.' });
     return mergeWarnings(w, status.warnings);
-  }, [settings, params.baseMm, wholeFits, plan.error, status.warnings]);
+  }, [settings, params.baseMm, wholeFits, plan.error, corePlanError, status.warnings]);
 
   const toggleFormat = (f: ExportFormat, on: boolean) =>
     setExport({ formats: on ? Array.from(new Set([...settings.formats, f])) : settings.formats.filter((x) => x !== f) });

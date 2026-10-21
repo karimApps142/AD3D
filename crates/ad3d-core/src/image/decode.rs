@@ -46,11 +46,54 @@ pub fn decode_dynamic(bytes: &[u8]) -> Result<DynamicImage> {
     if reader.format().is_none() {
         return Err(Error::Io("unrecognised image format".into()));
     }
+    if reader.format() == Some(image::ImageFormat::Jpeg) && jpeg_is_truncated(bytes) {
+        return Err(Error::Io(format!("{TRUNCATED}: the JPEG has no end marker after its image data")));
+    }
     let mut dec = reader.into_decoder().map_err(|e| Error::Io(format!("decode: {e}")))?;
     let orient = dec.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
     let mut img = DynamicImage::from_decoder(dec).map_err(|e| Error::Io(format!("decode: {e}")))?;
     img.apply_orientation(orient);
     Ok(img)
+}
+
+/// Start of the error message for a file that ends early.
+pub const TRUNCATED: &str = "file ends early";
+
+/// True when a JPEG stops before the end-of-image marker of its main image (an
+/// interrupted download or a cloud placeholder): the decoder would fill the rest
+/// grey. Walks the marker segments to the first start-of-scan, so an EXIF
+/// thumbnail's end marker does not count; data appended after the end marker (a
+/// motion photo's video) is fine.
+fn jpeg_is_truncated(b: &[u8]) -> bool {
+    if b.len() < 4 || b[0] != 0xFF || b[1] != 0xD8 {
+        return false; // not a plain JPEG stream; let the decoder judge it
+    }
+    let mut i = 2usize;
+    while i + 4 <= b.len() {
+        if b[i] != 0xFF {
+            return false; // unexpected layout; leave it to the decoder
+        }
+        let m = b[i + 1];
+        if m == 0xFF {
+            i += 1; // fill byte
+            continue;
+        }
+        if m == 0xD9 {
+            return true; // end of image before any scan
+        }
+        if (0xD0..=0xD7).contains(&m) || m == 0x01 {
+            i += 2;
+            continue;
+        }
+        let len = u16::from_be_bytes([b[i + 2], b[i + 3]]) as usize;
+        if m == 0xDA {
+            // Entropy-coded data: a real 0xFF is stuffed as FF 00, so FF D9 is the marker.
+            let start = (i + 2 + len).min(b.len());
+            return !b[start..].windows(2).any(|w| w == [0xFF, 0xD9]);
+        }
+        i += 2 + len;
+    }
+    true
 }
 
 /// Decodes bytes (PNG/JPEG/TIFF/WebP/BMP), applies EXIF orientation and linearises.

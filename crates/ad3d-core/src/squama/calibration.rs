@@ -107,6 +107,15 @@ impl CalibrationSpec {
     }
 }
 
+/// True when a standing print with `k` quarter turns stacks its layers along the
+/// light's in-plane direction (layer lines run across the light).
+pub fn layers_across_light(light_azimuth: f64, k: u32) -> bool {
+    // Print Z is plate-space −down; layers stack along it.
+    let up = -crate::orient::down_in_plate(k);
+    let a = DVec2::new(light_azimuth.cos(), light_azimuth.sin());
+    up.dot(a).abs() > std::f64::consts::FRAC_1_SQRT_2
+}
+
 /// Which tile edge faced the light.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -153,6 +162,15 @@ pub struct CalibrationKey {
     pub tilt_max_deg: f64,
     /// Ramp patches in step order, then fillers.
     pub patches: Vec<PatchKey>,
+    /// Standing quarter turns the tile was exported with (`None`: flat, or not
+    /// recorded). Turns `k` and `k + 2` stack layers the same way relative to the
+    /// light; a response measured on a tile printed another way may not transfer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub print_quarter_turns: Option<u32>,
+    /// Whether the print's layer lines ran across the light (`true`, stacked along the
+    /// light axis) or along it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layers_across_light: Option<bool>,
 }
 
 impl CalibrationKey {
@@ -176,6 +194,44 @@ pub struct CalibrationTile {
 }
 
 impl CalibrationTile {
+    /// The standing quarter turn to print this tile with, and its largest downward
+    /// ledge (mm). A turn that stacks layers like the plate's (`plate_k` or
+    /// `plate_k + 2`) is kept when its ledge is within [`MAX_LEDGE_MM`], so the
+    /// measured response transfers to the plate; otherwise the turn with the
+    /// smallest ledge (ties: the plate's layer direction, then the lower turn).
+    pub fn best_turn(&self, plate_k: Option<u32>, tol: &Tol) -> (u32, f64) {
+        let all: Vec<u32> = (0..self.partition.pieces.len() as u32).collect();
+        let ledge = |k: u32| crate::orient::max_downward_ledge(&self.partition, &self.heights, &all, crate::orient::down_in_plate(k), tol);
+        let same_layers = |k: u32| plate_k.is_some_and(|p| (k + 4 - p) % 2 == 0);
+        let mut best: Option<(u32, f64)> = None;
+        if let Some(p) = plate_k {
+            for k in [p % 4, (p + 2) % 4] {
+                let l = ledge(k);
+                if l <= MAX_LEDGE_MM + 1e-9 && best.is_none_or(|b| l < b.1 - 1e-9) {
+                    best = Some((k, l));
+                }
+            }
+        }
+        if let Some(b) = best {
+            return b;
+        }
+        let mut best = (0u32, f64::INFINITY);
+        for k in 0..4 {
+            let l = ledge(k);
+            let better = l < best.1 - 1e-9 || ((l - best.1).abs() <= 1e-9 && same_layers(k) && !same_layers(best.0));
+            if better {
+                best = (k, l);
+            }
+        }
+        best
+    }
+
+    /// Records how the tile is printed in its key.
+    pub fn set_print_turn(&mut self, k: Option<u32>) {
+        self.key.print_quarter_turns = k;
+        self.key.layers_across_light = k.map(|k| layers_across_light(self.key.light_azimuth_deg.to_radians(), k));
+    }
+
     /// `validate()` options for this tile under an export transform.
     pub fn validate_opts(&self, transform: Xform) -> ValidateOpts {
         ValidateOpts { transform, min_facet_w: Some(self.min_facet_w), back_area: Some(self.back_area), ..Default::default() }
@@ -361,6 +417,8 @@ pub fn calibration_facets(spec: &CalibrationSpec, tol: &Tol) -> Result<(Partitio
         tilt_min_deg: lo.to_degrees(),
         tilt_max_deg: hi.to_degrees(),
         patches,
+        print_quarter_turns: None,
+        layers_across_light: None,
     };
     let _ = pl.along_x;
     Ok((part, facets, key))
